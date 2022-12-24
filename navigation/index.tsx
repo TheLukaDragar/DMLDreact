@@ -105,3 +105,18 @@ function TabBarIcon(props: {
 }) {
   return <FontAwesome size={30} style={{ marginBottom: -3 }} {...props} />;
 }
+
+
+//simulate a girlfriend
+//GF: "I'm hungry"
+//ME: "I'm hungry too make me a sandwich"
+//GF: "I'm hungry for love"
+//ME: "I'm hungry for love too, make me a sandwich"
+//GF: "I'm hungry for love and a sandwich"
+//ME: "I'm hungry for love and a sandwich too, make me a sandwich"
+//GF: "I'm hungry for love and a sandwich and a kiss"
+//ME: "I'm hungry for love and a sandwich and a kiss too, make me a sandwich"
+//GF: "I'm hungry for love and a sandwich and a kiss and a hug"
+//ME: "I'm hungry for love and a sandwich and a kiss and a hug too, make me a sandwich"
+//GF: "I'm hungry for love and a sandwich and a kiss and a hug
+//ME (thinking): "I'm hungry for love and a sandwich and a kiss and a hug too, make me a sandwich"
