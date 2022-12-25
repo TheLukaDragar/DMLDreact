@@ -1,6 +1,7 @@
 import  { useState,useEffect } from 'react';
 import { View, Text, FlatList } from 'react-native';
 import {PermissionsAndroid, Platform} from 'react-native';
+import * as thisDevice from 'expo-device';
 
 
 import {
@@ -9,7 +10,6 @@ import {
   Characteristic,
   Device,
 } from 'react-native-ble-plx';
-import DeviceInfo from 'react-native-device-info';
 interface Props {
   // Declare the type of the props here
   
@@ -22,9 +22,12 @@ const BluetoothScanner: React.FC<Props> = () => {
 
   const requestPermissions = async (cb: VoidCallback) => {
     if (Platform.OS === 'android') {
-      const apiLevel = await DeviceInfo.getApiLevel();
+      
+      const apiLevel =  thisDevice.platformApiLevel;
+      //null check for apiLevel
 
-      if (apiLevel < 31) {
+
+      if (apiLevel != null && apiLevel) {  //TODO apiLevel is null on my device
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           {
@@ -37,6 +40,10 @@ const BluetoothScanner: React.FC<Props> = () => {
         );
         cb(granted === PermissionsAndroid.RESULTS.GRANTED);
       } else {
+
+        if (apiLevel == null) {
+          console.log("apiLevel is null");
+        }
         // Android 12+ requires multiple permissions
         const result = await PermissionsAndroid.requestMultiple([
           PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
