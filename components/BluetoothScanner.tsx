@@ -25,9 +25,10 @@ const BluetoothScanner: React.FC<Props> = () => {
       
       const apiLevel =  thisDevice.platformApiLevel;
       //null check for apiLevel
+      alert(apiLevel);
 
 
-      if (apiLevel != null && apiLevel) {  //TODO apiLevel is null on my device
+      if (apiLevel != null && apiLevel < 31) {  //TODO apiLevel is null on my device
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           {
@@ -37,7 +38,10 @@ const BluetoothScanner: React.FC<Props> = () => {
             buttonNegative: 'Cancel',
             buttonPositive: 'OK',
           },
-        );
+        ).catch(err => {
+          console.log(err);
+        });
+
         cb(granted === PermissionsAndroid.RESULTS.GRANTED);
       } else {
 
@@ -90,8 +94,12 @@ const BluetoothScanner: React.FC<Props> = () => {
                       console.log('Bluetooth is powered off');
                       return;
                   }
+                  if (error.errorCode === BleErrorCode.ScanStartFailed) {
+                      console.warn('Scan start failed  - make sure ble perms is enabled on the device');
+                      return;
+                  }
                   
-                  console.log(error);
+                  console.warn(error, error.errorCode);
                   return;
                 }
           
