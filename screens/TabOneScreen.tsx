@@ -1,48 +1,104 @@
-import { Button, StyleSheet } from 'react-native';
+import { StyleSheet,TextInput,KeyboardAvoidingView } from 'react-native';
+import { Button } from 'react-native-paper';
+
 
 import EditScreenInfo from '../components/EditScreenInfo';
 import { Text, View } from '../components/Themed';
 import { RootTabScreenProps } from '../types';
 import BluetoothScanner from '../components/BluetoothScanner';
 //import { createEncryptedWallet } from 'gimly-id-app-sdk'
-import {useState } from 'react';
+import {useEffect, useState } from 'react';
+//import store from redux-toolkit store
+
+import { incrementCount, decrementCount } from '../data/user-slice';
+import { setLoading } from '../data/store';
+import secureReducer, { getMnemonic , setMnemonic} from '../data/secure';
+import { useAppDispatch, useAppSelector } from '../data/hooks';
+import { ActivityIndicator, MD2Colors } from 'react-native-paper';
 
 
 
 export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'>) {
 
-  const pin = "1234"
-  const [mnemonic, setMnemonic] = useState<string>("");
+  const user = useAppSelector((state) => state.user);
+  const dispatch = useAppDispatch();
+  const loading = useAppSelector((state) => state.loading);
+  const secure = useAppSelector((state) => state.secure);
 
-  const makeWallet = async () => {
-    console.log("Making wallet");
-    savePin(pin);
-    
+
+
+  useEffect(() => {
+    dispatch(getMnemonic());
+   
+  }, []);
+
+
+
+
+ 
+  const setPin =   (pin: string) => {
+    //set mnemonic to the value of the pin
+    dispatch(setMnemonic(pin));
+
   }
-  const savePin = async (pin: string) => {
-    if (pin) {
-      // await createEncryptedWallet(pin).then((res) => {
-      //   setMnemonic(res.mnemonicPhrase);
-      //   console.log(res);
-      // }
-      // )
-      setMnemonic("test");
-      
-    }
-  }
+   
+
+ 
+
 
 
   return (
     <View style={styles.container}>
       <BluetoothScanner />
-      <Button title="Make wallet" onPress={makeWallet} />
-      <Text style={styles.mnemonic}>Mnemonic: </Text> 
-      <Text style={styles.mnemonic}>{mnemonic}</Text>
-      <Text style={styles.mnemonic}>Pin: </Text> 
+
+      <Text style={styles.mnemonic}>Mnemonic: </Text>
+      <Text style={styles.mnemonic}>{secure.mnemonic}</Text>
+
+
+      <ActivityIndicator animating={secure.status === 'loading'} color={MD2Colors.blue500} />
+
+
+      <TextInput
+      
+
+        onSubmitEditing={(event) => setPin(event.nativeEvent.text)}
+       
+       
+        style={{ height: 40, width: '80%', borderColor: 'gray', borderWidth: 1 }}
+        
+      />
+
+
+
+      <Text style={styles.mnemonic}>Count: </Text>
+      <Text style={styles.mnemonic}>{user.count}</Text>
+
+
+      <View style={{flexDirection: 'row'}}>
+      <Button icon="plus"  mode="outlined" onPress={() => dispatch(incrementCount())}>
+        Increment
+      </Button>
+
+      
+      <Button icon="minus" mode="outlined" onPress={() => dispatch(decrementCount())}>
+        Decrement
+      </Button>
+
+      </View>
+
+      <ActivityIndicator animating={loading} color={MD2Colors.blue500} />
+
+      <Button icon="plus" mode="contained" onPress={() => loading? dispatch(setLoading(false)) : dispatch(setLoading(true))}>
+        Start Loading
+      </Button>
+
+     
+
+
+      
     
       <Text style={styles.title}>Tab One</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="/screens/TabOneScreen.tsx" />
+    <EditScreenInfo path="/screens/TabOneScreen.tsx" />
     </View>
   );
 }
@@ -61,9 +117,5 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
   },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
-  },
+  
 });
