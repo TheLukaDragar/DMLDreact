@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import userReducer from './user-slice';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import secureReducer from './secure';
+import bleReducer from '../ble/bleSlice';
 
 /**
  * @remarks
@@ -37,14 +38,13 @@ const loadingSlice = createSlice({
 
 
 
-
-
 // combine reducers
 const reducers = combineReducers({
     user: userReducer,
     loading: loadingSlice.reducer,
     secure: secureReducer,
     //[ConfigApi.reducerPath]: ConfigApi.reducer,
+    ble: bleReducer,
 });
 
 // set the persisting reducers
@@ -66,3 +66,5 @@ export const { setLoading } = loadingSlice.actions;
 
 export type AppDispatch = typeof store.dispatch;
 export type RootState = ReturnType<typeof store.getState>;
+
+
