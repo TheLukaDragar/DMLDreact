@@ -1,6 +1,6 @@
 import {
   BleError,
-  BleManager, Device,
+  BleManager, Characteristic, Device,
 } from 'react-native-ble-plx';
 
 
@@ -11,9 +11,24 @@ import { Buffer } from 'buffer'
 import CryptoES from 'crypto-es';
 
 type VoidCallback = (result: boolean) => void;
+// /KEY_CALIBRATION_STATE_NOT_CALIBRATED,
+// KEY_CALIBRATION_STATE_CALIBRATING,
+// KEY_CALIBRATION_STATE_CALIBRATING_STEP_1,
+// KEY_CALIBRATION_STATE_CALIBRATING_STEP_2,
+// KEY_CALIBRATION_STATE_CALIBRATED_STEP_DONE,
+enum CalibrationState {
+  NOT_CALIBRATED = "not calibrated",
+  CALIBRATING = "calibrating",
+  CALIBRATING_STEP_1 = "calibrating step 1",
+  CALIBRATING_STEP_2 = "calibrating step 2",
+  CALIBRATED_STEP_DONE = "calibration done"
+}
 
+
+export const manager = new BleManager();
 
 class BLEService {
+ 
   
   
   
@@ -21,26 +36,27 @@ class BLEService {
   disconnectedLister: any;
 
   demo = false
-  private static instance: BLEService | null = null;
-
   private permissionsGranted = false;
   private connectedPeripheralId: string | null = null;
-
-
-
+  private logBuffer: string = "";
 
   constructor() {
-    this.manager = new BleManager(); //TODO: restore state handler for android
+   this.manager = new BleManager({
+      restoreStateIdentifier: 'BleInTheBackground',
+      restoreStateFunction: restoredState => {
+        if (restoredState == null) {
+          // BleManager was constructed for the first time.
+        } else {
+          // BleManager was restored. Check `restoredState.connectedPeripherals` property.
+          console.log("BLEMANAGER restoredState");
+
+        }
+      },
+    });
     console.log("BLEService constructor");
-    BLEService.instance = this;
 
   }
 
-  static getInstance(): BLEService {
-    return BLEService.instance? BLEService.instance : new BLEService();  
-  }
-
-  
   
 
   async connect(peripheralId: string) {
@@ -94,8 +110,8 @@ class BLEService {
     console.log(device.isConnectable);
 
     
-    this.disconnectedLister = this.manager.onDeviceDisconnected(this.connectedPeripheralId!,this.onDeviceDisconnected);
-    console.log("onDeviceDisconnected listener added");
+    // this.disconnectedLister = this.manager.onDeviceDisconnected(this.connectedPeripheralId!,this.onDeviceDisconnected);
+    // console.log("onDeviceDisconnected listener added");
     
     
 
@@ -174,15 +190,21 @@ class BLEService {
     
   }
 
-  onDeviceDisconnected(error: any, device: any) {
-    console.log("onDeviceDisconnected");
+  // onDeviceDisconnected(error: any, device: any) {
+  //   console.log("onDeviceDisconnected Manager");
+
+
+   
+
   
-    this.connectedPeripheralId = null;
-    this.disconnectedLister?.remove();
-    this.disconnectedLister = null;
+  //   this.connectedPeripheralId = null;
+  //   this.disconnectedLister?.remove();
+  //   this.disconnectedLister = null;
+
+
 
     
-  }
+  // }
 
   //onDisconnect interface for other classes to listen to return this.disconnectedLister
   onDisconnect( callback: (error: any, device: any) => void) {
@@ -192,9 +214,99 @@ class BLEService {
     
   }
 
-  
-  
-  
+  onCalibrationChange(callback: (error: BleError | null, state: CalibrationState | null) => void) {
+    this.manager.monitorCharacteristicForDevice(this.connectedPeripheralId!, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34fe', (error, characteristic) => {
+    if (error) {
+      console.log("onCalibrationChange error: " + error);
+      callback(error, null);
+      return;
+
+    }
+    else{
+
+      switch (characteristic?.value) {
+        case "MA==":
+          //not calibrated
+          callback(null, CalibrationState.NOT_CALIBRATED);
+          break;
+        case "MQ==":
+          //calibrating
+          callback(null, CalibrationState.CALIBRATING);
+          break;
+        case "Mg==":
+          //calibring step 1 
+          callback(null, CalibrationState.CALIBRATING_STEP_1);
+          break;
+        case "Mw==":
+          //calibring step 2
+          callback(null, CalibrationState.CALIBRATING_STEP_2);
+          break;
+        case "NA==":
+          //calibring done
+          callback(null, CalibrationState.CALIBRATED_STEP_DONE);
+          break;
+
+        default:
+          callback(null, CalibrationState.NOT_CALIBRATED);
+
+      }
+    }}
+    , 'calibration');
+    //todo: cancel transaction uppon disconnect
+  }
+
+  //subscribe to log nordic characteristic
+  //nordic uart service
+  onLog(callback: (error: BleError | null, log: string | null) => void) {
+    this.manager.monitorCharacteristicForDevice(this.connectedPeripheralId!, '6e400001-b5a3-f393-e0a9-e50e24dcca9e', '6e400003-b5a3-f393-e0a9-e50e24dcca9e', (error, characteristic) => {
+      if (error) {
+        console.log("onLog error: " + error, error.errorCode);
+        callback(error, null);
+        return;
+
+      }
+      else{
+        let log = Buffer.from(characteristic?.value!, 'base64').toString('ascii');
+        //BUFFER for new line
+
+        this.logBuffer += log;
+        let index = this.logBuffer.indexOf("\n");
+        //call callback for each new line
+        while (index > -1) {
+          let line = this.logBuffer.substring(0, index);
+          this.logBuffer = this.logBuffer.substring(index + 1);
+          callback(null, line);
+          index = this.logBuffer.indexOf("\n");
+        }
+
+
+      }}
+      , 'log');
+
+
+
+  }
+
+  async writeCalibrationMode(data: string) {
+    let encoded = Buffer.from(data).toString('base64');
+    console.log("writeCalibrationMode: " + encoded);
+    let sucess= await this.manager.writeCharacteristicWithResponseForDevice(this.connectedPeripheralId!, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34ff', encoded);
+
+    return sucess;
+
+  }
+  async readCalibrationMode() {
+    let characteristic = await this.manager.readCharacteristicForDevice(this.connectedPeripheralId!, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34ff');
+    let value = characteristic.value;
+    let calibrationMode = Buffer.from(value!, 'base64').toString('ascii');
+    console.log("calibrationMode: " + calibrationMode);
+    return calibrationMode;
+
+
+    
+    
+  }
+
 
 
   solveChallenge(challenge: string ) {
@@ -249,6 +361,8 @@ class BLEService {
     console.log("authenticated: " + auth? "true" : "false");
     
     if(auth === '1') {
+      //setup listeners for calibration and battery ...
+      //TODO
       return true;
     }else {
       return false;
@@ -256,6 +370,7 @@ class BLEService {
     }
 
   }
+  
  
   async disconnect() {
 
@@ -265,12 +380,15 @@ class BLEService {
       console.log("not connected");
       return;
     }
-  
+
+
 
     await this.manager.cancelDeviceConnection(this.connectedPeripheralId? this.connectedPeripheralId : '').catch((error) => {
       console.log("error disconnecting: " + error);
     }
     );
+
+  
     
   
 
@@ -350,4 +468,4 @@ class BLEService {
   };
 }
 
-export default BLEService;
+export const BLEServiceInstance = new BLEService();

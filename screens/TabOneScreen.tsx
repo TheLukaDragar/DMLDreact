@@ -6,7 +6,6 @@ import EditScreenInfo from '../components/EditScreenInfo';
 import { Text, View } from '../components/Themed';
 import { RootTabScreenProps } from '../types';
 import BluetoothScanner from '../components/BluetoothScanner';
-//import { createEncryptedWallet } from 'gimly-id-app-sdk'
 import { useEffect, useState } from 'react';
 //import store from redux-toolkit store
 
@@ -16,10 +15,10 @@ import secureReducer, { getMnemonic , setMnemonic} from '../data/secure';
 import { useAppDispatch, useAppSelector } from '../data/hooks';
 import { ActivityIndicator, MD2Colors } from 'react-native-paper';
 //bleslice
-import {setPeriphiralID, setStatus } from '../ble/bleSlice';
-
+import {setLog, setPeriphiralID, setStatus } from '../ble/bleSlice';
+import { Buffer } from 'buffer'
 //bleservice
-import BLEService from '../ble/BLEService';
+import  { BLEServiceInstance } from '../ble/BLEService';
 
 
 
@@ -32,7 +31,11 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
   const loading = useAppSelector((state) => state.loading);
   const secure = useAppSelector((state) => state.secure);
   const ble = useAppSelector((state) => state.ble);
-  const bleService =  BLEService.getInstance();
+  const bleService =  BLEServiceInstance;
+
+  const [calibMode, setCalibMode] = useState(false);
+
+
 
 
 
@@ -46,6 +49,9 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
     dispatch(getMnemonic());
     //bleService.setDemo(true);
     dispatch(setPeriphiralID('F9:E0:C3:CE:C3:14'));
+
+    bleService.init();
+
    
 
    
@@ -74,9 +80,6 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
         dispatch(setStatus('disconnected'));
       });
 
-
-
-
       dispatch(setStatus('connected'));
       console.log(challenge);
     
@@ -90,6 +93,41 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
       if (auth) {
         dispatch(setStatus('authenticated'));
         dispatch(setStatus('ready'));
+
+        //read calibration mode
+        let calib = await bleService.readCalibrationMode();
+        console.log("mode :",calib);
+        if (calib == '1') {
+          setCalibMode(true);
+        }else{
+          setCalibMode(false);
+        }
+
+
+        bleService.onCalibrationChange((error,state) => {
+          if (error) {
+            console.log(error);
+          }else{
+            console.log(state);
+        
+          }
+
+          
+        });
+
+        bleService.onLog((error,log) => {
+          if (error) {
+            console.log(error);
+          }
+          else{
+            //custom log with yellow color
+           console.log("BLE LOG:"+ log);
+
+           dispatch(setLog(log!));
+            
+          }
+        });
+
       }else{
         await bleService.disconnect();
         dispatch(setStatus('disconnected'));
@@ -126,11 +164,36 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
 
 
 
+  async function BleWriteCalibrationMode(): Promise<void> {
+    try {
+      await bleService.writeCalibrationMode(calibMode? '0' : '1');
+      //setCalibMode(!calibMode);
+      console.log('calibration mode set to: ' + calibMode);
+      let calib = await bleService.readCalibrationMode();
+      console.log("mode :",calib);
+
+      setCalibMode(!(calib == '0'));
+
+
+      
+    }
+    catch (e) {
+      alert(e);
+    }
+  }
+
   return (
     <View style={styles.container}>
+
+      <Text style={styles.log}> freqency: {ble.log[ble.log.length -1].f} Hz</Text>
+      <Text style={styles.log}> sampling rate: {ble.log[ble.log.length -1].s} Hz</Text>
+      <Text style={styles.log}> percent above 0.3: {ble.log[ble.log.length -1].p}%</Text>
+      <Text style={styles.log}> max value: {ble.log[ble.log.length -1].m}</Text>
+      <Text style={styles.log}> max val index: {ble.log[ble.log.length -1].i}</Text>
+
      
 
-      <Text style={styles.mnemonic}>Mnemonic: </Text>
+      {/* <Text style={styles.mnemonic}>Mnemonic: </Text>
       <Text style={styles.mnemonic}>{secure.mnemonic}</Text>
 
 
@@ -163,9 +226,15 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
         Decrement
       </Button>
 
-      </View>
+      </View> */}
 
       <ActivityIndicator animating={loading} color={MD2Colors.blue500} />
+
+      <Button mode="contained" onPress={() => BleWriteCalibrationMode() }  style={{marginTop: 20,} } 
+      disabled={ble.status !== 'ready'}
+      >
+       Mode: {calibMode? 'FSK' : 'ASK'}
+      </Button>
 
      
 
@@ -206,6 +275,17 @@ const styles = StyleSheet.create({
   mnemonic: {
     fontSize: 20,
     fontWeight: 'bold',
+  },
+  log: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    width: '100%',
+    textAlign: 'center',
+
+    
+
+
+
   },
   
 });

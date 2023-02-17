@@ -7,7 +7,7 @@ export const getMnemonic = createAsyncThunk(
     'secure/getMnemonic',
     async () => {
         //sleep for 2 seconds
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        //await new Promise((resolve) => setTimeout(resolve, 1));
         console.log('getMnemonic');
         const mnemonic = await SecureStore.getItemAsync('mnemonic');
         if (mnemonic === null) {
