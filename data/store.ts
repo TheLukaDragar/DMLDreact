@@ -8,6 +8,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import secureReducer from './secure';
 import bleReducer from '../ble/bleSlice';
 import { reducer as apiReducer, middleware as apiMiddleware } from './api';
+import { setupListeners } from '@reduxjs/toolkit/dist/query';
 
 
 
@@ -75,6 +76,9 @@ export const store = configureStore({
             },
         }).concat(apiMiddleware),
 });
+
+setupListeners(store.dispatch) //for rtk-query fetch on x 
+
 
 // export the redux dispatch and root states
 export const { setLoading } = loadingSlice.actions;
