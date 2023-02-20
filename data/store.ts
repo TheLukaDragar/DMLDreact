@@ -7,6 +7,9 @@ import userReducer from './user-slice';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import secureReducer from './secure';
 import bleReducer from '../ble/bleSlice';
+import { reducer as apiReducer, middleware as apiMiddleware } from './api';
+
+
 
 /**
  * @remarks
@@ -21,9 +24,20 @@ const persistConfig = {
     key: 'root',
     version: 1,
     storage: AsyncStorage,
-    whitelist: ['user'], // only user will be persisted
+    whitelist: ['user','api'], // only user will be persisted
+    
 
 };
+
+const apiPersistConfig = {
+    key: 'api',
+    version: 1,
+    storage: AsyncStorage,
+    blacklist: ['AuthMsg'], // only user will be persisted
+};
+
+
+
 
 //create loading slice
 const loadingSlice = createSlice({
@@ -45,6 +59,7 @@ const reducers = combineReducers({
     secure: secureReducer,
     //[ConfigApi.reducerPath]: ConfigApi.reducer,
     ble: bleReducer,
+    api: persistReducer(apiPersistConfig, apiReducer)
 });
 
 // set the persisting reducers
@@ -58,7 +73,7 @@ export const store = configureStore({
             serializableCheck: {
                 ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
             },
-        })//.concat(ConfigApi.middleware), //TODO: add the rtk-query middleware when api
+        }).concat(apiMiddleware),
 });
 
 // export the redux dispatch and root states

@@ -1,32 +1,33 @@
-import { createSlice, PayloadAction,createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import * as SecureStore from 'expo-secure-store';
 
 
+// Import the crypto getRandomValues shim (**BEFORE** the shims)
+import "react-native-get-random-values"
 
-export const getMnemonic = createAsyncThunk(
-    'secure/getMnemonic',
-    async () => {
-        //sleep for 2 seconds
-        //await new Promise((resolve) => setTimeout(resolve, 1));
-        console.log('getMnemonic');
-        const mnemonic = await SecureStore.getItemAsync('mnemonic');
-        if (mnemonic === null) {
-            return '';
-        }
-        return mnemonic;
-    }
-);
+// Import the the ethers shims (**BEFORE** ethers)
+import "@ethersproject/shims"
 
-//set mnemonic in secure store
+import { ethers } from 'ethers';
 
-export const setMnemonic = createAsyncThunk(
-    'secure/setMnemonic',
-    async (mnemonic: string) => {
-        console.log('setMnemonic');
-        await SecureStore.setItemAsync('mnemonic', mnemonic);
-        return mnemonic;
-    }
-);
+
+//from gimly
+export type KeyChainData = {
+    wallet: string | null
+    privateKey: string | null
+    mnemonic: string | null
+    pin: string | null
+    did?: string | null
+}
+
+export type UserData = {
+    token: string | null
+}
+
+
+
+
+
 
 
 
@@ -34,58 +35,264 @@ export const setMnemonic = createAsyncThunk(
 const secureSlice = createSlice({
     name: 'secure',
     initialState: {
-        status : 'idle' as 'idle' | 'loading' | 'failed',
-        mnemonic: '',
+        keyChainData: {
+            wallet: '',
+            privateKey: '',
+            mnemonic: '',
+            pin: '',
+            did: ''
+        } as KeyChainData,
+        userData: {
+            token: ''
+        } as UserData,
+        loading: true,
+
     },
     reducers: {
-        
-        
+
     },
     extraReducers: (builder) => {
-        builder.addCase(getMnemonic.fulfilled, (state, action) => {
-            
-            console.log('getMnemonic fulfilled');
-            state.mnemonic = action.payload;
-            state.status = 'idle';
+        builder.addCase(getSecure.fulfilled, (state, action) => {
+
+
+            state.keyChainData = action.payload?.keyChainData!;
+            state.userData = action.payload?.userData!;
+            //log data here
+            console.log('getSecure.fulfilled');
+            state.loading = false;
         });
-        builder.addCase(setMnemonic.fulfilled, (state, action) => {
-            console.log('setMnemonic fulfilled');
-            state.mnemonic = action.payload;
-            state.status = 'idle';
-            
+        
+        builder.addCase(getSecure.rejected, (state, action) => {
+           //log error here
+            console.log('getSecure.rejected', action.error);
         }
         );
-        //handle error
-        builder.addCase(getMnemonic.rejected, (state, action) => {
-            console.log('getMnemonic rejected');
-            state.mnemonic = '';
-            state.status = 'failed';
+
+        builder.addCase(getSecure.pending, (state, action) => {
+            console.log('getSecure.pending');
         }
         );
-        builder.addCase(setMnemonic.rejected, (state, action) => {
-            console.log('setMnemonic rejected');
-            state.mnemonic = '';
-            state.status = 'failed';
+
+        //create a new wallet
+        builder.addCase(createWallet.fulfilled, (state, action) => {
+            console.log('createWallet.fulfilled');
+            state.keyChainData = action.payload?.keyChainData!;
         }
         );
-        //handle loading
-        builder.addCase(getMnemonic.pending, (state, action) => {
-            console.log('getMnemonic pending');
-            state.status = 'loading';
+
+        builder.addCase(createWallet.rejected, (state, action) => {
+            console.log('createWallet.rejected', action.error);
         }
         );
-        builder.addCase(setMnemonic.pending, (state, action) => {
-            console.log('setMnemonic pending');
-            state.status = 'loading';
+
+        builder.addCase(createWallet.pending, (state, action) => {
+            console.log('createWallet.pending');
         }
         );
+
+        //get token
+        builder.addCase(getToken.fulfilled, (state, action) => {
+            console.log('getToken.fulfilled');
+            state.userData.token = action.payload
+        }
+        );
+        //remove token
+        builder.addCase(removeToken.fulfilled, (state, action) => {
+            console.log('removeToken.fulfilled');
+            state.userData.token = null;
+        }
+        );
+        //set token
+        builder.addCase(setToken.fulfilled, (state, action) => {
+            console.log('setToken.fulfilled', action.payload);
+            state.userData.token = action.payload;
+        }
+        );
+        //pending
+        builder.addCase(getToken.pending, (state, action) => {
+            console.log('getToken.pending');
+        }
+        );
+        //rejected
+        builder.addCase(getToken.rejected, (state, action) => {
+            console.log('getToken.rejected', action.error);
+        }
+        );
+
+
 
 
     },
-    
+
 
 
 });
+
+export const getSecure= createAsyncThunk(
+    'secure/getSecure',
+    async (_,thunkAPI) => {
+        let keyChainData = {
+            wallet: null,
+            privateKey: null,
+            mnemonic: null,
+            pin: null,
+            did: null
+        } as KeyChainData;
+
+        let userData = {
+            token: null
+
+        } as UserData;
+
+        try {
+
+            //wait 5s for testing
+            //await new Promise((resolve) => setTimeout(resolve, 5000));
+
+            // await SecureStore.deleteItemAsync('wallet');
+            // await SecureStore.deleteItemAsync('privateKey');
+            // await SecureStore.deleteItemAsync('mnemonic');
+            // await SecureStore.deleteItemAsync('pin');
+            // await SecureStore.deleteItemAsync('did');
+            // await SecureStore.deleteItemAsync('token');
+
+            //for testing
+
+            //get from secure store
+            keyChainData.wallet = await SecureStore.getItemAsync('wallet');
+            keyChainData.privateKey = await SecureStore.getItemAsync('privateKey');
+            keyChainData.mnemonic = await SecureStore.getItemAsync('mnemonic');
+            keyChainData.pin = await SecureStore.getItemAsync('pin');
+            keyChainData.did = await SecureStore.getItemAsync('did');
+
+            userData.token = await SecureStore.getItemAsync('token');
+
+            console.log('getSecure', userData);
+
+
+            return {
+                keyChainData,
+                userData
+
+            }
+
+        } catch (error) {
+
+            console.error('getSecure', error);
+
+            //TODO: handle error
+
+            //IMPORTANT IF THIS ERROR HAPPENS 
+            //it means the app was reinstalled and the secure store became corrupted
+            //we need to delete the secure store and create a new wallet
+            
+            //delete secure store
+            await SecureStore.deleteItemAsync('wallet');
+            await SecureStore.deleteItemAsync('privateKey');
+            await SecureStore.deleteItemAsync('mnemonic');
+            await SecureStore.deleteItemAsync('pin');
+            await SecureStore.deleteItemAsync('did');
+            await SecureStore.deleteItemAsync('token');
+
+            return {
+                keyChainData,
+                userData
+
+            }
+
+            //return thunkAPI.rejectWithValue("secure store error");
+        }
+
+
+
+       
+
+    }
+);
+
+//create new wallet with ethers and store in secure store ecrypted with pin
+export const createWallet = createAsyncThunk(
+    'secure/createWallet',
+    async (pin: string, thunkAPI ) => {
+
+        if (!pin || pin.length !== 4) {
+            return thunkAPI.rejectWithValue('pin must be 4 digits');
+        }
+
+        //create new wallet //gimly
+        try {
+            console.log('createWallet');
+            const mnemonic = ethers.utils.entropyToMnemonic(
+              ethers.utils.randomBytes(32)
+            )
+            console.log('createWallet',"random done");
+            const wallet = ethers.Wallet.fromMnemonic(mnemonic)
+            const encryptedWallet = await wallet.encrypt(pin, { scrypt: { N: 2 ** 1 } }) //TODO: change N to 2 ** 18
+
+            console.log('createWallet',"saving wallet");
+           
+
+            //store in secure store
+            await SecureStore.setItemAsync('wallet', encryptedWallet);
+            console.log('createWallet',"wallet saved");
+            await SecureStore.setItemAsync('privateKey', wallet.privateKey);
+            await SecureStore.setItemAsync('mnemonic', wallet.mnemonic.phrase);
+            console.log('createWallet',"mnemonic saved");
+            await SecureStore.setItemAsync('pin', pin);
+
+            console.log('createWallet',"saved wallet");
+
+        
+            return {
+              mnemonicPhrase: wallet.mnemonic.phrase,
+              keyChainData: { //only used for updating the state
+                wallet: encryptedWallet,
+                privateKey: wallet.privateKey,
+                mnemonic: wallet.mnemonic.phrase,
+                pin: pin} as KeyChainData
+            }
+          } catch (error) {
+            return thunkAPI.rejectWithValue(error)
+          }
+        }
+);
+
+//get token from backend
+export const getToken = createAsyncThunk(
+    'secure/getToken',
+    async (pin: string, thunkAPI) => {
+
+        //wait 3 seconds
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+
+
+        return 'hahhahaha'; //
+    }
+);
+
+//remove token from backend
+export const removeToken = createAsyncThunk(
+    'secure/removeToken',
+    async ( _,thunkAPI) => {
+        await SecureStore.deleteItemAsync('token');
+        return null;
+    }
+);
+
+//set token in secure store
+export const setToken = createAsyncThunk(
+    'secure/setToken',
+    async (token: string, thunkAPI) => {
+        await SecureStore.setItemAsync('token', token);
+        return token;
+    }
+);
+
+
+
+
+
+
 
 export default secureSlice.reducer;
 

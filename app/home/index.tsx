@@ -2,23 +2,23 @@ import { StyleSheet,TextInput,KeyboardAvoidingView } from 'react-native';
 import { Button } from 'react-native-paper';
 
 
-import EditScreenInfo from '../components/EditScreenInfo';
-import { Text, View } from '../components/Themed';
-import { RootTabScreenProps } from '../types';
-import BluetoothScanner from '../components/BluetoothScanner';
+import EditScreenInfo from '../../components/EditScreenInfo';
+import { Text, View } from '../../components/Themed';
+import { RootTabScreenProps } from '../../types';
+import BluetoothScanner from '../../components/BluetoothScanner';
 import { useEffect, useState } from 'react';
 //import store from redux-toolkit store
 
-import { incrementCount, decrementCount } from '../data/user-slice';
-import { setLoading } from '../data/store';
-//import secureReducer, { getMnemonic , setMnemonic} from '../data/secure';
-import { useAppDispatch, useAppSelector } from '../data/hooks';
+import { incrementCount, decrementCount } from '../../data/user-slice';
+import { setLoading } from '../../data/store';
+//import secureReducer, { getMnemonic , setMnemonic} from '../../data/secure';
+import { useAppDispatch, useAppSelector } from '../../data/hooks';
 import { ActivityIndicator, MD2Colors } from 'react-native-paper';
 //bleslice
-import {setLog, setPeriphiralID, setStatus } from '../ble/bleSlice';
+import {setLog, setPeriphiralID, setStatus } from '../../ble/bleSlice';
 import { Buffer } from 'buffer'
 //bleservice
-import  { BLEServiceInstance } from '../ble/BLEService';
+import  { BLEServiceInstance } from '../../ble/BLEService';
 
 
 
@@ -39,6 +39,8 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
 
 
 
+
+
   
 
   
@@ -46,9 +48,10 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
 
 
   useEffect(() => {
-   // dispatch(getMnemonic());
+    //dispatch(getMnemonic());
     //bleService.setDemo(true);
     dispatch(setPeriphiralID('F9:E0:C3:CE:C3:14'));
+    console.log("HOME SCREEN");
 
     bleService.init();
 

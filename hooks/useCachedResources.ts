@@ -1,6 +1,6 @@
 import { FontAwesome } from '@expo/vector-icons';
 import * as Font from 'expo-font';
-import * as SplashScreen from 'expo-splash-screen';
+import { SplashScreen } from 'expo-router';
 import { useEffect, useState } from 'react';
 
 export default function useCachedResources() {
@@ -10,7 +10,11 @@ export default function useCachedResources() {
   useEffect(() => {
     async function loadResourcesAndDataAsync() {
       try {
-        SplashScreen.preventAutoHideAsync();
+        //SplashScreen.preventAutoHideAsync();
+
+        //wait 2s to simulate a slow loading
+        //await new Promise((resolve) => setTimeout(resolve, 2000));
+
 
         // Load fonts
         await Font.loadAsync({
@@ -22,7 +26,7 @@ export default function useCachedResources() {
         console.warn(e);
       } finally {
         setLoadingComplete(true);
-        SplashScreen.hideAsync();
+        //SplashScreen.hideAsync();
       }
     }
 
