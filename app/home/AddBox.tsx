@@ -12,9 +12,11 @@ import { useEffect, useState } from 'react';
 
 import * as Location from 'expo-location';
 import { LocationObject } from 'expo-location';
-import { BLEServiceInstance } from '../../ble/BLEService';
-import {scanBleDevices,IBLEDevice,stopDeviceScan,clearScannedDevices} from '../../ble/bleSlice';
+//import { BLEServiceInstance } from '../../ble/BLEService';
+import {scanBleDevices,stopDeviceScan,clearScannedDevices} from '../../ble/bleSlice';
+
 import Layout from'../../constants/Layout';
+import { IBLEDevice } from '../../ble/bleSlice.contracts';
 
 
 export default function TabTwoScreen() {
@@ -29,7 +31,7 @@ export default function TabTwoScreen() {
 
   const ble = useAppSelector((state) => state.ble);
   const scannedDevices = useAppSelector((state) => state.ble.deviceScan.devices);
-  const bleService =  BLEServiceInstance;
+ // const bleService =  BLEServiceInstance;
 
   const {
     data: user,
@@ -71,6 +73,8 @@ export default function TabTwoScreen() {
 
 
   async function searchForBox() {
+
+    console.log('searchForBox');
 
     if (isScanning) {
       dispatch(stopDeviceScan({}));
@@ -162,8 +166,7 @@ const DeviceItem = (props: DeviceItemProps) => {
           macAddress: device?.id,
 
         }
-          
-
+        
         ).unwrap().then((result) => {
 
           console.log(result);

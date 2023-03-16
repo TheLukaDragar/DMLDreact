@@ -58,6 +58,13 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <TabBarIcon name="link" color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="BleScreen"
+        options={{
+          title: "Add Box",
+          tabBarIcon: ({ color }) => <TabBarIcon name="link" color={color} />,
+        }}
+      />
     </Tabs>
   );
 }
