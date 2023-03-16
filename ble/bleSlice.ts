@@ -1,4 +1,4 @@
-import { createSlice, Dispatch, PayloadAction } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, Dispatch, PayloadAction } from '@reduxjs/toolkit';
 
 interface BleState {
   periphiralID: string | null;
@@ -6,10 +6,9 @@ interface BleState {
   status: "disconnected" | "connecting" | "connected" | "authenticating" | "authenticated" | "ready";
   demo: boolean;
   log: log[];
+  deviceScan: { devices: [], status: "NetworkState.PENDING", error: '' },
   
 }
-       //{"f":2520.00,"s":5120.00,"p":0.95,"m":1.00,"i":3}
-
 type log = {
   f: number;
   s: number;
@@ -17,8 +16,42 @@ type log = {
   m: number;
   i: number;
 }
+import { BLEServiceInstance } from './BLEService';
+const bleService =  BLEServiceInstance;
 
 
+export const toBLEDeviceVM = (device: any) => {
+  const result = {
+      serviceUUIDs: device.serviceUUIDs,
+      isConnectable: device.isConnectable,
+      overflowServiceUUIDs: device.overflowServiceUUIDs,
+      txPowerLevel: device.txPowerLevel,
+      serviceData: device.serviceData,
+      manufacturerData: device.manufacturerData,
+      name: device.name,
+      mtu: device.mtu,
+      rssi: device.rssi,
+      solicitedServiceUUIDs: device.solicitedServiceUUIDs,
+      localName: device.localName,
+      id: device.id,
+  };
+  return result;
+};
+export interface IBLEDevice {
+  serviceUUIDs: Array<string>;
+  isConnectable: boolean;
+  overflowServiceUUIDs: Array<string>;
+  txPowerLevel: string;
+  serviceData?: any;
+  manufacturerData?: any;
+  name: string;
+  mtu: number;
+  rssi: string;
+  solicitedServiceUUIDs: Array<string>;
+  localName: string;
+  id: string;
+  _manager?: any;
+}
 
 const initialState: BleState = {
   periphiralID: null,
@@ -26,12 +59,63 @@ const initialState: BleState = {
   status: "disconnected",
   demo: false,
   log : [{f: 0, s: 0, p: 0, m: 0, i: 0}],
+  deviceScan: { devices: [], status: "NetworkState.PENDING", error: '' },
 };
+
+const stopScan = () => {
+  console.log('Stopping scan');
+  bleService.manager.stopDeviceScan();
+};
+
+export const scanBleDevices = createAsyncThunk<any, void, { dispatch: Dispatch, state: any }>('ble/scanBleDevices', async (payload, thunkAPI) => {
+
+  console.log('Starting scan');
+
+  try {
+    bleService.manager.startDeviceScan(null, null, async (error, scannedDevice) => {
+          if (error) {
+              console.log('startDeviceScan error: ', error);
+              throw new Error(error.toString());
+          }
+          if (scannedDevice) {
+
+            //check if we exceed the max number of devices
+            if (thunkAPI.getState().ble.deviceScan.devices.length > 20) {
+              thunkAPI.dispatch(stopDeviceScan({}));
+              return;
+            }
+              thunkAPI.dispatch(addScannedDevice({ device: toBLEDeviceVM(scannedDevice) }));
+          }
+      });
+  } catch (error: any) {
+      throw new Error(error.toString);
+  }
+});
 
 const bleSlice = createSlice({
   name: 'ble',
   initialState,
   reducers: {
+
+
+  addScannedDevice(state, action) {
+      const { device } = action.payload;
+      const existingDevices = state.deviceScan.devices.filter(existingDevice => device.id !== existingDevice?.id);
+      
+      const updatedDevices = [device, ...existingDevices];
+      const sorted = updatedDevices.sort((a, b) => {
+          a.rssi = a.rssi || -100;
+          b.rssi = b.rssi || -100;
+          return a.rssi > b.rssi ? -1 : b.rssi > a.rssi ? 1 : 0;
+      });
+      state.deviceScan.devices = sorted as any; //todo fix this
+  },
+  clearScannedDevices(state, action) {
+    state.deviceScan = { devices: [], status: "NetworkState.PENDING", error: '' };
+},
+    stopDeviceScan(state, action) {
+        bleService.manager.stopDeviceScan();
+    },
     setPeriphiralID: (state, action: PayloadAction<string>) => {
       state.periphiralID = action.payload;
       console.log("setConnectedPeripheral: " + action.payload);
@@ -83,14 +167,15 @@ const bleSlice = createSlice({
 
       console.log("setLog: " + action.payload);
       
-    }
+    },
+    
 
 
 
   },
 });
 
-export const { setPeriphiralID, setError, clearError, setStatus, setLog } = bleSlice.actions;
+export const { setPeriphiralID, setError, clearError, setStatus, setLog,addScannedDevice,stopDeviceScan,clearScannedDevices } = bleSlice.actions;
 export default bleSlice.reducer;
 
 

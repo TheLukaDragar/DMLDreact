@@ -56,6 +56,11 @@ interface RegisterWallet {
     username?: string
 }
 
+interface connectBox {
+  macAddress: string
+  did: string
+}
+
 // Define a custom baseQuery with a default base URL and headers
 const baseQuery = fetchBaseQuery({
   baseUrl: 'https://4gkntp89fl.execute-api.eu-central-1.amazonaws.com/development/',
@@ -75,7 +80,7 @@ const baseQuery = fetchBaseQuery({
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery,
-  tagTypes: ['User','AuthMsg'],
+  tagTypes: ['User','AuthMsg','Box'],
   
 
 
@@ -221,6 +226,83 @@ export const apiSlice = createApi({
         
 
     }),
+    //box endpoints
+    getMyBoxes: builder.query<any[], void>({
+        query: () => ({
+            url: '/box',
+            method: 'GET',
+
+        }),
+        transformResponse: (response: any[]) => response,
+        async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+            console.log('getMyBoxes', arg,dispatch);
+            try {
+                const { data } = await queryFulfilled;
+                console.log('data', data);
+              } catch (error) {
+              
+              }
+
+        },
+        providesTags: ['Box'],
+
+    }),
+
+    //get a box data by id
+    getBox: builder.query<any, string>({
+        query: (id) => ({
+            url: `/box/data/${id}`,
+            method: 'GET',
+
+        }),
+        transformResponse: (response: any) => response,
+        async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+            console.log('getBox', arg,dispatch);
+            try {
+                const { data } = await queryFulfilled;
+                console.log('data', data);
+              } catch (error) {}
+
+        }
+
+      }),
+
+      connectBox: builder.mutation<any, connectBox>({
+        query: (body) => ({
+            url: '/box/connect',
+            method: 'POST',
+            body,
+
+        }),
+        transformResponse: (response: any) => response,
+        async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+            console.log('onQueryStarted /box/connect', arg,dispatch);
+            
+            try {
+                const { data } = await queryFulfilled;
+                console.log('data', JSON.stringify(data));
+
+              } catch (error) {
+                console.log('error', JSON.stringify(error));
+              }
+        },
+
+        transformErrorResponse(baseQueryReturnValue, meta, arg) {
+            console.log('transformErrorResponse', baseQueryReturnValue);
+            return baseQueryReturnValue
+        },
+
+      }),
+
+
+
+
+
+
+
+    
+
+
 
 
 
@@ -261,4 +343,7 @@ export const { reducer, middleware } = apiSlice
 
 // Export the endpoint for use in components
 export const { useGetAuthMsgQuery, useRegisterWalletMutation , useLoginWalletMutation,  useGetMeQuery , useLazyGetAuthMsgQuery
+, useGetMyBoxesQuery, useGetBoxQuery, useLazyGetBoxQuery, useLazyGetMyBoxesQuery,useConnectBoxMutation
+
+
 } = apiSlice

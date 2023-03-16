@@ -7,8 +7,11 @@ import {useRouter} from 'expo-router';
 import { useAppDispatch, useAppSelector } from '../../data/hooks';
 
 import secureReducer, { removeToken} from '../../data/secure';
-import { useGetAuthMsgQuery, useGetMeQuery } from '../../data/api';
+import { useGetAuthMsgQuery, useGetMeQuery, useLazyGetMyBoxesQuery } from '../../data/api';
+import { useEffect, useState } from 'react';
 
+import * as Location from 'expo-location';
+import { LocationObject } from 'expo-location';
 
 
 export default function TabTwoScreen() {
@@ -17,6 +20,9 @@ export default function TabTwoScreen() {
 
   const secure = useAppSelector((state) => state.secure);
   const dispatch = useAppDispatch();
+
+  const [location, setLocation] = useState<LocationObject | null>(null);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const {
     data: user,
@@ -27,6 +33,23 @@ export default function TabTwoScreen() {
     refetch
   } = useGetMeQuery();
 
+  const [getMyBoxes,{ data:boxes,isLoading: IsLoadingMsg, error : errorBox, isError : isErrorBox}] = useLazyGetMyBoxesQuery();
+
+
+
+  useEffect(() => {
+    (async () => {
+      
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setErrorMsg('Permission to access location was denied');
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      setLocation(location);
+    })();
+  }, []);
 
 
 
@@ -35,12 +58,33 @@ export default function TabTwoScreen() {
 
       {isSuccess && <Text>{user?.authUser.username}</Text>}
 
+     {location && <Text>latitude: {location.coords.latitude}</Text>}
+      {location && <Text>longitude: {location.coords.longitude}</Text>}
+      {errorMsg && <Text>{errorMsg}</Text>}
+
+
 
       <Button
         onPress={() => dispatch(removeToken())}
         mode="contained"
         style={{marginTop: 20, padding: 10}}>
         Sign out
+      </Button>
+
+      <Text>
+        boxes:
+        { boxes?.map((box) => {
+          return <Text>{box.name}</Text>
+        })}
+
+      </Text>
+
+
+      <Button
+        onPress={() => getMyBoxes()}
+        mode="contained"
+        style={{marginTop: 20, padding: 10}}>
+        get my boxes
       </Button>
 
       <Text style={styles.title}>Tab Two</Text>

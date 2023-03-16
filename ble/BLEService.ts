@@ -363,6 +363,7 @@ class BLEService {
     if(auth === '1') {
       //setup listeners for calibration and battery ...
       //TODO
+      //log name
       return true;
     }else {
       return false;

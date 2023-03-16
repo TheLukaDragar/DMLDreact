@@ -118,11 +118,11 @@ const [Error , setError] = React.useState("");
 
 <Text style={styles.title}>Welcome to DLMD</Text>
 
-{isError && <Text>{error.status}</Text>}
+{/* {isError && <Text>{error.status}</Text>} */}
 
         <Text>
         wallet:
-        {secure.keyChainData.wallet == null ? "null" : secure.keyChainData.wallet}
+        {secure.keyChainData.privateKey == null ? "null" : secure.keyChainData.privateKey}
 
       </Text>
 
