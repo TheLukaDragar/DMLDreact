@@ -94,10 +94,61 @@ async function loadWallet() {
         const data3 = await response3.json();
         console.log('my data', data3);
 
+       let keyy="cQfTjWnZr4u7x!z%"
+
+       //convert to hex string
+         let keyhex = ethers.utils.formatBytes32String(keyy);
+
+         //0x635166546a576e5a7234753778217a25
+         //remove 0x
+            keyhex = keyhex.substring(2);
+            //remove last 32 bytes
+            keyhex = keyhex.substring(0, keyhex.length - 32);
 
 
+        //call create box
+        // const url4 = "https://4gkntp89fl.execute-api.eu-central-1.amazonaws.com/development/box/create"
+        // newbox = {
+        //     "did":"KeyBot_000000000001",
+        //     "macAddress":"E8:6C:AB:36:64:D1",//"F9:E0:C3:CE:C3:14",
+        //     "key":keyhex}
 
+        // console.log('newbox', newbox);
 
+        // const response4 = await fetch(url4, {
+        //     method: 'POST',
+        //     body: JSON.stringify(newbox),
+        //     headers: { 'Content-Type': 'application/json', 'Authorization': token }
+        // });
+        // const data4 = await response4.json();
+        // console.log('create box', data4);
+
+        boxId =2;
+
+        //call get all boxes
+        const url5 = "https://4gkntp89fl.execute-api.eu-central-1.amazonaws.com/development/box/"+boxId+"/data"
+        //add params boxId = 1
+        
+
+        const response5 = await fetch(url5, {
+            method: 'GET',
+            headers: { 'Authorization': token }
+    
+        });
+        console.log('token', token);
+        const data5 = await response5.json();
+        console.log('get all boxes', data5);
+
+        //call get box 
+        const url6 = "https://4gkntp89fl.execute-api.eu-central-1.amazonaws.com/development/box"
+        //get
+        const response6 = await fetch(url6, {
+            method: 'GET',
+            headers: { 'Authorization': token }
+
+        });
+        const data6 = await response6.json();
+        console.log('get boxes', data6);
 
 
 

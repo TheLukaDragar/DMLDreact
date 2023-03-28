@@ -7,6 +7,7 @@ import {store} from '../data/store';
 import useCachedResources from '../hooks/useCachedResources';
 import useColorScheme from '../hooks/useColorScheme';
 import { StatusBar } from "expo-status-bar";
+import { RootSiblingParent } from 'react-native-root-siblings';
 
 import { Provider as PaperProvider } from 'react-native-paper';
 //theme provider
@@ -20,6 +21,7 @@ import {
 import React from 'react';
 
 import { ProviderAuth } from '../auth/provider';
+import BLEManager from '../components/BLEManager/BLEManager';
 
 
 const persistor = persistStore(store);
@@ -59,8 +61,12 @@ export default function RootLayout(): ReactNode {
     <PersistGate loading={null} persistor={persistor}>
       <ProviderAuth>
     <PaperProvider>
+    <RootSiblingParent>  
+    <BLEManager/>
       <Slot/>
       <StatusBar />
+
+    </RootSiblingParent>
     </PaperProvider>
     </ProviderAuth>
     

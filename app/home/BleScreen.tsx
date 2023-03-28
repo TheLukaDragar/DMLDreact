@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FlatList, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, TouchableOpacity,StyleSheet } from 'react-native';
 import { useAppDispatch, useAppSelector } from '../../data/hooks';
 import {
     connectDeviceById, scanBleDevices,
@@ -8,10 +8,15 @@ import {
     selectScannedDevices, stopDeviceScan
 } from '../../ble/bleSlice';
 import { IBLEDevice } from '../../ble/bleSlice.contracts';
+import { Text, View } from '../../components/Themed';
 
 import { MaterialIcons } from '@expo/vector-icons';
 import Toast from 'react-native-root-toast';
 import { Button } from 'react-native-paper';
+import Layout from'../../constants/Layout';
+
+
+
 
 interface DeviceItemProps {
     device: IBLEDevice | null
@@ -48,8 +53,12 @@ const DeviceItem = (props: DeviceItemProps) => {
     }
 
     return (
-        <TouchableOpacity style={{  backgroundColor: (connectedDevice?.id === device?.id)? 'green' : 'white' }} onPress={connectHandler}>
-            <Text style={{ paddingVertical: 10 }}>{device?.name}</Text>
+        <TouchableOpacity style={{  width: Layout.window.width*0.8}} onPress={connectHandler}>
+            <Text style={{ paddingVertical: 10,
+            color: connectedDevice?.id === device?.id ? 'green' : 'white'
+            
+            
+            }}>{device?.name + ' ' + device?.id}</Text>
         </TouchableOpacity>
     )
 }
@@ -111,7 +120,8 @@ const BLEScreen = () => {
     }, [adapterState, bleDevice, isScanning]);
 
     return (
-        <View >
+        <View style={styles.container}>
+            
             <View >
                 <View >
                     <Text >{stateText}</Text>
@@ -128,9 +138,30 @@ const BLEScreen = () => {
                     <DeviceItem device={item} />
                 )}
                 />
-            <Button onPress={scanPressHandler} loading={isScanning} style={{ marginBottom: 10 }} mode="contained" labelStyle={{ color: 'white' }}>{buttonText}</Button>
+            <Button onPress={scanPressHandler} loading={isScanning} style={{ marginBottom: 10 }} mode="contained">{buttonText}</Button>
         </View>
     );
+
+    
 };
+
+const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: 'bold',
+    },
+    separator: {
+      marginVertical: 30,
+      height: 1,
+      width: '80%',
+    },
+  });
+
+
 
 export default BLEScreen;

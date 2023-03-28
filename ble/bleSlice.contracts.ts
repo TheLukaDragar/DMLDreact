@@ -7,7 +7,58 @@ export enum NetworkState {
     ERROR="ERROR",
     CANCELED="CANCELED"
 }
+export enum ConnectionState {
+    DISCONNECTED="connect",
+    SEARCHING="searching",
+    CONNECTING="connecting",
+    DISCONNECTING="disconnecting",
+    AUTHENTICATING="authenticating",
+    READY="ready",
+    ERROR="error",
+}
+export enum SensorState {
+    SENSOR_OK="OK",
+    SENSOR_ERROR="ERROR",
+  PENDING="PENDING"
+}
 
+export enum MidSensorState {
+   PENDING="PENDING",
+   PRESSED="1",
+   RELEASED="0"
+}
+
+export enum ManualMotorControlCommand {
+
+    MOTOR1_FORWARD='0',
+    MOTOR1_BACKWARD= '1',
+    MOTOR2_FORWARD= '2',
+    MOTOR2_BACKWARD= '3'
+}
+
+export enum KeyBotCommand{
+    KEYBOT_PRESS_LEFT = '0',
+    KEYBOT_PRESS_RIGHT = '1',
+    KEYBOT_EMERGENCY_STOP = '2',
+    KEYBOT_CENTER = '3',
+}
+
+export enum KeyBotState {
+    KEYBOT_STATE_IDLE = '0',
+    KEYBOT_PRESSING_LEFT = '1',
+    KEYBOT_PRESSING_RIGHT = '2',
+    KEYBOT_RETURNING_TO_CENTER_FROM_LEFT = '3',
+    KEYBOT_RETURNING_TO_CENTER_FROM_RIGHT = '4',
+    KEYBOT_ERROR_PRESSING_LEFT = '5',
+    KEYBOT_ERROR_PRESSING_RIGHT = '6',
+    KEYBOT_ERROR_RETURNING_TO_CENTER_FROM_LEFT = '7',
+    KEYBOT_ERROR_RETURNING_TO_CENTER_FROM_RIGHT = '8',
+    KEYBOT_STATE_EMERGENCY_RESET = '9',
+    KEYBOT_STATE_CENTERING = ':',
+    KEYBOT_ERROR_CENTERING = ';',
+  };
+
+    
 export interface IBLEDevice {
     serviceUUIDs: Array<string>;
     isConnectable: boolean;
@@ -43,7 +94,7 @@ export const toBLEDeviceVM = (device: any) => {
 };
 
 export interface IDeviceConnectionState {
-    status: NetworkState;
+    status: ConnectionState;
     error: string;
 }
 
@@ -53,9 +104,45 @@ export interface IDeviceScan {
     error: string;
 }
 
+export interface SensorStatus {
+    status: SensorState;
+    error: string;
+}
+
+export interface MidSensorsStatus {
+    sensor_1_status: MidSensorState;
+    sensor_2_status: MidSensorState;
+    error: string;
+}
+
+
+export interface authenticateDeviceParams {
+    solved_challenge: string
+}
+
 export interface connectDeviceByIdParams {
     id: string
 }
+
+export interface linkDeviceByIdParams {
+    id: string
+    name: string
+}
+
+//testbuttonParams
+export interface testbuttonParams {
+    h: string
+}
+//manualMotorControlParams
+export interface manualMotorControlParams {
+    command: ManualMotorControlCommand
+}
+
+export interface keybotCommandParams {
+    command: KeyBotCommand
+}
+
+
 
 export type IAdapterState =
 /**
@@ -84,9 +171,22 @@ export type IAdapterState =
     | 'PoweredOn';
 
 export interface bleSliceInterface {
+    use_demo_device: boolean;
     adapterState: IAdapterState;
     deviceConnectionState: IDeviceConnectionState;
     deviceScan: IDeviceScan;
     locationPermission: Location.LocationPermissionResponse['status'] | null;
     connectedDevice: IBLEDevice | null;
+    logs: string[];
+    sensorStatus: SensorStatus;
+    midSensorsStatus: MidSensorsStatus;
+    keyBotState: {
+        status: KeyBotState;
+        text: string;
+        error: string;
+    },
+    batteryLevel: {
+        level: number;
+        text: string;
+    }
 }
