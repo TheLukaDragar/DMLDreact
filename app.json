@@ -12,6 +12,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "jsEngine": "hermes",
     "updates": {
       "fallbackToCacheTimeout": 0,
       "url": "https://u.expo.dev/36e1a5d9-7e86-47ef-9c3e-a82fb95e09b4"
