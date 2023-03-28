@@ -26,7 +26,8 @@
       "infoPlist": {
         "NSBluetoothAlwaysUsageDescription": "Allow $(PRODUCT_NAME) to connect to bluetooth devices",
         "NSBluetoothPeripheralUsageDescription": "Allow $(PRODUCT_NAME) to connect to bluetooth devices"
-      }
+      },
+      "jsEngine": "jsc"
     },
     "android": {
       "adaptiveIcon": {
