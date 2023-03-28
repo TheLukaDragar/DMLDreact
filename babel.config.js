@@ -10,6 +10,7 @@ module.exports = function(api) {
       production: {
         plugins: ['react-native-paper/babel',
         require.resolve("expo-router/babel"),
+        'react-native-reanimated/plugin',
       ], // making smaller bundle size
 
       },
