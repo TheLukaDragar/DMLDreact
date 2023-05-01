@@ -102,7 +102,7 @@ const [Error , setError] = React.useState("");
             setError(errMsg);
           } else if (isErrorWithMessage(err)) {
             // you can access a string 'message' property here
-            console.log("error with message");
+            console.log("error with message , ",err);
             setError(err.message);
           }
     }

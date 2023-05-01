@@ -7,7 +7,7 @@ import {useRouter} from 'expo-router';
 import { useAppDispatch, useAppSelector } from '../../data/hooks';
 
 import secureReducer, { removeToken} from '../../data/secure';
-import { useGetAuthMsgQuery, useGetMeQuery, useLazyGetMyBoxesQuery,useConnectBoxMutation } from '../../data/api';
+import { useGetAuthMsgQuery, useGetMeQuery, useLazyGetMyBoxesQuery,useConnectBoxMutation, useLazyGetBoxesQuery } from '../../data/api';
 import { useEffect, useState } from 'react';
 
 import * as Location from 'expo-location';
@@ -42,7 +42,7 @@ export default function TabTwoScreen() {
     refetch
   } = useGetMeQuery();
 
-  const [getMyBoxes,{ data:boxes,isLoading: IsLoadingMsg, error : errorBox, isError : isErrorBox}] = useLazyGetMyBoxesQuery();
+  const [getBoxes,{ data:boxes,isLoading: IsLoadingMsg, error : errorBox, isError : isErrorBox}] = useLazyGetBoxesQuery();
   const [isScanning, setIsScanning] = useState(false);
   const [buttonText, setButtonText] = useState('Start Scan');
 
@@ -116,7 +116,7 @@ export default function TabTwoScreen() {
 
 
       <Button
-        onPress={() => getMyBoxes()}
+        onPress={() => getBoxes()}
         mode="contained"
         style={{marginTop: 20, padding: 10}}>
         get my boxes

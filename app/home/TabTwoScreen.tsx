@@ -7,7 +7,7 @@ import {useRouter} from 'expo-router';
 import { useAppDispatch, useAppSelector } from '../../data/hooks';
 
 import secureReducer, { removeToken} from '../../data/secure';
-import { useGetAuthMsgQuery, useGetMeQuery, useLazyGetMyBoxesQuery } from '../../data/api';
+import { useGetAuthMsgQuery, useGetMeQuery, useLazyGetBoxesQuery, useLazyGetMyBoxesQuery } from '../../data/api';
 import { useEffect, useState } from 'react';
 
 import * as Location from 'expo-location';
@@ -33,7 +33,7 @@ export default function TabTwoScreen() {
     refetch
   } = useGetMeQuery();
 
-  const [getMyBoxes,{ data:boxes,isLoading: IsLoadingMsg, error : errorBox, isError : isErrorBox}] = useLazyGetMyBoxesQuery();
+  const [getBoxes,{ data:boxes,isLoading: IsLoadingMsg, error : errorBox, isError : isErrorBox}] = useLazyGetBoxesQuery();
 
 
 
@@ -50,6 +50,18 @@ export default function TabTwoScreen() {
       setLocation(location);
     })();
   }, []);
+
+
+
+
+  async function getBoxesAPI() {
+    await getBoxes().unwrap().then(async (res) => {
+      console.log(res);
+     
+    });
+  }
+
+  
 
 
 
@@ -73,15 +85,30 @@ export default function TabTwoScreen() {
 
       <Text>
         boxes:
-        { boxes?.map((box) => {
-          return <Text>{box.name}</Text>
-        })}
+        {
+          boxes?.total
+        }
+
+        {
+          boxes?.items.map((box) => {
+            return (
+              <Text>
+                {box.id}
+              </Text>
+            )
+          })
+
+
+
+
+        }
+        
 
       </Text>
 
 
       <Button
-        onPress={() => getMyBoxes()}
+        onPress={() => getBoxesAPI()}
         mode="contained"
         style={{marginTop: 20, padding: 10}}>
         get my boxes

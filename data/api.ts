@@ -61,6 +61,53 @@ interface connectBox {
   did: string
 }
 
+interface GetBoxesResponse {
+  items: BoxItem[];
+  total: number;
+}
+
+interface BoxItem{
+  id: number;
+  status: number;
+  _createTime: string;
+  _createUser: number;
+  _updateTime: string;
+  _updateUser: number;
+  macAddress: string;
+  did: string;
+  licensePlate: null;
+  approximateLocation_id: null;
+  preciseLocation_id: null;
+  imageUrl: null;
+  reputationThreshold: null;
+  reputation: null;
+  description: null;
+  user_id: null;
+  permission: null;
+}
+
+
+interface Box {
+  id: number;
+  _createTime: string;
+  _createUser: number;
+  _updateTime: string;
+  _updateUser: number;
+  status: number;
+  did: string;
+  macAddress: string;
+  licensePlate: null;
+  approximateLocation_id: null;
+  approximateLocation: null;
+  preciseLocation_id: null;
+  preciseLocation: null;
+  description: null;
+  imageUrl: null;
+  reputationThreshold: null;
+  reputation: null;
+}
+
+
 // Define a custom baseQuery with a default base URL and headers
 const baseQuery = fetchBaseQuery({
   baseUrl: 'https://4gkntp89fl.execute-api.eu-central-1.amazonaws.com/development/',
@@ -80,7 +127,7 @@ const baseQuery = fetchBaseQuery({
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery,
-  tagTypes: ['User','AuthMsg','Box'],
+  tagTypes: ['User','AuthMsg','Box','Boxes'],
   
 
 
@@ -104,7 +151,7 @@ export const apiSlice = createApi({
 
       
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-        console.log('AuthMsg', arg,dispatch);
+        console.log('AuthMsg started');
         try {
             const { data } = await queryFulfilled;
 
@@ -166,7 +213,7 @@ export const apiSlice = createApi({
         }),
         transformResponse: (response: AuthResponse) => response,
         async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-            console.log('onQueryStarted /auth/login/wallet', arg,dispatch);
+            console.log('onQueryStarted /auth/login/wallet', arg);
             
 
 
@@ -185,7 +232,7 @@ export const apiSlice = createApi({
                 
 
               } catch (error) {
-                console.log('error', error);
+                console.log('error /auth/login/wallet', JSON.stringify(error));
 
 
               }
@@ -227,25 +274,23 @@ export const apiSlice = createApi({
 
     }),
     //box endpoints
-    getMyBoxes: builder.query<any[], void>({
-        query: () => ({
-            url: '/box',
-            method: 'GET',
-
-        }),
-        transformResponse: (response: any[]) => response,
-        async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-            console.log('getMyBoxes', arg,dispatch);
-            try {
-                const { data } = await queryFulfilled;
-                console.log('data', data);
-              } catch (error) {
-              
-              }
-
-        },
-        providesTags: ['Box'],
-
+    getBoxes: builder.query<GetBoxesResponse, void>({
+      query: () => ({
+        url: '/box',
+        method: 'GET',
+      }),
+      transformResponse: (response: GetBoxesResponse) => response,
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('getBoxes called')
+        try {
+          const { data } = await queryFulfilled;
+          console.log('getBoxes data', data);
+        } catch (error) {
+          console.log('getBoxes error', JSON.stringify(error));
+    
+        }
+      },
+      providesTags: ['Boxes'],
     }),
 
     //get a box data by id
@@ -343,7 +388,7 @@ export const { reducer, middleware } = apiSlice
 
 // Export the endpoint for use in components
 export const { useGetAuthMsgQuery, useRegisterWalletMutation , useLoginWalletMutation,  useGetMeQuery , useLazyGetAuthMsgQuery
-, useGetMyBoxesQuery, useGetBoxQuery, useLazyGetBoxQuery, useLazyGetMyBoxesQuery,useConnectBoxMutation
+, useGetBoxesQuery, useGetBoxQuery, useLazyGetBoxQuery, useLazyGetBoxesQuery,useConnectBoxMutation
 
 
 } = apiSlice

@@ -72,6 +72,7 @@ async function loadWallet() {
             "email": "add_box@gmail.com",
             "username": "add_box_admin"
         }
+        console.log('postinglogin', topost);
 
         const url2 = "https://4gkntp89fl.execute-api.eu-central-1.amazonaws.com/development/auth/login/wallet"
         const response2 = await fetch(url2, {
