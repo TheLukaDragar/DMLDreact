@@ -21,21 +21,21 @@ PODS:
     - ExpoModulesCore
   - Expo (48.0.15):
     - ExpoModulesCore
-  - expo-dev-client (2.1.6):
+  - expo-dev-client (2.2.1):
     - EXManifests
     - expo-dev-launcher
     - expo-dev-menu
     - expo-dev-menu-interface
     - EXUpdatesInterface
-  - expo-dev-launcher (2.1.6):
+  - expo-dev-launcher (2.2.1):
     - EXManifests
-    - expo-dev-launcher/Main (= 2.1.6)
+    - expo-dev-launcher/Main (= 2.2.1)
     - expo-dev-menu
     - expo-dev-menu-interface
     - ExpoModulesCore
     - EXUpdatesInterface
     - React-Core
-  - expo-dev-launcher/Main (2.1.6):
+  - expo-dev-launcher/Main (2.2.1):
     - EXManifests
     - expo-dev-launcher/Unsafe
     - expo-dev-menu
@@ -43,24 +43,24 @@ PODS:
     - ExpoModulesCore
     - EXUpdatesInterface
     - React-Core
-  - expo-dev-launcher/Unsafe (2.1.6):
+  - expo-dev-launcher/Unsafe (2.2.1):
     - EXManifests
     - expo-dev-menu
     - expo-dev-menu-interface
     - ExpoModulesCore
     - EXUpdatesInterface
     - React-Core
-  - expo-dev-menu (2.1.4):
-    - expo-dev-menu/Main (= 2.1.4)
+  - expo-dev-menu (2.2.0):
+    - expo-dev-menu/Main (= 2.2.0)
   - expo-dev-menu-interface (1.1.1)
-  - expo-dev-menu/GestureHandler (2.1.4)
-  - expo-dev-menu/Main (2.1.4):
+  - expo-dev-menu/GestureHandler (2.2.0)
+  - expo-dev-menu/Main (2.2.0):
     - EXManifests
     - expo-dev-menu-interface
     - expo-dev-menu/Vendored
     - ExpoModulesCore
     - React-Core
-  - expo-dev-menu/Reanimated (2.1.4):
+  - expo-dev-menu/Reanimated (2.2.0):
     - DoubleConversion
     - FBLazyVector
     - FBReactNativeSpec
@@ -88,8 +88,8 @@ PODS:
     - React-RCTVibration
     - ReactCommon/turbomodule/core
     - Yoga
-  - expo-dev-menu/SafeAreaView (2.1.4)
-  - expo-dev-menu/Vendored (2.1.4):
+  - expo-dev-menu/SafeAreaView (2.2.0)
+  - expo-dev-menu/Vendored (2.2.0):
     - expo-dev-menu/GestureHandler
     - expo-dev-menu/Reanimated
     - expo-dev-menu/SafeAreaView
@@ -449,7 +449,7 @@ PODS:
     - React-Core
   - RNGestureHandler (2.9.0):
     - React-Core
-  - RNReanimated (2.14.4):
+  - RNReanimated (3.1.0):
     - DoubleConversion
     - FBLazyVector
     - FBReactNativeSpec
@@ -703,9 +703,9 @@ SPEC CHECKSUMS:
   EXManifests: 8afcd1cb32f7a098771fbf4b2f19bb1fb937bb47
   EXPermissions: 2291c6736a823b4c680d5bf8e12d3c1c5d11da35
   Expo: 62bba165c9cd30a2983176e7d975ae688b6334b6
-  expo-dev-client: 84792ce20d34fa5c882cdc3ca338ea1b2cde5013
-  expo-dev-launcher: c50f1b78ea294f5762902b768952898d17739983
-  expo-dev-menu: c5f4e620be0eb66efd92a53c3bb12203ddb11df7
+  expo-dev-client: 92b9e487ad6a05a3ad1dda70334729ccaf622bfe
+  expo-dev-launcher: 5275974e9f825f70a33bb79301a8ab894179fa94
+  expo-dev-menu: 3b67916b76bae0283adfe5a5c71e323196e6ad40
   expo-dev-menu-interface: 6c82ae323c4b8724dead4763ce3ff24a2108bdb1
   ExpoDevice: e0bebf68f978b3d353377ce42e73c20c0a070215
   ExpoKeepAwake: 69f5f627670d62318410392d03e0b5db0f85759a
@@ -754,11 +754,11 @@ SPEC CHECKSUMS:
   ReactCommon: 7efec56db1e74f34e24beadcdda6942829d19c4c
   RNCAsyncStorage: 8616bd5a58af409453ea4e1b246521bb76578d60
   RNGestureHandler: 071d7a9ad81e8b83fe7663b303d132406a7d8f39
-  RNReanimated: cc5e3aa479cb9170bcccf8204291a6950a3be128
+  RNReanimated: b1220a0e5168745283ff5d53bfc7d2144b2cee1b
   RNScreens: 218801c16a2782546d30bd2026bb625c0302d70f
   RNVectorIcons: fcc2f6cb32f5735b586e66d14103a74ce6ad61f8
   Yoga: d56980c8914db0b51692f55533409e844b66133c
 
-PODFILE CHECKSUM: eafa318a4fd37f1132b92d60327ee4b0df232be7
+PODFILE CHECKSUM: 3d51bb5c6357a2693f8ee7d8f437e2afeb0b12a0
 
 COCOAPODS: 1.11.3

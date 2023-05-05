@@ -7,7 +7,7 @@ import {useRouter} from 'expo-router';
 import { useAppDispatch, useAppSelector } from '../../data/hooks';
 
 import secureReducer, { removeToken} from '../../data/secure';
-import { useGetAuthMsgQuery, useGetMeQuery, useLazyGetBoxesQuery, useLazyGetMyBoxesQuery } from '../../data/api';
+import { useGetAuthMsgQuery, useGetMeQuery, useLazyGetBoxesQuery } from '../../data/api';
 import { useEffect, useState } from 'react';
 
 import * as Location from 'expo-location';

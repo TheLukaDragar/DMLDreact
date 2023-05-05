@@ -1,16 +1,13 @@
 import { StyleSheet } from 'react-native';
 
-import EditScreenInfo from '../../components/EditScreenInfo';
-import { Text, View } from '../../components/Themed';
+import { useRouter } from 'expo-router';
 import { Button, Snackbar } from 'react-native-paper';
-import {useRouter} from 'expo-router';
+import { Text, View } from '../../components/Themed';
 import { useAppDispatch, useAppSelector } from '../../data/hooks';
 
-import secureReducer, { removeToken} from '../../data/secure';
-import { useEffect } from 'react';
-import { isErrorWithMessage, isFetchBaseQueryError, useGetAuthMsgQuery, useLazyGetAuthMsgQuery, useLoginWalletMutation } from '../../data/api';
-import { ethers, Wallet } from 'ethers';
-import React from 'react';
+import { ethers } from 'ethers';
+import React, { useEffect } from 'react';
+import { isErrorWithMessage, isFetchBaseQueryError, useLazyGetAuthMsgQuery, useLoginWalletMutation } from '../../data/api';
 
 
 
@@ -21,94 +18,62 @@ export default function TabTwoScreen() {
   const secure = useAppSelector((state) => state.secure);
   const dispatch = useAppDispatch();
 
-  const [Login  , { isLoading: isLoginIn }] = useLoginWalletMutation();
+  const [Login, { isLoading: isLoginIn }] = useLoginWalletMutation();
 
-//   const {
-//     data: msg,
-//     isLoading: isGettingMsg,
-//     isSuccess,
-//     isError,
-//     error,
-//     refetch
-//   } = useGetAuthMsgQuery();
+  const [getMessageToSign, { isLoading: IsLoadingMsg }] = useLazyGetAuthMsgQuery();
 
-const [getMessage,{ isLoading: IsLoadingMsg,error,isError }] = useLazyGetAuthMsgQuery();
-
-const [Error , setError] = React.useState("");
+  const [ErrorMessage, setError] = React.useState("");
 
 
 
-  useEffect (() => {
+  useEffect(() => {
 
     //console.log(secure.userData);
 
-    
 
 
 
 
 
 
-  },[])
 
-  //login
+  }, [])
+
   async function login() {
-    //get the token
     try {
+      const msg = await getMessageToSign().unwrap();
+  
+      if (secure.is_wallet_setup === false) {
+        throw new Error("wallet not setup");
+      }
+  
+      console.log(secure.keyChainData?.privateKey!, "private key");
+      console.log(msg?.message!, "message");
+      const signer = new ethers.Wallet(secure.keyChainData?.privateKey!);
+      const signature = await signer.signMessage(msg?.message!);
 
-
-        //todo IT CAN HAPPEN THAT WE DONT GET THE MESSAGE FROM THE SERVER
-        //todo WE NEED TO HANDLE THIS CASE
-
-        //get the message from the server
-        await getMessage().unwrap().then(async (msg) => {
-    
-
-                console.log(secure.keyChainData?.privateKey!,"private key");
-                console.log(msg?.message!,"message");
-                const signer = new ethers.Wallet(secure.keyChainData?.privateKey!);
-                const signature = await signer.signMessage(msg?.message!);
-                //check the signature
-                const recoveredAddress = ethers.utils.verifyMessage(
-                    msg?.message!,
-                    signature
-                );
-
-                console.log(recoveredAddress === signer.address,"recovered address === wallet address");
-
-                await Login({
-                    wallet: signer.address,
-                    signature: signature,
-                    timestamp: msg?.timestamp!,
-                }).unwrap().then((result) => {
-
-                    console.log(result);
-                });
-
-    });
-
-
-
-
-
-
-
-
+      const recoveredAddress = ethers.utils.verifyMessage(msg?.message!, signature);
+  
+      console.log(recoveredAddress === signer.address, "recovered address === wallet address");
+  
+      const result = await Login({
+        wallet: signer.address,
+        signature: signature,
+        timestamp: msg?.timestamp!,
+      }).unwrap();
+  
+      console.log(result);
     } catch (err) {
-        if (isFetchBaseQueryError(err)) {
-            // you can access all properties of `FetchBaseQueryError` here
-            const errMsg = 'error' in err ? err.error : JSON.stringify(err.data)
-            console.log("fetch error");
-            setError(errMsg);
-          } else if (isErrorWithMessage(err)) {
-            // you can access a string 'message' property here
-            console.log("error with message , ",err);
-            setError(err.message);
-          }
+      if (isFetchBaseQueryError(err)) {
+        const errMsg = 'error' in err ? err.error : JSON.stringify(err.data)
+        console.log("fetch error", err);
+        setError(errMsg);
+      } else if (isErrorWithMessage(err)) {
+        console.log("error with message , ", err);
+        setError(err.message);
+      }
     }
-
   }
-
 
 
 
@@ -116,11 +81,9 @@ const [Error , setError] = React.useState("");
   return (
     <View style={styles.container}>
 
-<Text style={styles.title}>Welcome to DLMD</Text>
+      <Text style={styles.title}>Welcome to DLMD</Text>
 
-{/* {isError && <Text>{error.status}</Text>} */}
-
-        <Text>
+      <Text>
         wallet:
         {secure.keyChainData.privateKey == null ? "null" : secure.keyChainData.privateKey}
 
@@ -132,14 +95,14 @@ const [Error , setError] = React.useState("");
 
       </Text>
 
-      
+
 
       <Button
-        onPress={() => router.push('auth/step_1_create_wallet')}
+        onPress={() => router.push('auth/step_1_choose_role')}
         mode="contained"
-        contentStyle={{padding: 20, width: 300}}
-        style={{marginTop: 20}}>
-        
+        contentStyle={{ padding: 20, width: 300 }}
+        style={{ marginTop: 20 }}>
+
         Begin
       </Button>
 
@@ -147,14 +110,23 @@ const [Error , setError] = React.useState("");
         onPress={() => login()}
         loading={isLoginIn || IsLoadingMsg}
         mode="contained"
-        contentStyle={{padding: 20, width: 300}}
-        style={{marginTop: 20}}>
-        
+        contentStyle={{ padding: 20, width: 300 }}
+        style={{ marginTop: 20 }}>
+
         Login
       </Button>
 
+      <Button
+        onPress={() => router.push('auth/intro_1')}
+        mode="contained"
+        contentStyle={{ padding: 20, width: 300 }}
+        style={{ marginTop: 20 }}>
+
+        Intro
+      </Button>
+
       <Snackbar
-        visible={Error != ""}
+        visible={ErrorMessage != ""}
         onDismiss={() => { setError(""); }}
         action={{
           label: 'Ok',
@@ -162,10 +134,10 @@ const [Error , setError] = React.useState("");
             // Do something
 
             setError("");
-            
+
           },
         }}>
-        {Error}
+        {ErrorMessage}
       </Snackbar>
 
     </View>

@@ -1,59 +1,60 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { REHYDRATE } from 'redux-persist';
-import { setToken } from './secure'
-import { RootState } from './store'
+import { setToken } from './secure';
+import { RootState } from './store';
 
 interface User {
+  _createTime: string;
+  _createUser: null;
+  _updateTime: string;
+  _updateUser: null;
+  authUser: {
+    PIN: null;
     _createTime: string;
     _createUser: null;
     _updateTime: string;
     _updateUser: null;
-    authUser: {
-      PIN: null;
-      _createTime: string;
-      _createUser: null;
-      _updateTime: string;
-      _updateUser: null;
-      email: string;
-      id: number;
-      passwordHash: null;
-      permissions: any[];
-      roles: any[];
-      status: number;
-      tableName: string;
-      username: string;
-    };
-    birthDate: null;
-    crypto: null;
-    details: any[];
-    firstName: null;
+    email: string;
     id: number;
-    lastName: null;
-    reputation: null;
+    passwordHash: null;
+    permissions: any[];
+    roles: any[];
     status: number;
     tableName: string;
-    userType: null;
-  }
+    username: string;
+  };
+  birthDate: null;
+  crypto: null;
+  details: any[];
+  firstName: null;
+  id: number;
+  lastName: null;
+  reputation: null;
+  status: number;
+  tableName: string;
+  userType: null;
+}
 
-  
+
 interface AuthResponse { //message to sign
-  authToken: {data: string
-},
+  authToken: {
+    data: string
+  },
   profile: User
 }
 
 interface WalletAuthMsg {
-    message: string
-    timestamp: number
+  message: string
+  timestamp: number
 }
 
 
 interface RegisterWallet {
-    wallet: string,
-    signature: string
-    timestamp: number
-    email?: string
-    username?: string
+  wallet: string,
+  signature: string
+  timestamp: number
+  email?: string
+  username?: string
 }
 
 interface connectBox {
@@ -66,7 +67,7 @@ interface GetBoxesResponse {
   total: number;
 }
 
-interface BoxItem{
+interface BoxItem {
   id: number;
   status: number;
   _createTime: string;
@@ -115,7 +116,7 @@ const baseQuery = fetchBaseQuery({
     const authToken = (getState() as RootState).secure.userData.token
 
     if (authToken) {
-        console.log('authToken', authToken);
+      console.log('authToken', authToken);
       headers.set('Authorization', `Bearer ${authToken}`)
     }
     headers.set('Content-Type', 'application/json')
@@ -127,14 +128,14 @@ const baseQuery = fetchBaseQuery({
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery,
-  tagTypes: ['User','AuthMsg','Box','Boxes'],
-  
+  tagTypes: ['User', 'AuthMsg', 'Box', 'Boxes'],
+
 
 
   //this is used to persist the data from the api in storage (redux-persist)
   extractRehydrationInfo(action, { reducerPath }) {
     if (action.type === REHYDRATE) {
-        console.log('extractRehydrationInfo', action.payload?.[reducerPath]);
+      console.log('extractRehydrationInfo', action.payload?.[reducerPath]);
       return action.payload?.[reducerPath]
     }
   },
@@ -149,128 +150,118 @@ export const apiSlice = createApi({
       transformResponse: (response: WalletAuthMsg) => response,
       providesTags: ['AuthMsg'],
 
-      
+
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         console.log('AuthMsg started');
         try {
-            const { data } = await queryFulfilled;
+          const { data } = await queryFulfilled;
 
-            console.log('AuthMsg completed', data);
-            
-            //works if some cache is already there for the user it will update it
-          } catch (error) {
+          console.info('AuthMsg completed', data);
 
-            console.log('AuthMsg Erorr', error);
+        } catch (error) {
 
+          console.log('AuthMsg Error', JSON.stringify(error));
 
-          }
-    },
+        }
+      },
 
-    
-
-    
-      
     }),
     RegisterWallet: builder.mutation<AuthResponse, RegisterWallet>({
-        query: (body) => ({
-            url: '/auth/register/wallet',
-            method: 'POST',
-            body,
-        }),
-        transformResponse: (response: AuthResponse) => response,
+      query: (body) => ({
+        url: '/auth/register/wallet',
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: AuthResponse) => response,
 
-        // transformErrorResponse: (response: any) => {
-        //     console.log('transformErrorResponse', response);
-        //     return response
-        // },
+      transformErrorResponse: (response: any) => {
+          console.log('/auth/register/wallet', response);
+          return response
+      },
 
-        
-        async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-            console.log('onQueryStarted', arg,dispatch);
-            try {
-                const { data } = await queryFulfilled;
-                dispatch(setToken(data.authToken.data))
 
-                dispatch(apiSlice.util.updateQueryData('getMe', undefined,(draft) => {
-                    console.log('patchResult', draft);
-                    Object.assign(draft, data.profile)
-                  })
-                )
-                //works if some cache is already there for the user it will update it
-              } catch (error) {}
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('onQueryStarted', arg, dispatch);
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(setToken(data.authToken.data))
 
-        },
-        
-        //invalidatesTags: ['User'] //no need to invalidate the user cache as it is updated manually
+          dispatch(apiSlice.util.updateQueryData('getMe', undefined, (draft) => {
+            console.log('patchResult', draft);
+            Object.assign(draft, data.profile)
+          })
+          )
+          //works if some cache is already there for the user it will update it
+        } catch (error) { }
+
+      },
+
+      //invalidatesTags: ['User'] //no need to invalidate the user cache as it is updated manually
 
     }),
     LoginWallet: builder.mutation<AuthResponse, RegisterWallet>({
-        query: (body) => ({
-            url: '/auth/login/wallet',
-            method: 'POST',
-            body,
+      query: (body) => ({
+        url: '/auth/login/wallet',
+        method: 'POST',
+        body,
 
-        }),
-        transformResponse: (response: AuthResponse) => response,
-        async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-            console.log('onQueryStarted /auth/login/wallet', arg);
-            
+      }),
+      transformResponse: (response: AuthResponse) => response,
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.info('onQueryStarted /auth/login/wallet', arg);
 
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(setToken(data.authToken.data))
 
-
-            try {
-                const { data } = await queryFulfilled;
-                dispatch(setToken(data.authToken.data))
-             
-                //mannually update the user cache with the new data
-               dispatch(apiSlice.util.updateQueryData('getMe', undefined,(draft) => {
-                    console.log('patchResult', draft);
-                    Object.assign(draft, data.profile)
-                  })
-                )
-                //works if some cache is already there for the user it will update it
-                
-
-              } catch (error) {
-                console.log('error /auth/login/wallet', JSON.stringify(error));
+          //mannually update the user cache with the new data
+          dispatch(apiSlice.util.updateQueryData('getMe', undefined, (draft) => {
+            console.log('patchResult', draft);
+            Object.assign(draft, data.profile)
+          })
+          )
+          //works if some cache is already there for the user it will update it
 
 
-              }
-
-        },
-
-        transformErrorResponse(baseQueryReturnValue, meta, arg) {
-            console.log('transformErrorResponse', baseQueryReturnValue);
-            return baseQueryReturnValue
-        },
-
-        
+        } catch (error) {
+          //if i need loging
+          //console.log('error /auth/login/wallet', JSON.stringify(error));
 
 
+        }
 
-        //invalidatesTags: ['User'] //no need to invalidate the user cache as it is updated manually
-        
+      },
+
+      transformErrorResponse(baseQueryReturnValue, meta, arg) {
+        //using this to log the error better
+
+        console.log('error /auth/login/wallet', baseQueryReturnValue);
+        return baseQueryReturnValue
+      },
+
+      //invalidatesTags: ['User'] //no need to invalidate the user cache as it is updated manually
+
     }),
-    getMe : builder.query<User, void>({  
-        query: () => ({
-            url: '/users/me',
-            method: 'GET',
+    getMe: builder.query<User, void>({
+      query: () => ({
+        url: '/users/me',
+        method: 'GET',
 
-        }),
-        transformResponse: (response: User) => response,
+      }),
+      transformResponse: (response: User) => response,
 
-        async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-            console.log('onGetme', arg,dispatch);
-            try {
-                const { data } = await queryFulfilled;
-                console.log('data', data);
-              } catch (error) {}
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('onGetme', arg, dispatch);
+        try {
+          const { data } = await queryFulfilled;
+          console.log('data', data);
+        } catch (error) { }
 
-        },
+      },
 
-        providesTags : ['User'],
+      providesTags: ['User'],
 
-        
+
 
     }),
     //box endpoints
@@ -287,7 +278,7 @@ export const apiSlice = createApi({
           console.log('getBoxes data', data);
         } catch (error) {
           console.log('getBoxes error', JSON.stringify(error));
-    
+
         }
       },
       providesTags: ['Boxes'],
@@ -295,49 +286,49 @@ export const apiSlice = createApi({
 
     //get a box data by id
     getBox: builder.query<any, string>({
-        query: (id) => ({
-            url: `/box/data/${id}`,
-            method: 'GET',
+      query: (id) => ({
+        url: `/box/data/${id}`,
+        method: 'GET',
 
-        }),
-        transformResponse: (response: any) => response,
-        async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-            console.log('getBox', arg,dispatch);
-            try {
-                const { data } = await queryFulfilled;
-                console.log('data', data);
-              } catch (error) {}
+      }),
+      transformResponse: (response: any) => response,
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('getBox', arg, dispatch);
+        try {
+          const { data } = await queryFulfilled;
+          console.log('data', data);
+        } catch (error) { }
 
+      }
+
+    }),
+
+    connectBox: builder.mutation<any, connectBox>({
+      query: (body) => ({
+        url: '/box/connect',
+        method: 'POST',
+        body,
+
+      }),
+      transformResponse: (response: any) => response,
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('onQueryStarted /box/connect', arg, dispatch);
+
+        try {
+          const { data } = await queryFulfilled;
+          console.log('data', JSON.stringify(data));
+
+        } catch (error) {
+          console.log('error', JSON.stringify(error));
         }
+      },
 
-      }),
+      transformErrorResponse(baseQueryReturnValue, meta, arg) {
+        console.log('transformErrorResponse', baseQueryReturnValue);
+        return baseQueryReturnValue
+      },
 
-      connectBox: builder.mutation<any, connectBox>({
-        query: (body) => ({
-            url: '/box/connect',
-            method: 'POST',
-            body,
-
-        }),
-        transformResponse: (response: any) => response,
-        async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-            console.log('onQueryStarted /box/connect', arg,dispatch);
-            
-            try {
-                const { data } = await queryFulfilled;
-                console.log('data', JSON.stringify(data));
-
-              } catch (error) {
-                console.log('error', JSON.stringify(error));
-              }
-        },
-
-        transformErrorResponse(baseQueryReturnValue, meta, arg) {
-            console.log('transformErrorResponse', baseQueryReturnValue);
-            return baseQueryReturnValue
-        },
-
-      }),
+    }),
 
 
 
@@ -345,7 +336,7 @@ export const apiSlice = createApi({
 
 
 
-    
+
 
 
 
@@ -355,10 +346,10 @@ export const apiSlice = createApi({
 
 
   }),
-  
+
 })
 
-import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 
 /**
  * Type predicate to narrow an unknown error to `FetchBaseQueryError`
@@ -387,8 +378,8 @@ export function isErrorWithMessage(
 export const { reducer, middleware } = apiSlice
 
 // Export the endpoint for use in components
-export const { useGetAuthMsgQuery, useRegisterWalletMutation , useLoginWalletMutation,  useGetMeQuery , useLazyGetAuthMsgQuery
-, useGetBoxesQuery, useGetBoxQuery, useLazyGetBoxQuery, useLazyGetBoxesQuery,useConnectBoxMutation
+export const { useGetAuthMsgQuery, useRegisterWalletMutation, useLoginWalletMutation, useGetMeQuery, useLazyGetAuthMsgQuery
+  , useGetBoxesQuery, useGetBoxQuery, useLazyGetBoxQuery, useLazyGetBoxesQuery, useConnectBoxMutation
 
 
 } = apiSlice

@@ -1,24 +1,24 @@
-import {ReactNode, useEffect} from 'react';
-import {Slot, Stack, SplashScreen, usePathname, useSearchParams, useSegments, useRouter} from 'expo-router';
-import { PersistGate } from 'redux-persist/integration/react';
-import { persistStore } from 'redux-persist';
-import { Provider } from 'react-redux';
-import {store} from '../data/store';
-import useCachedResources from '../hooks/useCachedResources';
-import useColorScheme from '../hooks/useColorScheme';
+import { Slot, usePathname, useSearchParams } from 'expo-router';
 import { StatusBar } from "expo-status-bar";
+import { ReactNode, useEffect } from 'react';
 import { RootSiblingParent } from 'react-native-root-siblings';
+import { Provider } from 'react-redux';
+import { persistStore } from 'redux-persist';
+import { PersistGate } from 'redux-persist/integration/react';
+import { store } from '../data/store';
+import useColorScheme from '../hooks/useColorScheme';
 
-import { Provider as PaperProvider } from 'react-native-paper';
+import { MD3DarkTheme, Provider as PaperProvider } from 'react-native-paper';
 //theme provider
+import { configureFonts, MD3LightTheme } from 'react-native-paper';
+
+//safe area view
 import {
-  ThemeProvider,
   DarkTheme,
   DefaultTheme,
-  useTheme,
-  NavigationContainer
+  ThemeProvider
 } from "@react-navigation/native";
-import React from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ProviderAuth } from '../auth/provider';
 import BLEManager from '../components/BLEManager/BLEManager';
@@ -34,7 +34,25 @@ export default function RootLayout(): ReactNode {
   const pathname = usePathname();
   const params = useSearchParams();
 
-  
+  const fontConfig = {
+
+    fontFamily: 'sf-pro',
+
+
+    // Include other platforms if needed
+  };
+
+  const DarkTheme_paper = {
+    ...MD3DarkTheme,
+    fonts: configureFonts({ config: fontConfig }),
+  };
+  const LightTheme_paper = {
+    ...MD3LightTheme,
+    fonts: configureFonts({ config: fontConfig }),
+  };
+  //TODO https://callstack.github.io/react-native-paper/docs/guides/theming-with-react-navigation/
+
+
 
 
 
@@ -54,29 +72,34 @@ export default function RootLayout(): ReactNode {
   // } else {
   return (
 
-    
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
 
-    <Provider store={store}>
-    <PersistGate loading={null} persistor={persistor}>
-      <ProviderAuth>
-    <PaperProvider>
-    <RootSiblingParent>  
-    <BLEManager/>
-      <Slot/>
-      <StatusBar />
 
-    </RootSiblingParent>
-    </PaperProvider>
-    </ProviderAuth>
-    
-    </PersistGate>
-    </Provider>
 
-    </ThemeProvider>
-  
+    <SafeAreaProvider>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+
+        <Provider store={store}>
+          <PersistGate loading={null} persistor={persistor}>
+            <ProviderAuth>
+              {/* <PaperProvider theme={colorScheme === 'dark' ? DarkTheme_paper : LightTheme_paper}> */}
+              <PaperProvider>
+                <RootSiblingParent>
+                  <BLEManager />
+                  <Slot />
+                  <StatusBar />
+
+                </RootSiblingParent>
+              </PaperProvider>
+            </ProviderAuth>
+
+          </PersistGate>
+        </Provider>
+
+      </ThemeProvider>
+    </SafeAreaProvider>
+
   );
-  
+
 }
 
 

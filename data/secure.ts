@@ -46,9 +46,12 @@ const secureSlice = createSlice({
             token: ''
         } as UserData,
         loading: true,
+        is_wallet_setup: false,
+        is_user_logged_in: false,
 
     },
-    reducers: {
+    reducers: {      
+
 
     },
     extraReducers: (builder) => {
@@ -57,6 +60,17 @@ const secureSlice = createSlice({
 
             state.keyChainData = action.payload?.keyChainData!;
             state.userData = action.payload?.userData!;
+
+            if (state.keyChainData.mnemonic != null && state.keyChainData.mnemonic != '') {
+                state.is_wallet_setup = true;
+            }
+
+            if (state.userData.token != null && state.userData.token != '') {
+                state.is_user_logged_in = true;
+            }
+
+
+
             //log data here
             console.log('getSecure.fulfilled');
             state.loading = false;
@@ -77,6 +91,7 @@ const secureSlice = createSlice({
         builder.addCase(createWallet.fulfilled, (state, action) => {
             console.log('createWallet.fulfilled');
             state.keyChainData = action.payload?.keyChainData!;
+            state.is_wallet_setup = true;
         }
         );
 
@@ -100,12 +115,14 @@ const secureSlice = createSlice({
         builder.addCase(removeToken.fulfilled, (state, action) => {
             console.log('removeToken.fulfilled');
             state.userData.token = null;
+            state.is_user_logged_in = false;
         }
         );
         //set token
         builder.addCase(setToken.fulfilled, (state, action) => {
             console.log('setToken.fulfilled', action.payload);
             state.userData.token = action.payload;
+            state.is_user_logged_in = true;
         }
         );
         //pending
