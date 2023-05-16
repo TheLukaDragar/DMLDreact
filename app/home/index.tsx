@@ -53,7 +53,7 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
     });
   }
   async function BleConnect() {
-    let connectResult = await dispatch(connectDeviceById({ id: "D7:7F:5F:7D:3B:4A" })).unwrap().then((result) => {
+    let connectResult = await dispatch(connectDeviceById({ id: "EF:26:EC:7A:11:C0" })).unwrap().then((result) => {
       console.log(result);
       return result;
     }).catch((error) => {

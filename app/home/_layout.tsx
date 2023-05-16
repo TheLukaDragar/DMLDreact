@@ -51,6 +51,13 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
         }}
       />
+       <Tabs.Screen
+        name="ConnectBox"
+        options={{
+          title: "ConnectBox",
+          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+        }}
+      />
       <Tabs.Screen
         name="TabTwoScreen"
         options={{

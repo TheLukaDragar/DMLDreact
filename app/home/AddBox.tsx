@@ -7,7 +7,7 @@ import {useRouter} from 'expo-router';
 import { useAppDispatch, useAppSelector } from '../../data/hooks';
 
 import secureReducer, { removeToken} from '../../data/secure';
-import { useGetAuthMsgQuery, useGetMeQuery, useLazyGetMyBoxesQuery,useConnectBoxMutation, useLazyGetBoxesQuery } from '../../data/api';
+import { useGetAuthMsgQuery, useGetMeQuery, useLazyGetMyBoxesQuery,useConnectBoxMutation, useLazyGetBoxesQuery, isFetchBaseQueryError, isErrorWithMessage } from '../../data/api';
 import { useEffect, useState } from 'react';
 
 import * as Location from 'expo-location';
@@ -27,7 +27,8 @@ export default function TabTwoScreen() {
   const dispatch = useAppDispatch();
 
   const [location, setLocation] = useState<LocationObject | null>(null);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [ErrorMessage, setError] = useState("");
+
 
   const ble = useAppSelector((state) => state.ble);
   const scannedDevices = useAppSelector((state) => state.ble.deviceScan.devices);
@@ -55,7 +56,7 @@ export default function TabTwoScreen() {
       
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        setErrorMsg('Permission to access location was denied');
+        setError('Permission to access location was denied');
         return;
       }
 
@@ -64,33 +65,37 @@ export default function TabTwoScreen() {
     })();
   }, []);
 
+  async function getBoxx() {
+    try {
+      const msg = await getBoxes().unwrap();
   
-
+      console.log(msg);
   
-  
-
-
-
-
-  async function searchForBox() {
-
-    console.log('searchForBox');
-
-    if (isScanning) {
-      dispatch(stopDeviceScan({}));
-      setIsScanning(false);
-      setButtonText('Start Scan');
-  }else{
-    dispatch(clearScannedDevices({}));
-    dispatch(scanBleDevices());
-    setIsScanning(true);
-    setButtonText('Stop Scan');
+    
+    } catch (err) {
+      if (isFetchBaseQueryError(err)) {
+        const errMsg = 'error' in err ? err.error : JSON.stringify(err.data)
+        console.log("fetch error", err);
+        setError(errMsg);
+      } else if (isErrorWithMessage(err)) {
+        console.log("error with message , ", err);
+        setError(err.message);
+      }
+    }
   }
 
+
+  
+
+  
   
 
 
-  }
+
+
+
+  
+
 
 
 
@@ -101,44 +106,20 @@ export default function TabTwoScreen() {
 
      {location && <Text>latitude: {location.coords.latitude}</Text>}
       {location && <Text>longitude: {location.coords.longitude}</Text>}
-      {errorMsg && <Text>{errorMsg}</Text>}
+      {ErrorMessage && <Text>{ErrorMessage}</Text>}
 
 
 
       
-      <Text>
-        boxes:
-        { boxes?.map((box) => {
-          return <Text>{box.name}</Text>
-        })}
-
-      </Text>
+     
 
 
       <Button
-        onPress={() => getBoxes()}
+        onPress={() => getBoxx()}
         mode="contained"
         style={{marginTop: 20, padding: 10}}>
         get my boxes
       </Button>
-
-      <Button
-        onPress={() => searchForBox()}
-        mode="contained"
-        icon={'bluetooth'}
-        style={{marginTop: 20, padding: 10}}>
-        {buttonText}
-      </Button>
-
-      <FlatList
-                style={{ height: '100%' }}
-                contentContainerStyle={{ width: '100%', justifyContent: 'center' }}
-                data={scannedDevices}
-                renderItem={({ item }) => (
-                    <DeviceItem device={item} />
-                )}
-                />
-
 
       <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
     </View>
@@ -147,45 +128,6 @@ export default function TabTwoScreen() {
 
 interface DeviceItemProps {
   device: IBLEDevice | null
-}
-
-const DeviceItem = (props: DeviceItemProps) => {
-  const { device } = props;
-  const [isConnecting, setIsConnecting] = useState(false);
-  const dispatch = useAppDispatch();
-  const [Connect  , { isLoading: isConnectingBox, isSuccess: isConnectingBoxSuccess, isError: isConnectingBoxError, error: errorConnectingBox }] = useConnectBoxMutation();
-
-
-  const connectHandler = async () => {
-    if (isConnecting) return;
-    if (device?.id){
-        setIsConnecting(true);
-
-        await Connect({
-          did: device?.name,
-          macAddress: device?.id,
-
-        }
-        
-        ).unwrap().then((result) => {
-
-          console.log(result);
-      });
-
-
-        
-        setIsConnecting(false);
-    }
-    else {
-       console.log('no device id')
-    }
-}
-
-  return (
-    <TouchableOpacity style={{ width: Layout.window.width*0.8}} onPress={connectHandler}>
-    <Text style={{ paddingVertical: 10 }}>{device?.name}</Text>
-</TouchableOpacity>
-  )
 }
 
 const styles = StyleSheet.create({

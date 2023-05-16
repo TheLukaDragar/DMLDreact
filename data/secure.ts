@@ -62,7 +62,8 @@ const secureSlice = createSlice({
             state.userData = action.payload?.userData!;
 
             if (state.keyChainData.mnemonic != null && state.keyChainData.mnemonic != '') {
-                state.is_wallet_setup = true;
+                //state.is_wallet_setup = true;
+                //TODO ENABLE 
             }
 
             if (state.userData.token != null && state.userData.token != '') {
@@ -235,6 +236,9 @@ export const createWallet = createAsyncThunk(
         if (!pin || pin.length !== 4) {
             return thunkAPI.rejectWithValue('pin must be 4 digits');
         }
+
+        //delays for testing
+        await new Promise((resolve) => setTimeout(resolve, 5000));
 
         //create new wallet //gimly
         try {
