@@ -1,97 +1,148 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { REHYDRATE } from 'redux-persist';
-import { setToken } from './secure'
-import { RootState } from './store'
-
+import { setToken } from './secure';
+import { RootState } from './store';
 interface User {
+  _createTime: string;
+  _createUser: null;
+  _updateTime: string;
+  _updateUser: null;
+  authUser: {
+    PIN: null;
     _createTime: string;
     _createUser: null;
     _updateTime: string;
     _updateUser: null;
-    authUser: {
-      PIN: null;
-      _createTime: string;
-      _createUser: null;
-      _updateTime: string;
-      _updateUser: null;
-      email: string;
-      id: number;
-      passwordHash: null;
-      permissions: any[];
-      roles: any[];
-      status: number;
-      tableName: string;
-      username: string;
-    };
-    birthDate: null;
-    crypto: null;
-    details: any[];
-    firstName: null;
+    email: string;
     id: number;
-    lastName: null;
-    reputation: null;
+    passwordHash: null;
+    permissions: any[];
+    roles: any[];
     status: number;
     tableName: string;
-    userType: null;
-  }
-
-  
+    username: string;
+  };
+  birthDate: null;
+  crypto: null;
+  details: any[];
+  firstName: null;
+  id: number;
+  lastName: null;
+  reputation: null;
+  status: number;
+  tableName: string;
+  userType: null;
+}
 interface AuthResponse { //message to sign
-  authToken: {data: string
-},
+  authToken: {
+    data: string
+  },
   profile: User
 }
-
 interface WalletAuthMsg {
-    message: string
-    timestamp: number
+  message: string
+  timestamp: number
 }
-
-
 interface RegisterWallet {
-    wallet: string,
-    signature: string
-    timestamp: number
-    email?: string
-    username?: string
+  wallet: string,
+  signature: string
+  timestamp: number
+  email?: string
+  username?: string
 }
-
 interface connectBox {
   macAddress: string
   did: string
 }
+interface GetBoxesResponse {
+  items: BoxItem[];
+  total: number;
+}
+interface BoxItem {
+  id: number;
+  status: number;
+  _createTime: string;
+  _createUser: number;
+  _updateTime: string;
+  _updateUser: number;
+  macAddress: string;
+  did: string;
+  licensePlate: null;
+  approximateLocation_id: null;
+  preciseLocation_id: null;
+  imageUrl: null;
+  reputationThreshold: null;
+  reputation: null;
+  description: null;
+  user_id: null;
+  permission: null;
+}
+interface Box {
+  id: number;
+  _createTime: string;
+  _createUser: number;
+  _updateTime: string;
+  _updateUser: number;
+  status: number;
+  did: string;
+  macAddress: string;
+  licensePlate: null;
+  approximateLocation_id: null;
+  approximateLocation: null;
+  preciseLocation_id: null;
+  preciseLocation: null;
+  description: null;
+  imageUrl: null;
+  reputationThreshold: null;
+  reputation: null;
+}
+
+interface ApproximateLocation {
+  name?: string;
+  latitude: number;
+  longitude: number;
+  inaccuracy: number;
+}
+interface PreciseLocation {
+  latitude: number;
+  longitude: number;
+  inaccuracy: number;
+}
+interface setBoxPreciseLocation{
+  boxId: number;
+  preciseLocation: PreciseLocation;
+}
+
+
+
+
+
 
 // Define a custom baseQuery with a default base URL and headers
 const baseQuery = fetchBaseQuery({
   baseUrl: 'https://4gkntp89fl.execute-api.eu-central-1.amazonaws.com/development/',
   prepareHeaders: (headers: Headers, { getState }) => {
     const authToken = (getState() as RootState).secure.userData.token
-
     if (authToken) {
-        console.log('authToken', authToken);
+      console.log('authToken', authToken);
       headers.set('Authorization', `Bearer ${authToken}`)
     }
     headers.set('Content-Type', 'application/json')
     return headers
   },
 })
-
 // Define the RTK Query API slice
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery,
-  tagTypes: ['User','AuthMsg','Box'],
-  
-
-
+  tagTypes: ['User', 'AuthMsg', 'Box', 'Boxes'],
   //this is used to persist the data from the api in storage (redux-persist)
   extractRehydrationInfo(action, { reducerPath }) {
     if (action.type === REHYDRATE) {
-        console.log('extractRehydrationInfo', action.payload?.[reducerPath]);
+      console.log('extractRehydrationInfo', action.payload?.[reducerPath]);
       return action.payload?.[reducerPath]
     }
   },
-
   endpoints: (builder) => ({
     // Define the endpoint for the auth message
     getAuthMsg: builder.query<WalletAuthMsg, void>({
@@ -101,198 +152,249 @@ export const apiSlice = createApi({
       }),
       transformResponse: (response: WalletAuthMsg) => response,
       providesTags: ['AuthMsg'],
-
-      
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-        console.log('AuthMsg', arg,dispatch);
+        console.log('AuthMsg started');
         try {
-            const { data } = await queryFulfilled;
-
-            console.log('AuthMsg completed', data);
-            
-            //works if some cache is already there for the user it will update it
-          } catch (error) {
-
-            console.log('AuthMsg Erorr', error);
-
-
-          }
-    },
-
-    
-
-    
-      
+          const { data } = await queryFulfilled;
+          console.info('AuthMsg completed', data);
+        } catch (error) {
+          console.log('AuthMsg Error', JSON.stringify(error));
+        }
+      },
     }),
     RegisterWallet: builder.mutation<AuthResponse, RegisterWallet>({
-        query: (body) => ({
-            url: '/auth/register/wallet',
-            method: 'POST',
-            body,
-        }),
-        transformResponse: (response: AuthResponse) => response,
-
-        // transformErrorResponse: (response: any) => {
-        //     console.log('transformErrorResponse', response);
-        //     return response
-        // },
-
-        
-        async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-            console.log('onQueryStarted', arg,dispatch);
-            try {
-                const { data } = await queryFulfilled;
-                dispatch(setToken(data.authToken.data))
-
-                dispatch(apiSlice.util.updateQueryData('getMe', undefined,(draft) => {
-                    console.log('patchResult', draft);
-                    Object.assign(draft, data.profile)
-                  })
-                )
-                //works if some cache is already there for the user it will update it
-              } catch (error) {}
-
-        },
-        
-        //invalidatesTags: ['User'] //no need to invalidate the user cache as it is updated manually
-
+      query: (body) => ({
+        url: '/auth/register/wallet',
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: AuthResponse) => response,
+      transformErrorResponse: (response: any) => {
+          console.log('/auth/register/wallet', response);
+          return response
+      },
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('onQueryStarted', arg, dispatch);
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(setToken(data.authToken.data))
+          dispatch(apiSlice.util.updateQueryData('getMe', undefined, (draft) => {
+            console.log('patchResult', draft);
+            Object.assign(draft, data.profile)
+          })
+          )
+          //works if some cache is already there for the user it will update it
+        } catch (error) { }
+      },
+      //invalidatesTags: ['User'] //no need to invalidate the user cache as it is updated manually
     }),
     LoginWallet: builder.mutation<AuthResponse, RegisterWallet>({
-        query: (body) => ({
-            url: '/auth/login/wallet',
-            method: 'POST',
-            body,
-
-        }),
-        transformResponse: (response: AuthResponse) => response,
-        async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-            console.log('onQueryStarted /auth/login/wallet', arg,dispatch);
-            
-
-
-
-            try {
-                const { data } = await queryFulfilled;
-                dispatch(setToken(data.authToken.data))
-             
-                //mannually update the user cache with the new data
-               dispatch(apiSlice.util.updateQueryData('getMe', undefined,(draft) => {
-                    console.log('patchResult', draft);
-                    Object.assign(draft, data.profile)
-                  })
-                )
-                //works if some cache is already there for the user it will update it
-                
-
-              } catch (error) {
-                console.log('error', error);
-
-
-              }
-
-        },
-
-        transformErrorResponse(baseQueryReturnValue, meta, arg) {
-            console.log('transformErrorResponse', baseQueryReturnValue);
-            return baseQueryReturnValue
-        },
-
-        
-
-
-
-        //invalidatesTags: ['User'] //no need to invalidate the user cache as it is updated manually
-        
+      query: (body) => ({
+        url: '/auth/login/wallet',
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: AuthResponse) => response,
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.info('onQueryStarted /auth/login/wallet', arg);
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(setToken(data.authToken.data))
+          //mannually update the user cache with the new data
+          dispatch(apiSlice.util.updateQueryData('getMe', undefined, (draft) => {
+            console.log('patchResult', draft);
+            Object.assign(draft, data.profile)
+          })
+          )
+          //works if some cache is already there for the user it will update it
+        } catch (error) {
+          //if i need loging
+          //console.log('error /auth/login/wallet', JSON.stringify(error));
+        }
+      },
+      transformErrorResponse(baseQueryReturnValue, meta, arg) {
+        //using this to log the error better
+        console.log('error /auth/login/wallet', baseQueryReturnValue);
+        return baseQueryReturnValue
+      },
+      //invalidatesTags: ['User'] //no need to invalidate the user cache as it is updated manually
     }),
-    getMe : builder.query<User, void>({  
-        query: () => ({
-            url: '/users/me',
-            method: 'GET',
-
-        }),
-        transformResponse: (response: User) => response,
-
-        async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-            console.log('onGetme', arg,dispatch);
-            try {
-                const { data } = await queryFulfilled;
-                console.log('data', data);
-              } catch (error) {}
-
-        },
-
-        providesTags : ['User'],
-
-        
-
+    getMe: builder.query<User, void>({
+      query: () => ({
+        url: '/users/me',
+        method: 'GET',
+      }),
+      transformResponse: (response: User) => response,
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('onGetme', arg, dispatch);
+        try {
+          const { data } = await queryFulfilled;
+          console.log('data', data);
+        } catch (error) { }
+      },
+      providesTags: ['User'],
     }),
     //box endpoints
-    getMyBoxes: builder.query<any[], void>({
-        query: () => ({
-            url: '/box',
-            method: 'GET',
+    getBoxes: builder.query<GetBoxesResponse, void>({
+      query: () => ({
+        url: '/box',
+        method: 'GET',
+      }),
+      transformResponse: (response: GetBoxesResponse) => response,
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.info('onQueryStarted /box')
+        try {
+          const { data } = await queryFulfilled;
+          console.log('getBoxes data', data);
+        } catch (error) {}
+      },
+      transformErrorResponse: (response: any) => {
+        console.log('error /box', response);
+        return response
+      },
+      providesTags: ['Boxes'],
+    }),
+    //get a box data by id
+    getBox: builder.query<any, string>({
+      query: (id) => ({
+        url: `/box/data/${id}`,
+        method: 'GET',
+      }),
+      transformResponse: (response: any) => response,
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('getBox', arg, dispatch);
+        try {
+          const { data } = await queryFulfilled;
+          console.log('data', data);
+        } catch (error) { }
+      }
+    }),
+    connectBox: builder.mutation<any, connectBox>({
+      query: (body) => ({
+        url: '/box/connect',
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: any) => response,
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('onQueryStarted /box/connect', arg, dispatch);
+        try {
+          const { data } = await queryFulfilled;
+          console.log('data', JSON.stringify(data));
+        } catch (error) {
+        }
+      },
+      transformErrorResponse: (response: any) => {
+        console.log('error /box/connect', response);
+        return response
+      },
+    }),
 
-        }),
-        transformResponse: (response: any[]) => response,
-        async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-            console.log('getMyBoxes', arg,dispatch);
-            try {
-                const { data } = await queryFulfilled;
-                console.log('data', data);
-              } catch (error) {
-              
-              }
+    ///location/box/:boxId/precise
 
-        },
-        providesTags: ['Box'],
+    setBoxPreciseLocation: builder.mutation<any, setBoxPreciseLocation>({
+      query: (body) => {
+        const { boxId, preciseLocation } = body;
+        return {
+          url: `/location/box/${boxId}/precise`,
+          method: 'POST',
+          body: preciseLocation,
+        };
+      },
+      transformResponse: (response: any) => response,
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('onQueryStarted /location/box/precise', arg, dispatch);
+        try {
+          const { data } = await queryFulfilled;
+          console.log('/location/box/precise fulfiled', JSON.stringify(data));
+        } catch (error) {
+        }
+      },
+      transformErrorResponse: (response: any) => {
+        console.log('error /location/box/precise', response);
+        return response
+      },
+
+      invalidatesTags: ['Boxes']
+
+      //todo update the cache with the new location
 
     }),
 
-    //get a box data by id
-    getBox: builder.query<any, string>({
-        query: (id) => ({
-            url: `/box/data/${id}`,
-            method: 'GET',
+    // Note that when listing boxes using box API, preciseLocation is already populated,
+    //  meaning this endpoint doesn't need to be called when box is loaded initially.
+    //   You should only call this endpoint when refreshing precise location for a box
+    //    without refreshing the entire box.
 
-        }),
-        transformResponse: (response: any) => response,
-        async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-            console.log('getBox', arg,dispatch);
-            try {
-                const { data } = await queryFulfilled;
-                console.log('data', data);
-              } catch (error) {}
+    getBoxPreciseLocation: builder.query<any, string>({
+      query: (id) => ({
+        url: `/location/box/precise/${id}`,
+        method: 'GET',
+      }),
+      transformResponse: (response: any) => response,
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('getBoxPreciseLocation', arg, dispatch);
+        try {
+          const { data } = await queryFulfilled;
+          console.log('/location/box/precise fulfiled', JSON.stringify(data));
+        } catch (error) { }
+      },
+      transformErrorResponse: (response: any) => {
+        console.log('error /location/box/precise', response);
+        return response
+      }
 
+    }),
+
+
+
+
+      
+
+
+
+
+
+
+    createApproximateLocation: builder.mutation<any, ApproximateLocation>({
+      query: (body) => ({
+        url: '/location/create',
+        method: 'POST',
+        body,}),
+
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('onQueryStarted /location/create', arg, dispatch);
+        try {
+          const { data } = await queryFulfilled;
+          console.log('/location/create fulfiled', JSON.stringify(data));
+        } catch (error) {
         }
+      },
+      transformErrorResponse: (response: any) => {
+        console.log('error /location/create', response);
+        return response
+      },
 
-      }),
+    }),
 
-      connectBox: builder.mutation<any, connectBox>({
-        query: (body) => ({
-            url: '/box/connect',
-            method: 'POST',
-            body,
-
-        }),
-        transformResponse: (response: any) => response,
-        async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-            console.log('onQueryStarted /box/connect', arg,dispatch);
-            
-            try {
-                const { data } = await queryFulfilled;
-                console.log('data', JSON.stringify(data));
-
-              } catch (error) {
-                console.log('error', JSON.stringify(error));
-              }
-        },
-
-        transformErrorResponse(baseQueryReturnValue, meta, arg) {
-            console.log('transformErrorResponse', baseQueryReturnValue);
-            return baseQueryReturnValue
-        },
-
-      }),
+    updateApproximateLocation: builder.mutation<any, ApproximateLocation>({
+      query: (body) => ({
+        url: '/location/update',
+        method: 'POST',
+        body,}),
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('onQueryStarted /location/update', arg, dispatch);
+        try {
+          const { data } = await queryFulfilled;
+          console.log('/location/update fulfiled', JSON.stringify(data));
+        } catch (error) {
+        }
+      },
+      transformErrorResponse: (response: any) => {
+        console.log('error /location/update', response);
+        return response
+      },
+    }),
 
 
 
@@ -300,7 +402,7 @@ export const apiSlice = createApi({
 
 
 
-    
+
 
 
 
@@ -310,11 +412,8 @@ export const apiSlice = createApi({
 
 
   }),
-  
 })
-
-import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
-
+import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 /**
  * Type predicate to narrow an unknown error to `FetchBaseQueryError`
  */
@@ -323,7 +422,6 @@ export function isFetchBaseQueryError(
 ): error is FetchBaseQueryError {
   return typeof error === 'object' && error != null && 'status' in error
 }
-
 /**
  * Type predicate to narrow an unknown error to an object with a string 'message' property
  */
@@ -337,13 +435,9 @@ export function isErrorWithMessage(
     typeof (error as any).message === 'string'
   )
 }
-
 // Export the reducer and middleware separately
 export const { reducer, middleware } = apiSlice
-
 // Export the endpoint for use in components
-export const { useGetAuthMsgQuery, useRegisterWalletMutation , useLoginWalletMutation,  useGetMeQuery , useLazyGetAuthMsgQuery
-, useGetMyBoxesQuery, useGetBoxQuery, useLazyGetBoxQuery, useLazyGetMyBoxesQuery,useConnectBoxMutation
-
-
+export const { useGetAuthMsgQuery, useRegisterWalletMutation, useLoginWalletMutation, useGetMeQuery, useLazyGetAuthMsgQuery
+  , useGetBoxesQuery, useGetBoxQuery, useLazyGetBoxQuery, useLazyGetBoxesQuery, useConnectBoxMutation, useSetBoxPreciseLocationMutation, useGetBoxPreciseLocationQuery, useCreateApproximateLocationMutation, useUpdateApproximateLocationMutation
 } = apiSlice

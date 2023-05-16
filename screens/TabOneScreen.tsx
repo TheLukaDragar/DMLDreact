@@ -15,10 +15,10 @@ import { setLoading } from '../data/store';
 import { useAppDispatch, useAppSelector } from '../data/hooks';
 import { ActivityIndicator, MD2Colors } from 'react-native-paper';
 //bleslice
-import {setLog, setPeriphiralID, setStatus } from '../ble/bleSlice';
+//import {setLog, setPeriphiralID, setStatus } from '../ble/bleSlice';
 import { Buffer } from 'buffer'
 //bleservice
-import  { BLEServiceInstance } from '../ble/BLEService';
+//import  { BLEServiceInstance } from '../ble/BLEService';
 
 
 
@@ -31,7 +31,7 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
   const loading = useAppSelector((state) => state.loading);
   const secure = useAppSelector((state) => state.secure);
   const ble = useAppSelector((state) => state.ble);
-  const bleService =  BLEServiceInstance;
+  //const bleService =  BLEServiceInstance;
 
   const [calibMode, setCalibMode] = useState(false);
 
@@ -48,9 +48,9 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
   useEffect(() => {
    // dispatch(getMnemonic());
     //bleService.setDemo(true);
-    dispatch(setPeriphiralID('F9:E0:C3:CE:C3:14'));
+    //dispatch(setPeriphiralID('F9:E0:C3:CE:C3:14'));
 
-    bleService.init();
+    //bleService.init();
 
    
 
@@ -70,87 +70,87 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
   async function BleConnect() {
 
 
-    try {
+    //try {
 
-      dispatch(setStatus('connecting'));
-      let challenge = await bleService.connect(ble.periphiralID!);
+    //   dispatch(setStatus('connecting'));
+    //   let challenge = await bleService.connect(ble.periphiralID!);
 
-      bleService.onDisconnect(() => {
-        console.log('disconnected UI');
-        dispatch(setStatus('disconnected'));
-      });
+    //   bleService.onDisconnect(() => {
+    //     console.log('disconnected UI');
+    //     dispatch(setStatus('disconnected'));
+    //   });
 
-      dispatch(setStatus('connected'));
-      console.log(challenge);
+    //   dispatch(setStatus('connected'));
+    //   console.log(challenge);
     
-      let solution = bleService.solveChallenge(challenge!);
-      dispatch(setStatus('authenticating'));
+    //   let solution = bleService.solveChallenge(challenge!);
+    //   dispatch(setStatus('authenticating'));
 
-      let auth = await bleService.authenticate(solution);
-      console.log(auth);
+    //   let auth = await bleService.authenticate(solution);
+    //   console.log(auth);
     
      
-      if (auth) {
-        dispatch(setStatus('authenticated'));
-        dispatch(setStatus('ready'));
+    //   if (auth) {
+    //     dispatch(setStatus('authenticated'));
+    //     dispatch(setStatus('ready'));
 
-        //read calibration mode
-        let calib = await bleService.readCalibrationMode();
-        console.log("mode :",calib);
-        if (calib == '1') {
-          setCalibMode(true);
-        }else{
-          setCalibMode(false);
-        }
+    //     //read calibration mode
+    //     let calib = await bleService.readCalibrationMode();
+    //     console.log("mode :",calib);
+    //     if (calib == '1') {
+    //       setCalibMode(true);
+    //     }else{
+    //       setCalibMode(false);
+    //     }
 
 
-        bleService.onCalibrationChange((error,state) => {
-          if (error) {
-            console.log(error);
-          }else{
-            console.log(state);
+    //     bleService.onCalibrationChange((error,state) => {
+    //       if (error) {
+    //         console.log(error);
+    //       }else{
+    //         console.log(state);
         
-          }
+    //       }
 
           
-        });
+    //     });
 
-        bleService.onLog((error,log) => {
-          if (error) {
-            console.log(error);
-          }
-          else{
-            //custom log with yellow color
-           console.log("BLE LOG:"+ log);
+    //     bleService.onLog((error,log) => {
+    //       if (error) {
+    //         console.log(error);
+    //       }
+    //       else{
+    //         //custom log with yellow color
+    //        console.log("BLE LOG:"+ log);
 
-           dispatch(setLog(log!));
+    //        dispatch(setLog(log!));
             
-          }
-        });
+    //       }
+    //     });
 
-      }else{
-        await bleService.disconnect();
-        dispatch(setStatus('disconnected'));
+    //   }else{
+    //     await bleService.disconnect();
+    //     dispatch(setStatus('disconnected'));
 
-      }
-    }
-    catch (e) {
-      alert(e);
-      if (e == 'Error: Already connected') {
-        dispatch(setStatus('connected'));
-      }
+    //   }
+    // }
+    // catch (e) {
+    //   alert(e);
+    //   if (e == 'Error: Already connected') {
+    //     dispatch(setStatus('connected'));
+    //   }
 
-    }
+    //}
   }
 
   async function BleDisconnect() {
-    try {
-      await bleService.disconnect();
-      dispatch(setStatus('disconnected'));
-    }
-    catch (e) {
-      alert(e);
-    }
+    // try {
+    //   await bleService.disconnect();
+    //   dispatch(setStatus('disconnected'));
+    // }
+    // catch (e) {
+    //   alert(e);
+    // }
   }
 
 
@@ -165,31 +165,31 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
 
 
   async function BleWriteCalibrationMode(): Promise<void> {
-    try {
-      await bleService.writeCalibrationMode(calibMode? '0' : '1');
-      //setCalibMode(!calibMode);
-      console.log('calibration mode set to: ' + calibMode);
-      let calib = await bleService.readCalibrationMode();
-      console.log("mode :",calib);
+    // try {
+    //   await bleService.writeCalibrationMode(calibMode? '0' : '1');
+    //   //setCalibMode(!calibMode);
+    //   console.log('calibration mode set to: ' + calibMode);
+    //   let calib = await bleService.readCalibrationMode();
+    //   console.log("mode :",calib);
 
-      setCalibMode(!(calib == '0'));
+    //   setCalibMode(!(calib == '0'));
 
 
       
-    }
-    catch (e) {
-      alert(e);
-    }
+    // }
+    // catch (e) {
+    //   alert(e);
+    // }
   }
 
   return (
     <View style={styles.container}>
-
+{/* 
       <Text style={styles.log}> freqency: {ble.log[ble.log.length -1].f} Hz</Text>
       <Text style={styles.log}> sampling rate: {ble.log[ble.log.length -1].s} Hz</Text>
       <Text style={styles.log}> percent above 0.3: {ble.log[ble.log.length -1].p}%</Text>
       <Text style={styles.log}> max value: {ble.log[ble.log.length -1].m}</Text>
-      <Text style={styles.log}> max val index: {ble.log[ble.log.length -1].i}</Text>
+      <Text style={styles.log}> max val index: {ble.log[ble.log.length -1].i}</Text> */}
 
      
 
@@ -229,19 +229,19 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
       </View> */}
 
       <ActivityIndicator animating={loading} color={MD2Colors.blue500} />
-
+{/* 
       <Button mode="contained" onPress={() => BleWriteCalibrationMode() }  style={{marginTop: 20,} } 
       disabled={ble.status !== 'ready'}
       >
        Mode: {calibMode? 'FSK' : 'ASK'}
-      </Button>
+      </Button> */}
 
      
 
-      <Button icon="bluetooth" mode="contained" onPress={() => BleConnect() } style={{marginTop: 20, padding: 10}}
+      {/* <Button icon="bluetooth" mode="contained" onPress={() => BleConnect() } style={{marginTop: 20, padding: 10}}
       >
         {ble.status}
-      </Button>
+      </Button> */}
 
      
 

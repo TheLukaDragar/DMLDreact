@@ -45,6 +45,20 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="TabLog"
+        options={{
+          title: "log",
+          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+        }}
+      />
+       <Tabs.Screen
+        name="ConnectBox"
+        options={{
+          title: "ConnectBox",
+          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="TabTwoScreen"
         options={{
           title: "Tab Two",
@@ -53,6 +67,13 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="AddBox"
+        options={{
+          title: "Add Box",
+          tabBarIcon: ({ color }) => <TabBarIcon name="link" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="BleScreen"
         options={{
           title: "Add Box",
           tabBarIcon: ({ color }) => <TabBarIcon name="link" color={color} />,

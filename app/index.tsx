@@ -3,10 +3,9 @@
 import { StyleSheet } from 'react-native';
 
 import { Text, View } from '../components/Themed';
-import { Button } from 'react-native-paper';
-import {Slot, SplashScreen, useRouter} from 'expo-router';
+import {SplashScreen, useRouter} from 'expo-router';
 import { useAppDispatch, useAppSelector } from '../data/hooks';
-import { getSecure, getToken,removeToken } from '../data/secure';
+import { getSecure } from '../data/secure';
 import { useEffect } from 'react';
 import useCachedResources from '../hooks/useCachedResources';
 

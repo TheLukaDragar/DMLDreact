@@ -4,10 +4,25 @@
  */
 
 import {
+  SafeAreaView as DefaultSafeAreaView,
   Text as DefaultText,
-  useColorScheme,
   View as DefaultView,
+  useColorScheme,
 } from "react-native";
+
+import { Text as PaperText } from 'react-native-paper';
+import { customText } from 'react-native-paper';
+
+//const PaperText = customText<'sf-pro'>();
+
+export type PaperTextProps = ThemeProps & React.ComponentProps<typeof PaperText>;
+
+export function PaperStyledText(props: PaperTextProps) {
+  const { style, lightColor, darkColor, ...otherProps } = props;
+  const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+
+  return <PaperText style={[{ color }, style]} {...otherProps} />;
+}
 
 import Colors from "../constants/Colors";
 
@@ -24,6 +39,12 @@ export function useThemeColor(
     return Colors[theme][colorName];
   }
 }
+
+export function getTheme() {
+  const theme = useColorScheme() ?? "light";
+  return Colors[theme];
+}
+
 
 type ThemeProps = {
   lightColor?: string;
@@ -49,3 +70,19 @@ export function View(props: ViewProps) {
 
   return <DefaultView style={[{ backgroundColor }, style]} {...otherProps} />;
 }
+
+export type SafeAreaViewProps = ThemeProps & DefaultSafeAreaView["props"];
+
+export function SafeAreaView(props: SafeAreaViewProps) {
+  const { style, lightColor, darkColor, ...otherProps } = props;
+  const backgroundColor = useThemeColor(
+    { light: lightColor, dark: darkColor },
+    "background"
+  );
+
+  return (
+    <DefaultSafeAreaView style={[{ backgroundColor }, style]} {...otherProps} />
+  );
+}
+
+
