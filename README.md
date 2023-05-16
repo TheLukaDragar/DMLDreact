@@ -1,6 +1,7 @@
 # DMLDreact
 start
 
+
 set node version to 16
 .nvmrc
 ```
@@ -8,3 +9,4 @@ set node version to 16
 yarn
 npx expo  run:android -d
 ```
+https://docs.expo.dev/get-started/installation/
