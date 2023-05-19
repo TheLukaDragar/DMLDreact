@@ -754,10 +754,12 @@ const bleSlice = createSlice({
                 }
             })
             .addCase(disconnectDevice.pending, (state, action) => {
+                console.log("disconnectDevice.pending");
                 state.deviceConnectionState.status = ConnectionState.DISCONNECTING;
                 state.deviceConnectionState.error = '';
             })
             .addCase(disconnectDevice.fulfilled, (state, action: any) => {
+                console.log("disconnectDevice.fulfilled");
                 state.deviceConnectionState.status = ConnectionState.DISCONNECTED;
                 state.connectedDevice = null;
             })
@@ -773,6 +775,7 @@ const bleSlice = createSlice({
                 state.connectedDevice = null;
             })
             .addCase(getChallenge.pending, (state, action) => {
+                console.log("getChallenge.pending");
                 state.deviceConnectionState.status = ConnectionState.GETTING_CHALLENGE;
                 state.deviceConnectionState.error = '';
             })
@@ -781,11 +784,13 @@ const bleSlice = createSlice({
                 //TODO ERROR HANDLING
             })
             .addCase(getChallenge.fulfilled, (state, action: any) => {
+                console.log("getChallenge.fulfilled",action.payload);
                 state.deviceConnectionState.status = ConnectionState.CHALLENGE_RECEIVED;
                 state.deviceConnectionState.error = '';
                 
             })
             .addCase(authenticate.pending, (state, action) => {
+                console.log("authenticate.pending");
                 state.deviceConnectionState.status = ConnectionState.AUTHENTICATING;
                 state.deviceConnectionState.error = '';
             })
@@ -794,9 +799,30 @@ const bleSlice = createSlice({
                 //disconect device
                 disconnectDevice();
 
-                
-
             })
+            .addCase(authenticate.fulfilled, (state, action: any) => {
+                console.log("authenticate.fulfilled",action.payload);
+                state.deviceConnectionState.status = ConnectionState.AUTHENTICATED;
+                state.deviceConnectionState.error = '';
+            })
+
+            .addCase(subscribeToEvents.pending, (state, action) => {
+                console.log("subscribeToEvents.pending");
+                state.deviceConnectionState.status = ConnectionState.SUBSCRIBING_TO_EVENTS;
+                state.deviceConnectionState.error = '';
+            })
+            .addCase(subscribeToEvents.rejected, (state, action) => {
+                console.log("subscribeToEvents.rejected",action.error.message);
+                //disconect device
+                disconnectDevice();
+            })
+            .addCase(subscribeToEvents.fulfilled, (state, action: any) => {
+                console.log("subscribeToEvents.fulfilled");
+                state.deviceConnectionState.status = ConnectionState.READY;
+                state.deviceConnectionState.error = '';
+            })
+
+
 
 
                

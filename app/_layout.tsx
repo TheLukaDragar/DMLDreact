@@ -22,6 +22,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ProviderAuth } from '../auth/provider';
 import BLEManager from '../components/BLEManager/BLEManager';
+import {LogBox} from "react-native";
+LogBox.ignoreLogs(['new NativeEventEmitter']); // Ignore log notification by message
+//BLE PLX LIBRARY BUG still not fixed
 
 
 const persistor = persistStore(store);
@@ -51,7 +54,6 @@ export default function RootLayout(): ReactNode {
     fonts: configureFonts({ config: fontConfig }),
   };
   //TODO https://callstack.github.io/react-native-paper/docs/guides/theming-with-react-navigation/
-
 
 
 

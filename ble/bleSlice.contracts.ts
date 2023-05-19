@@ -13,11 +13,13 @@ export enum ConnectionState {
     CONNECTING = "connecting",
     CONNECTED = "connected",
     DISCONNECTING = "disconnecting",
-    AUTHENTICATING = "authenticating",
-    READY = "ready",
     ERROR = "error",
     GETTING_CHALLENGE = "getting challenge",
     CHALLENGE_RECEIVED = "challenge received",
+    AUTHENTICATING = "authenticating",
+    AUTHENTICATED = "authenticated",
+    READY = "ready",
+    SUBSCRIBING_TO_EVENTS = "SUBSCRIBING_TO_EVENTS"
 }
 export enum SensorState {
     SENSOR_OK="OK",
