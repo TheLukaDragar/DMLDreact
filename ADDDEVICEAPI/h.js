@@ -124,7 +124,7 @@ async function loadWallet() {
         // const data4 = await response4.json();
         // console.log('create box', data4);
 
-        boxId =2;
+        // boxId =2;
 
         //call get all boxes
         const url5 = "https://4gkntp89fl.execute-api.eu-central-1.amazonaws.com/development/box/"+boxId+"/data"

@@ -1,5 +1,5 @@
 import { StyleSheet, TextInput, KeyboardAvoidingView } from 'react-native';
-import { Button } from 'react-native-paper';
+import { Button, Snackbar } from 'react-native-paper';
 import EditScreenInfo from '../../components/EditScreenInfo';
 import { Text, View } from '../../components/Themed';
 import { RootTabScreenProps } from '../../types';
@@ -20,9 +20,15 @@ import {
   connectDeviceById, manualMotorControl, scanBleDevices,
   selectAdapterState,
   selectConnectedDevice,
-  selectScannedDevices, stopDeviceScan, testbutton, keyBotCommand, disconnectDevice
+  selectScannedDevices, stopDeviceScan, testbutton, keyBotCommand, disconnectDevice, getChallenge, authenticate,subscribeToEvents
 } from '../../ble/bleSlice';
 import { ManualMotorControlCommand, KeyBotCommand } from '../../ble/bleSlice.contracts';
+import { PreciseLocation, isErrorWithMessage, isFetchBaseQueryError, useLazyGetBoxAccessKeyQuery } from '../../data/api';
+import React from 'react';
+import * as Location from 'expo-location';
+import { LocationObject } from 'expo-location';
+import CryptoES from 'crypto-es';
+
 export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'>,) {
   const user = useAppSelector((state) => state.user);
   const dispatch = useAppDispatch();
@@ -31,18 +37,37 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
   const ble = useAppSelector((state) => state.ble);
   //const bleService =  BLEServiceInstance;
   const [calibMode, setCalibMode] = useState(false);
+
+
+  
+  const [getBoxAccessKey,{isLoading:isLoading,error:error}] = useLazyGetBoxAccessKeyQuery();
+
+
+
+  const [location, setLocation] = React.useState<LocationObject | null>(null);
+  const [ErrorMessage, setError] = React.useState("");
+
+  //dispatch(setMnemonic(pin));
+
   useEffect(() => {
-    //dispatch(getMnemonic());
-    //bleService.setDemo(true);
-    //dispatch(setPeriphiralID('F9:E0:C3:CE:C3:14'));
-    console.log("HOME SCREEN");
-    //bleService.init();
-    //conect to device
-  }, []);
-  const setPin = (pin: string) => {
-    //set mnemonic to the value of the pin
-    //dispatch(setMnemonic(pin));
-  }
+
+    //console.log(secure.userData);
+
+    (async () => {
+
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setError('Permission to access location was denied');
+       
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      setLocation(location);
+    })();
+
+  }, [])
+  
   async function test() {
     let result = await dispatch(testbutton({ h: "" })).unwrap().then((result) => {
       console.log(result);
@@ -52,14 +77,104 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
       return error;
     });
   }
+  
   async function BleConnect() {
-    let connectResult = await dispatch(connectDeviceById({ id: "EF:26:EC:7A:11:C0" })).unwrap().then((result) => {
-      console.log(result);
-      return result;
-    }).catch((error) => {
-      console.log(error);
-      return error;
-    });
+    try {
+      // 1. Connect to device
+      const connectResult = await dispatch(connectDeviceById({ id: "EF:26:EC:7A:11:C0" })).unwrap();
+      console.log("connectResult", connectResult);
+  
+      // 2. Get the challenge
+      const challenge = await dispatch(getChallenge()).unwrap();
+      console.log("challenge", challenge);
+
+
+      //check if location is null
+      if (location == null) {
+        throw new Error("Location service is not enabled please enable it");
+      }
+
+
+      //3. get location of the user
+      console.log(location?.coords.latitude);
+      console.log(location?.coords.longitude);
+      console.log(location?.coords.accuracy);
+      console.log(location?.timestamp);
+
+
+      if (location?.coords.latitude == undefined || location?.coords.longitude == undefined || location?.coords.accuracy == undefined) {
+        throw new Error("Location service is not enabled please enable it");
+        
+      }
+
+      const preciseLocation : PreciseLocation = {
+        latitude : location?.coords.latitude!,
+        longitude : location?.coords.longitude!,
+        inaccuracy : location?.coords.accuracy!,
+      }
+      // 3. Get solution from api 
+      //const response = await getBoxAccessKey({challenge:challenge,preciseLocation:preciseLocation,boxId:1}).unwrap();
+      
+
+      
+        console.log("challenge: " + challenge);
+      //solve here 
+        let key = "cQfTjWnZr4u7x!z%"
+        const key128Bits = CryptoES.enc.Utf8.parse(key);
+        //ecb mode
+        const encrypted = CryptoES.AES.encrypt(challenge, key128Bits, { mode: CryptoES.mode.ECB, padding: CryptoES.pad.NoPadding });
+        //to hex
+        let encryptedHex = encrypted.ciphertext.toString(CryptoES.enc.Hex);
+        //to uppercase
+        encryptedHex = encryptedHex.toUpperCase();
+        console.log("encrypted: " + encryptedHex);
+        let solved_challenge = encryptedHex
+
+
+
+
+      const response = {
+        boxId:1,
+        accessKey:solved_challenge
+      }
+      console.log("getBoxAccessKey",response.accessKey);
+
+      // 4. Authenticate
+      const auth = await dispatch(authenticate({solved_challenge:response.accessKey})).unwrap();
+      console.log(auth);
+
+      if (auth) {
+        console.log("authenticated");
+
+        // 5. Subscribe to events and init commands
+
+        const events = await dispatch(subscribeToEvents()).unwrap();
+
+
+      }else{
+        console.log("not authenticated");
+      }
+
+  
+    } catch (err) {
+      //diconect
+      if (isFetchBaseQueryError(err)) {
+        const errMsg = 'error' in err ? err.error : JSON.stringify(err.data)
+        console.log("fetch error", err);
+        setError(errMsg);
+      } else if (isErrorWithMessage(err)) {
+        console.log("error with message , ", err.message);
+        //console.log("error", err);
+        setError(err.message);
+      } else {
+        console.log("error", err);
+        setError(JSON.stringify(err));
+      }
+    }
+  
+  
+
+
     // try {
     //   dispatch(setStatus('connecting'));
     //   let challenge = await bleService.connect(ble.periphiralID!);
@@ -120,7 +235,14 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
         return result;
       }
       ).catch((error) => {
-        console.log(error);
+        if (isErrorWithMessage(error)) {
+          console.log(error.message);
+          setError(error.message);
+        }
+        else {
+          console.log(error);
+        }
+
       }
       );
   }
@@ -256,6 +378,21 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
           center
         </Button>
       </View>
+
+      <Snackbar
+        visible={ErrorMessage != ""}
+        onDismiss={() => { setError(""); }}
+        action={{
+          label: 'Ok',
+          onPress: () => {
+            // Do something
+
+            setError("");
+
+          },
+        }}>
+        {ErrorMessage}
+      </Snackbar>
     </View>
   );
 }

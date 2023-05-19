@@ -72,8 +72,10 @@ const BLEManager = () => {
     }, []);
 
     useEffect(() => {
-        // Manage device connection changes
+        // Manage device connection changes if its not in demo mode
+        if(!ble.use_demo_device) {
         checkDevices();
+    }
     }, [connectedDevice])
 
     // Permissions manager

@@ -39,8 +39,8 @@ export default function step_2_create_wallet() {
       //if wallet is set, go to step 2
       if (secure.is_wallet_setup) {
 
-        console.log("wallet is already created skipping to registration");
-        Toast.show("Wallet is already created, skipping to registration");
+        console.log("wallet is created");
+        Toast.show("Wallet created");
         //get role 
         const role = params.role as UserType;
         if (role == undefined) {
@@ -72,9 +72,6 @@ export default function step_2_create_wallet() {
 
       <Text
         style={{ marginTop: 20, padding: 10 }}
-
-
-
       >
         {pinConfirm == '' ? "Please set a pin for the app" : [pinConfirm == pinn ? "Pin set" : "Please confirm your pin"]}
       </Text>

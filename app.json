@@ -1,4 +1,5 @@
 {
+  
   "expo": {
     "name": "DMLDreact",
     "slug": "DMLDreact",
@@ -12,6 +13,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+  
     "jsEngine": "hermes",
     "updates": {
       "fallbackToCacheTimeout": 0,

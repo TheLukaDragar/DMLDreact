@@ -62,7 +62,7 @@ const secureSlice = createSlice({
             state.userData = action.payload?.userData!;
 
             if (state.keyChainData.mnemonic != null && state.keyChainData.mnemonic != '') {
-                //state.is_wallet_setup = true;
+                state.is_wallet_setup = true;
                 //TODO ENABLE 
             }
 

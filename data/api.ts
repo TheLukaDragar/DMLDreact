@@ -58,7 +58,7 @@ interface GetBoxesResponse {
   items: BoxItem[];
   total: number;
 }
-interface BoxItem {
+export interface BoxItem {
   id: number;
   status: number;
   _createTime: string;
@@ -103,7 +103,7 @@ interface ApproximateLocation {
   longitude: number;
   inaccuracy: number;
 }
-interface PreciseLocation {
+export interface PreciseLocation {
   latitude: number;
   longitude: number;
   inaccuracy: number;
@@ -112,15 +112,25 @@ interface setBoxPreciseLocation{
   boxId: number;
   preciseLocation: PreciseLocation;
 }
+interface getBoxAccessKeyParams{
+  boxId: number;
+  preciseLocation: PreciseLocation;
+  challenge: string;
+}
+interface getBoxAccessKeyResponse{
+  boxId: number;
+  accessKey: string;
+}
 
 
+import Constants from 'expo-constants';
 
-
+const API_URL = Constants?.expoConfig?.extra?.API_URL || 'https://4gkntp89fl.execute-api.eu-central-1.amazonaws.com/development/'
 
 
 // Define a custom baseQuery with a default base URL and headers
 const baseQuery = fetchBaseQuery({
-  baseUrl: 'https://4gkntp89fl.execute-api.eu-central-1.amazonaws.com/development/',
+  baseUrl: API_URL,
   prepareHeaders: (headers: Headers, { getState }) => {
     const authToken = (getState() as RootState).secure.userData.token
     if (authToken) {
@@ -346,13 +356,28 @@ export const apiSlice = createApi({
 
     }),
 
-
-
-
-      
-
-
-
+    getBoxAccessKey: builder.query<getBoxAccessKeyResponse, getBoxAccessKeyParams>({
+      query: ({boxId, challenge, preciseLocation}) => ({
+      url: `/box/${boxId}/access-key?challenge=${challenge}&latitude=${preciseLocation.latitude}&longitude=${preciseLocation.longitude}&inaccuracy=${preciseLocation.inaccuracy}`,
+          method: 'GET',
+      }),
+      transformResponse: (response: any) => response,
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+          console.log('getBoxAccessKey', arg, dispatch);
+          try {
+              const { data } = await queryFulfilled;
+              console.log('getBoxAccessKey fulfilled', JSON.stringify(data));
+          } catch (error) {
+            console.log('getBoxAccessKey error', error);
+          }
+      },
+      transformErrorResponse: (response: any) => {
+          console.log('error getBoxAccessKey', response);
+          return response
+      }
+    }),
+    
+  
 
 
 
@@ -413,7 +438,31 @@ export const apiSlice = createApi({
 
   }),
 })
+//using fetch because it's easier to implement 
+// export const getBoxAccessKey = createAsyncThunk(
+//   'boxes/getAccessKey',
+//   async ({ id, challenge, location }: {id: string, challenge: string, location: PreciseLocation},thunkAPI) => {
+//     // You should use your own API calling mechanism here
+//     // fetch is used as an example
+//     const state = thunkAPI.getState() as RootState;
+
+//     const user_token = state.secure.userData?.token;
+//     console.log('getBoxAccessKey', id, challenge, location, user_token);
+//     const response = await fetch(API_URL+`box/${id}/access-key?challenge=${challenge}&location=${JSON.stringify(location)}`, { method: 'GET' , headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user_token}` }});
+
+//     if (!response.ok) {
+//       console.log('error getBoxAccessKey', response.status, response);
+
+//       throw new Error('Failed to fetch access key');
+//     }
+
+//     const data = await response.json();
+//     console.log('getBoxAccessKey fulfilled', JSON.stringify(data));
+//     return data;
+//   }
+// );
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
+import { createAsyncThunk } from '@reduxjs/toolkit';
 /**
  * Type predicate to narrow an unknown error to `FetchBaseQueryError`
  */
@@ -439,5 +488,5 @@ export function isErrorWithMessage(
 export const { reducer, middleware } = apiSlice
 // Export the endpoint for use in components
 export const { useGetAuthMsgQuery, useRegisterWalletMutation, useLoginWalletMutation, useGetMeQuery, useLazyGetAuthMsgQuery
-  , useGetBoxesQuery, useGetBoxQuery, useLazyGetBoxQuery, useLazyGetBoxesQuery, useConnectBoxMutation, useSetBoxPreciseLocationMutation, useGetBoxPreciseLocationQuery, useCreateApproximateLocationMutation, useUpdateApproximateLocationMutation
+  , useGetBoxesQuery, useGetBoxQuery, useLazyGetBoxQuery, useLazyGetBoxesQuery, useConnectBoxMutation, useSetBoxPreciseLocationMutation, useGetBoxPreciseLocationQuery, useCreateApproximateLocationMutation, useUpdateApproximateLocationMutation,useGetBoxAccessKeyQuery,useLazyGetBoxAccessKeyQuery
 } = apiSlice

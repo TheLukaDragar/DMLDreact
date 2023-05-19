@@ -8,13 +8,16 @@ export enum NetworkState {
     CANCELED="CANCELED"
 }
 export enum ConnectionState {
-    DISCONNECTED="connect",
-    SEARCHING="searching",
-    CONNECTING="connecting",
-    DISCONNECTING="disconnecting",
-    AUTHENTICATING="authenticating",
-    READY="ready",
-    ERROR="error",
+    DISCONNECTED = "connect",
+    SEARCHING = "searching",
+    CONNECTING = "connecting",
+    CONNECTED = "connected",
+    DISCONNECTING = "disconnecting",
+    AUTHENTICATING = "authenticating",
+    READY = "ready",
+    ERROR = "error",
+    GETTING_CHALLENGE = "getting challenge",
+    CHALLENGE_RECEIVED = "challenge received",
 }
 export enum SensorState {
     SENSOR_OK="OK",
@@ -121,7 +124,7 @@ export interface authenticateDeviceParams {
 }
 
 export interface connectDeviceByIdParams {
-    id: string
+    id: string //mac address
 }
 
 export interface linkDeviceByIdParams {

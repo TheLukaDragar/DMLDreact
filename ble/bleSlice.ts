@@ -4,20 +4,29 @@ import { RootState } from '../data/store';
 import { bleSliceInterface, connectDeviceByIdParams, linkDeviceByIdParams,manualMotorControlParams,ManualMotorControlCommand,KeyBotState,testbuttonParams, NetworkState, toBLEDeviceVM,authenticateDeviceParams, SensorState, MidSensorState, keybotCommandParams, ConnectionState} from './bleSlice.contracts';
 import { Buffer } from 'buffer'
 import CryptoES from 'crypto-es';
+import Constants from 'expo-constants';
+
 const bleManager = new BleManager();
 let device: Device;
 let logBuffer: string = "";
 const demoDevice = {
     id: 'F9:E0:C3:CE:C3:14',
-    name: 'Demo Device',
+    name: 'KeyBot_000000000000',
     rssi: 0,
     solicitedServiceUUIDs: [],
-    localName: 'Demo Device',
+    localName: 'KeyBot_000000000000',
+
 };
 const stopScan = () => {
     console.log('Stopping scan');
     bleManager.stopDeviceScan();
 };
+
+import { PreciseLocation } from '../data/api';
+
+
+
+
 export const scanBleDevices = createAsyncThunk('ble/scanBleDevices', async (_, thunkAPI) => {
   // Check if demo mode is on from the global state.
   const state = thunkAPI.getState() as RootState;
@@ -48,74 +57,191 @@ export const scanBleDevices = createAsyncThunk('ble/scanBleDevices', async (_, t
         throw new Error(error.toString);
     }
 });
-export const authenticateDevice = createAsyncThunk('ble/authenticateDevice', async (_, thunkAPI) => {
-    // Check if demo mode is on from the global state.
+
+
+
+export const authenticate = createAsyncThunk('ble/authenticate', async (params: authenticateDeviceParams, thunkAPI) => {
+    //get device
+
+
     const state = thunkAPI.getState() as RootState;
+    const connectedDevice = state.ble.connectedDevice;
     const demoModeOn = state.ble.use_demo_device;
-    // If demo mode is on use the demo device.
+
+    if (!connectedDevice) {
+        throw new Error('No connected device');
+    }
+
     if (demoModeOn) {
-        console.log('Demo mode on, using demo device in authenticateDevice');
-        //make api call to authenticate device todo
+        //dela
+        await new Promise(resolve => setTimeout(resolve, 200));
+        console.log('Demo mode on, skipping authentication');
         return true;
     }
-     //get challenge from box
-     let characteristic = await bleManager.readCharacteristicForDevice(device.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34fa').catch((error) => {
-        console.log("readCharacteristicForDevice error: " + error);
-        throw new Error(error);
-      });
-      if (characteristic === null) {
+
+
+        let message = params.solved_challenge.substring(0, 16);
+        let encoded = Buffer.from(message).toString('base64');
+        console.log("encoded: " + encoded);
+        let writeCharacteristic = await bleManager.writeCharacteristicWithResponseForDevice(connectedDevice.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34fb', encoded);
+        if (writeCharacteristic === null) {
         throw new Error("Characteristic not found");
-      }
-      let challenge = Buffer.from(characteristic.value!, 'base64').toString('ascii').substring(0, 16);
-      console.log("challenge: " + challenge);
-      //solve here 
-        let key = "cQfTjWnZr4u7x!z%"
-        const key128Bits = CryptoES.enc.Utf8.parse(key);
-        //ecb mode
-        const encrypted = CryptoES.AES.encrypt(challenge, key128Bits, { mode: CryptoES.mode.ECB, padding: CryptoES.pad.NoPadding });
-        //to hex
-        let encryptedHex = encrypted.ciphertext.toString(CryptoES.enc.Hex);
-        //to uppercase
-        encryptedHex = encryptedHex.toUpperCase();
-        console.log("encrypted: " + encryptedHex);
-        let solved_challenge = encryptedHex
-    let message = solved_challenge.substring(0, 16);
-    let encoded = Buffer.from(message).toString('base64');
-    console.log("encoded: " + encoded);
-    let writeCharacteristic = await bleManager.writeCharacteristicWithResponseForDevice(device.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34fb', encoded);
-    if (writeCharacteristic === null) {
-      throw new Error("Characteristic not found");
-    }
-    console.log("characteristic: " + writeCharacteristic.uuid);
-    //write the second part of the message
-    message = solved_challenge.substring(16, 32);
-    //encode to base64
-    encoded = Buffer.from(message).toString('base64');
-    console.log("encoded 2: " + encoded);
-    writeCharacteristic = await bleManager.writeCharacteristicWithResponseForDevice(device.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34fb', encoded);
-    if (writeCharacteristic === null) {
-      throw new Error("Characteristic not found");
-    }
-    //read the auth characteristic
-    let readCharacteristic = await bleManager.readCharacteristicForDevice(device.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34fc');
-    if (readCharacteristic === null) {
-      throw new Error("Characteristic not found");
-    }
-    let value = readCharacteristic.value;
-    let auth = Buffer.from(value!, 'base64').toString('ascii');
-    console.log("authenticated: " + auth? "true" : "false");
-    if(auth === '1') {
-      //setup listeners for calibration and battery ...
-      //TODO
-      //log name
-      return true;
-    }else {
-      throw new Error("Authentication failed");
-    }
+        }
+        console.log("characteristic: " + writeCharacteristic.uuid);
+        //write the second part of the message
+        message = params.solved_challenge.substring(16, 32);
+        //encode to base64
+        encoded = Buffer.from(message).toString('base64');
+        console.log("encoded 2: " + encoded);
+        writeCharacteristic = await bleManager.writeCharacteristicWithResponseForDevice(connectedDevice.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34fb', encoded);
+        if (writeCharacteristic === null) {
+        throw new Error("Characteristic not found");
+        }
+        //read the auth characteristic
+        let readCharacteristic = await bleManager.readCharacteristicForDevice(connectedDevice.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34fc');
+        if (readCharacteristic === null) {
+        throw new Error("Characteristic not found");
+        }
+        let value = readCharacteristic.value;
+        let auth = Buffer.from(value!, 'base64').toString('ascii');
+        console.log("authenticated: " + auth? "true" : "false");
+        
+        if( auth === '1' ){
+            return true;
+        }
+        else{
+            console.log("Authentication failed KeyBot says: " + auth);
+            throw new Error("Authentication failed");
+        }
+
 });
+
+
+
+
+
+// export const authenticateDevice = createAsyncThunk('ble/authenticateDevice', async (id : number, thunkAPI) => {
+//     // Check if demo mode is on from the global state.
+//     const state = thunkAPI.getState() as RootState;
+//     const demoModeOn = state.ble.use_demo_device;
+//     // If demo mode is on use the demo device.
+//     if (demoModeOn) {
+//         console.log('Demo mode on, using demo device in authenticateDevice');
+//         //make api call to authenticate device todo
+//         //cc39c0f66ccc4bd25202e68947e07831
+//         const demo_challenge = CryptoES.lib.WordArray.random(16).toString().substring(0, 16);
+//         console.log("demo challenge: " + demo_challenge);
+//         // let key = "cQfTjWnZr4u7x!z%"
+//         // const key128Bits = CryptoES.enc.Utf8.parse(key);
+//         // //ecb mode
+//         // const encrypted = CryptoES.AES.encrypt(demo_challenge, key128Bits, { mode: CryptoES.mode.ECB, padding: CryptoES.pad.NoPadding });
+//         // //to hex
+//         // let encryptedHex = encrypted.ciphertext.toString(CryptoES.enc.Hex);
+//         // //to uppercase
+//         // encryptedHex = encryptedHex.toUpperCase();
+//         // console.log("demo encrypted: " + encryptedHex);
+
+
+//         //call api 
+//         // define your location and boxId here
+    
+//     try {
+//         console.log(device);
+//         const location: PreciseLocation = { latitude: 123, longitude: 456, inaccuracy: 3 };
+//         const boxId: string = demoDevice.id;
+
+//       // Dispatch getBoxAccessKey thunk
+//       const resultAction = await thunkAPI.dispatch(getBoxAccessKey({id: boxId, challenge: demo_challenge, location: location }));
+
+//       if (getBoxAccessKey.fulfilled.match(resultAction)) {
+//         const accessKey = resultAction.payload;
+//         console.log('Received accessKey:', accessKey);
+
+//         // Continue your logic here
+//       } else {
+//         // Handle error here
+//         if (resultAction.error) {
+//           console.error('Failed to get accessKey:', resultAction.error.message);
+//           return false;
+//         }
+//       }
+//     } catch (err) {
+//       console.error('Error in getBoxAccessKey:', err);
+//       return false;
+//     }
+
+//         return true;
+//     }
+//      //get challenge from box
+//      let characteristic = await bleManager.readCharacteristicForDevice(device.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34fa').catch((error) => {
+//         console.log("readCharacteristicForDevice error: " + error);
+//         throw new Error(error);
+//       });
+//       if (characteristic === null) {
+//         throw new Error("Characteristic not found");
+//       }
+//       let challenge = Buffer.from(characteristic.value!, 'base64').toString('ascii').substring(0, 16);
+//       console.log("challenge: " + challenge);
+//       //solve here 
+//         let key = "cQfTjWnZr4u7x!z%"
+//         const key128Bits = CryptoES.enc.Utf8.parse(key);
+//         //ecb mode
+//         const encrypted = CryptoES.AES.encrypt(challenge, key128Bits, { mode: CryptoES.mode.ECB, padding: CryptoES.pad.NoPadding });
+//         //to hex
+//         let encryptedHex = encrypted.ciphertext.toString(CryptoES.enc.Hex);
+//         //to uppercase
+//         encryptedHex = encryptedHex.toUpperCase();
+//         console.log("encrypted: " + encryptedHex);
+//         let solved_challenge = encryptedHex
+//     let message = solved_challenge.substring(0, 16);
+//     let encoded = Buffer.from(message).toString('base64');
+//     console.log("encoded: " + encoded);
+//     let writeCharacteristic = await bleManager.writeCharacteristicWithResponseForDevice(device.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34fb', encoded);
+//     if (writeCharacteristic === null) {
+//       throw new Error("Characteristic not found");
+//     }
+//     console.log("characteristic: " + writeCharacteristic.uuid);
+//     //write the second part of the message
+//     message = solved_challenge.substring(16, 32);
+//     //encode to base64
+//     encoded = Buffer.from(message).toString('base64');
+//     console.log("encoded 2: " + encoded);
+//     writeCharacteristic = await bleManager.writeCharacteristicWithResponseForDevice(device.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34fb', encoded);
+//     if (writeCharacteristic === null) {
+//       throw new Error("Characteristic not found");
+//     }
+//     //read the auth characteristic
+//     let readCharacteristic = await bleManager.readCharacteristicForDevice(device.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34fc');
+//     if (readCharacteristic === null) {
+//       throw new Error("Characteristic not found");
+//     }
+//     let value = readCharacteristic.value;
+//     let auth = Buffer.from(value!, 'base64').toString('ascii');
+//     console.log("authenticated: " + auth? "true" : "false");
+//     if(auth === '1') {
+//       return true;
+//     }else {
+//       throw new Error("Authentication failed");
+//     }
+// });
 export const connectDeviceById = createAsyncThunk('ble/connectDeviceById', async (params: connectDeviceByIdParams, thunkAPI) => {
-    try {
-        const { id } = params;
+   
+        const { id } = params; //mac adress
+        const state = thunkAPI.getState() as RootState;
+
+        const demoModeOn = state.ble.use_demo_device;
+        // If demo mode is on use the demo device.
+        if (demoModeOn) {
+            console.log('Demo mode on, using demo device in connectDeviceById');
+            thunkAPI.dispatch(setConnectionState({ status: ConnectionState.SEARCHING }));
+            await new Promise(resolve => setTimeout(resolve, 500));
+            thunkAPI.dispatch(setConnectionState({ status: ConnectionState.CONNECTING }));
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+
+            return toBLEDeviceVM(demoDevice);
+        }
+
         stopScan();
 
         //searching
@@ -137,15 +263,83 @@ export const connectDeviceById = createAsyncThunk('ble/connectDeviceById', async
         //print name and id
         console.log('Device name: ', device.name);
         console.log('Device id: ', device.id);
+
+
+
         //authenticate
-        thunkAPI.dispatch(setConnectionState({ status: ConnectionState.AUTHENTICATING }));
-       let auth_result = await thunkAPI.dispatch(authenticateDevice()).unwrap().catch((error) => {
-            console.log("authenticateDevice error: " + error);
-            throw new Error(error);
-        });
-        console.log("auth_result: " + auth_result);
+    //     thunkAPI.dispatch(setConnectionState({ status: ConnectionState.AUTHENTICATING }));
+    //    let auth_result = await thunkAPI.dispatch(authenticateDevice()).unwrap().catch((error) => {
+    //         console.log("authenticateDevice error: " + error);
+    //         throw new Error(error);
+    //     });
+    //     console.log("auth_result: " + auth_result);
+       
+        return toBLEDeviceVM({ ...device, serviceUUIDs });
+    
+});
+
+
+
+export const getChallenge = createAsyncThunk<string, void, { state: RootState }>(
+  'ble/getChallenge', 
+  async (_, thunkAPI) => {
+    try {
+      const state = thunkAPI.getState();
+      const connectedDevice  = state.ble.connectedDevice;
+      const isDemoDevice = state.ble.use_demo_device;
+
+      if (connectedDevice === null) {
+        throw new Error("No connected device");
+      }
+
+      if (isDemoDevice) {
+        const demo_challenge = CryptoES.lib.WordArray.random(16).toString().substring(0, 16);
+        console.log("demo challenge: " + demo_challenge);
+        return demo_challenge;
+      }
+
+      let characteristic = await bleManager.readCharacteristicForDevice(connectedDevice.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34fa').catch((error: Error) => {
+        console.log("readCharacteristicForDevice error: " + error);
+        throw new Error("readCharacteristicForDevice error: " + error.toString());
+      });
+      
+      if (characteristic === null) {
+        throw new Error("Characteristic not found");
+      }
+
+      let challenge = Buffer.from(characteristic.value!, 'base64').toString('ascii').substring(0, 16);
+      console.log("challenge: " + challenge);
+      
+      return challenge;
+
+    } catch (error: any) {
+        throw new Error(error.toString);
+    }
+    }
+);
+
+
+
+
+
+
+export const subscribeToEvents = createAsyncThunk('ble/subscribeToEvents', async (_, thunkAPI) => {
+    try {
+
+
+        const state = thunkAPI.getState() as RootState;
+        const connectedDevice  = state.ble.connectedDevice;
+        const isDemoDevice = state.ble.use_demo_device;
+
+        if (connectedDevice === null) {
+            throw new Error('No connected device');
+        }
+        if (isDemoDevice) {
+            return;
+        }
+
         bleManager.monitorCharacteristicForDevice(
-            device.id,
+            connectedDevice.id,
             '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
             '6e400003-b5a3-f393-e0a9-e50e24dcca9e',
             (error, characteristic) => {
@@ -172,32 +366,8 @@ export const connectDeviceById = createAsyncThunk('ble/connectDeviceById', async
             },
             'log'
           );
-            //read sensor status
-            // bleManager.readCharacteristicForDevice(device.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34fd').then((characteristic) => {
-            //     if (characteristic === null) {
-            //         console.log("sensorStatus Characteristic not found");
-            //         return;
-            //     }
-            //     let status = Buffer.from(characteristic.value!, 'base64').toString('ascii');
-            //     console.log("status: " + status);
-            //     thunkAPI.dispatch(updateKeySensorStatus({ status: status }));
-            // }).catch((error) => {
-            //     console.log("readCharacteristicForDevice error: " + error);
-            // });
-            //sensorStatus 00002a3d-0000-1000-8000-00805f9b34fd
-            // bleManager.monitorCharacteristicForDevice(device.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34fd', (error, characteristic) => {
-            //     if (error) {
-            //         console.log("onSensorStatus error: " + error, error.errorCode);
-            //         return;
-            //     }
-            //     else {
-            //         let status = Buffer.from(characteristic?.value!, 'base64').toString('ascii');
-            //         console.log("sensorStatus: " + status);
-            //         thunkAPI.dispatch(updateKeySensorStatus({ status: status }));
-            //     }
-            // }, 'status');
-            //midSensorsStatus 00002a3d-0000-1000-8000-00805f9b34f2 and 00002a3d-0000-1000-8000-00805f9b34f3
-            bleManager.monitorCharacteristicForDevice(device.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34f2', (error, characteristic) => {
+        
+            bleManager.monitorCharacteristicForDevice(connectedDevice.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34f2', (error, characteristic) => {
                 if (error) {
                     console.log("onMidSensorsStatus error: " + error, error.errorCode);
                     return;
@@ -209,7 +379,7 @@ export const connectDeviceById = createAsyncThunk('ble/connectDeviceById', async
                 }
             }, 'midSensorsStatus');
             //read it
-            bleManager.readCharacteristicForDevice(device.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34f2').then((characteristic) => {
+            bleManager.readCharacteristicForDevice(connectedDevice.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34f2').then((characteristic) => {
                 if (characteristic === null) {
                     console.log("midSensorsStatus Characteristic not found");
                     return;
@@ -223,7 +393,7 @@ export const connectDeviceById = createAsyncThunk('ble/connectDeviceById', async
 
 
             //00002a3d-0000-1000-8000-00805f9b34f4 
-            bleManager.monitorCharacteristicForDevice(device.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34f4', (error, characteristic) => {
+            bleManager.monitorCharacteristicForDevice(connectedDevice.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34f4', (error, characteristic) => {
                 if (error) {
                     console.log("onKeyBotState error: " + error, error.errorCode);
                     return;
@@ -237,7 +407,7 @@ export const connectDeviceById = createAsyncThunk('ble/connectDeviceById', async
             }, 'keyBotState');
 
             //battery level 00002a3d-0000-1000-8000-00805f9b34f5
-            bleManager.monitorCharacteristicForDevice(device.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34f5', (error, characteristic) => {
+            bleManager.monitorCharacteristicForDevice(connectedDevice.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34f5', (error, characteristic) => {
                 if (error) {
                     console.log("onBatteryLevel error: " + error, error.errorCode);
                     return;
@@ -253,7 +423,7 @@ export const connectDeviceById = createAsyncThunk('ble/connectDeviceById', async
                 }
             }, 'batteryLevel');
             //read it
-            bleManager.readCharacteristicForDevice(device.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34f5').then((characteristic) => {
+            bleManager.readCharacteristicForDevice(connectedDevice.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34f5').then((characteristic) => {
                 if (characteristic === null) {
                     console.log("batteryLevel Characteristic not found");
                     return;
@@ -269,18 +439,20 @@ export const connectDeviceById = createAsyncThunk('ble/connectDeviceById', async
             });
 
 
+        } catch (error: any) {
+            console.log("subscribeToEvents error: " + error);
+            throw Error("subscribeToEvents error: " + error);
 
-
-
-
-
-
-
-        return toBLEDeviceVM({ ...device, serviceUUIDs });
-    } catch (error: any) {
-        throw new Error(error.toString);
+           
+        }
     }
-});
+);
+
+
+
+
+
+
 export const linkDeviceById = createAsyncThunk('ble/linkDeviceById', async (params: linkDeviceByIdParams, thunkAPI) => {
    //todo
 });
@@ -346,7 +518,17 @@ export const keyBotCommand = createAsyncThunk('ble/keyBotCommand', async (params
 
     
 export const disconnectDevice = createAsyncThunk('ble/disconnectDevice', async (_, thunkAPI) => {
-    try{
+    
+        //state
+        const state = thunkAPI.getState() as RootState;
+        const isDemoDevice = state.ble.use_demo_device;
+
+        if (isDemoDevice) {
+            console.log('Disconnecting from demo device');
+            await new Promise(resolve => setTimeout(resolve, 200));
+            return { isSuccess: true }
+        }
+
     console.log('Disconnecting')
     if (device) {
         const isDeviceConnected = await device.isConnected();
@@ -373,14 +555,11 @@ export const disconnectDevice = createAsyncThunk('ble/disconnectDevice', async (
         console.log('Device is undefined');
         throw new Error('Device is undefined.')
     }
-}
-    catch (error: any) {
-        console.log('Disconnecting error: ' + error);
-        throw new Error(error.toString);
-    }
+
+    
 });
 const initialState: bleSliceInterface = {
-    use_demo_device: false,
+    use_demo_device: Constants.expoConfig?.extra?.use_demo_device ?? false,
     adapterState: 'Unknown',
     deviceConnectionState: { status: ConnectionState.DISCONNECTED, error: '' },
     deviceScan: { devices: [], status: NetworkState.PENDING, error: '' },
@@ -558,7 +737,7 @@ const bleSlice = createSlice({
                 state.deviceConnectionState.error = '';
             })
             .addCase(connectDeviceById.fulfilled, (state, action: any) => {
-                state.deviceConnectionState.status = ConnectionState.READY;
+                state.deviceConnectionState.status = ConnectionState.CONNECTED;
                 const device = action.payload;
                 state.connectedDevice = device;
             })
@@ -593,6 +772,35 @@ const bleSlice = createSlice({
                 }
                 state.connectedDevice = null;
             })
+            .addCase(getChallenge.pending, (state, action) => {
+                state.deviceConnectionState.status = ConnectionState.GETTING_CHALLENGE;
+                state.deviceConnectionState.error = '';
+            })
+            .addCase(getChallenge.rejected, (state, action) => {
+                console.log("getChallenge.rejected",action.error.message);
+                //TODO ERROR HANDLING
+            })
+            .addCase(getChallenge.fulfilled, (state, action: any) => {
+                state.deviceConnectionState.status = ConnectionState.CHALLENGE_RECEIVED;
+                state.deviceConnectionState.error = '';
+                
+            })
+            .addCase(authenticate.pending, (state, action) => {
+                state.deviceConnectionState.status = ConnectionState.AUTHENTICATING;
+                state.deviceConnectionState.error = '';
+            })
+            .addCase(authenticate.rejected, (state, action) => {
+                console.log("authenticate.rejected",action.error.message);
+                //disconect device
+                disconnectDevice();
+
+                
+
+            })
+
+
+               
+
         ;
     },
 });
