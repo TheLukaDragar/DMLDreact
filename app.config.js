@@ -7,7 +7,7 @@ module.exports = ({ config }) => {
             reputationSCAddress: "0x0000000000000",
             parcelNFTSCAddress: "0x0000000000000",
             RPCUrl: "https://bellecour.iex.ec",
-            use_demo_device: true,
+            use_demo_device: false,
         },
     };
 };
