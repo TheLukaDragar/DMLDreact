@@ -35,14 +35,23 @@ export default function step_2_create_wallet() {
 
   useFocusEffect(
     React.useCallback(() => {
+      const role = params.role as UserType;
       console.log("secure updated in step 1");
+      if (role !== UserType.CLIENT && role !== UserType.COURIER  ) {
+        Toast.show("Role not supported yet");
+        router.back();
+        return;
+      }
+
+
+
       //if wallet is set, go to step 2
       if (secure.is_wallet_setup) {
 
         console.log("wallet is created");
         Toast.show("Wallet created");
         //get role 
-        const role = params.role as UserType;
+       
         if (role == undefined) {
           console.log("role is undefined");
           return;
@@ -52,7 +61,9 @@ export default function step_2_create_wallet() {
         if (role == UserType.CLIENT) {
           router.replace('auth/step_4_client_setup');
 
-        } else {
+        }
+        
+        else {
           Toast.show("Role not supported yet");
           //go back to role selection
           router.back();

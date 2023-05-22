@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from '../../data/hooks';
 import { ethers } from 'ethers';
 import React, { useEffect } from 'react';
 import { isErrorWithMessage, isFetchBaseQueryError, useLazyGetAuthMsgQuery, useLoginWalletMutation } from '../../data/api';
+import { loadDemoClientWallet } from '../../data/secure';
 
 
 
@@ -75,6 +76,47 @@ export default function TabTwoScreen() {
     }
   }
 
+  async function demo_client_login() {
+    try {
+
+
+      const secure_data = await dispatch(loadDemoClientWallet()) 
+
+      const msg = await getMessageToSign().unwrap();
+  
+      if (secure.is_wallet_setup === false) {
+        throw new Error("wallet not setup");
+      }
+  
+      console.log(secure.keyChainData?.privateKey!, "private key");
+      console.log(msg?.message!, "message");
+      const signer = new ethers.Wallet(secure.keyChainData?.privateKey!);
+      const signature = await signer.signMessage(msg?.message!);
+
+      const recoveredAddress = ethers.utils.verifyMessage(msg?.message!, signature);
+  
+      console.log(recoveredAddress === signer.address, "recovered address === wallet address");
+  
+      const result = await Login({
+        wallet: signer.address,
+        signature: signature,
+        timestamp: msg?.timestamp!,
+      }).unwrap();
+  
+      console.log(result);
+    } catch (err) {
+      if (isFetchBaseQueryError(err)) {
+        const errMsg = 'error' in err ? err.error : JSON.stringify(err.data)
+        console.log("fetch error", err);
+        setError(errMsg);
+      } else if (isErrorWithMessage(err)) {
+        console.log("error with message , ", err);
+        setError(err.message);
+      }
+    }
+    
+  }
+
 
 
 
@@ -104,6 +146,21 @@ export default function TabTwoScreen() {
         style={{ marginTop: 20 }}>
 
         Begin
+      </Button>
+      <Button
+        onPress={() => demo_client_login()}
+        mode="contained"
+        contentStyle={{ padding: 20, width: 300 }}
+        style={{ marginTop: 20 }}>
+        Client (Demo)
+      </Button>
+      <Button
+        onPress={() => router.push('auth/step_1_choose_role')}
+        mode="contained"
+        contentStyle={{ padding: 20, width: 300 }}
+        style={{ marginTop: 20 }}>
+
+        Courier (Demo)
       </Button>
 
       <Button

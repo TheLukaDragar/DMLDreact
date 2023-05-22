@@ -236,12 +236,17 @@ export const apiSlice = createApi({
       }),
       transformResponse: (response: User) => response,
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-        console.log('onGetme', arg, dispatch);
+        console.log(' /users/me started');
         try {
           const { data } = await queryFulfilled;
           console.log('data', data);
         } catch (error) { }
       },
+      transformErrorResponse: (response: any) => {
+        console.log('error /users/me', response);
+        return response
+      },
+
       providesTags: ['User'],
     }),
     //box endpoints
@@ -358,7 +363,10 @@ export const apiSlice = createApi({
 
     getBoxAccessKey: builder.query<getBoxAccessKeyResponse, getBoxAccessKeyParams>({
       query: ({boxId, challenge, preciseLocation}) => ({
-      url: `/box/${boxId}/access-key?challenge=${challenge}&latitude=${preciseLocation.latitude}&longitude=${preciseLocation.longitude}&inaccuracy=${preciseLocation.inaccuracy}`,
+
+
+        //https://4gkntp89fl.execute-api.eu-central-1.amazonaws.com/box/1/access-key?id=1&longitude=11&latitude=1&inaccuracy=1
+      url: `/box/${boxId}/access-key?challenge=${challenge}&location%5Blatitude%5D=${preciseLocation.latitude}&location%5Blongitude%5D=${preciseLocation.longitude}&location%5Binaccuracy%5D=${preciseLocation.inaccuracy}`,
           method: 'GET',
       }),
       transformResponse: (response: any) => response,

@@ -6,7 +6,7 @@ import { Button } from 'react-native-paper';
 import {useRouter} from 'expo-router';
 import { useAppDispatch, useAppSelector } from '../../data/hooks';
 
-import secureReducer, { removeToken} from '../../data/secure';
+import secureReducer, { full_signout, removeToken} from '../../data/secure';
 import { useGetAuthMsgQuery, useGetMeQuery, useLazyGetBoxesQuery } from '../../data/api';
 import { useEffect, useState } from 'react';
 
@@ -81,6 +81,12 @@ export default function TabTwoScreen() {
         mode="contained"
         style={{marginTop: 20, padding: 10}}>
         Sign out
+      </Button>
+      <Button
+        onPress={() => dispatch(full_signout())}
+        mode="contained"
+        style={{marginTop: 20, padding: 10}}>
+        Full sign out
       </Button>
 
       <Text>

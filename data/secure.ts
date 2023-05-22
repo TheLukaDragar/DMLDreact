@@ -25,12 +25,6 @@ export type UserData = {
 }
 
 
-
-
-
-
-
-
 //craate a secure slice use secure store to store the mnemonic
 const secureSlice = createSlice({
     name: 'secure',
@@ -105,6 +99,14 @@ const secureSlice = createSlice({
             console.log('createWallet.pending');
         }
         );
+        //loadDemoClientWallet
+        builder.addCase(loadDemoClientWallet.fulfilled, (state, action) => {
+            console.log('loadDemoClientWallet.fulfilled');
+            state.keyChainData = action.payload?.keyChainData!;
+            state.is_wallet_setup = true;
+        }
+        );
+
 
         //get token
         builder.addCase(getToken.fulfilled, (state, action) => {
@@ -137,7 +139,23 @@ const secureSlice = createSlice({
         }
         );
 
-
+        //full sign out
+        builder.addCase(full_signout.fulfilled, (state, action) => {
+            console.log('full_signout.fulfilled');
+            state.keyChainData = {
+                wallet: null,
+                privateKey: null,
+                mnemonic: null,
+                pin: null,
+                did: null
+            } as KeyChainData;
+            state.userData = {
+                token: null
+            } as UserData;
+            state.is_wallet_setup = false;
+            state.is_user_logged_in = false;
+        }
+        );
 
 
     },
@@ -278,6 +296,47 @@ export const createWallet = createAsyncThunk(
         }
 );
 
+export const loadDemoClientWallet = createAsyncThunk(
+    'secure/loadDemoClientWallet',
+    async (_, thunkAPI ) => {
+        //create new wallet //gimly
+        try {
+            console.log('loadDemoClientWallet');
+            const mnemonic = "divide make base fuel vibrant into before easily ankle orphan reject float antique weekend since pelican leopard gloom bulb certain regular exercise rather rent"
+            console.log('loadDemoClientWallet',"random done");
+            const wallet = ethers.Wallet.fromMnemonic(mnemonic)
+            //const encryptedWallet = await wallet.encrypt("1111", { scrypt: { N: 2 ** 1 } }) //TODO: change N to 2 ** 18
+            const encryptedWallet = "{\"address\":\"d52c27cc2c7d3fb5ba4440ffa825c12ea5658d60\",\"id\":\"d8c90009-cd35-48ea-8c30-b5d9b375d1c5\",\"version\":3,\"crypto\":{\"cipher\":\"aes-128-ctr\",\"cipherparams\":{\"iv\":\"c9088d12cbfeeeb97b9145cd08234c64\"},\"ciphertext\":\"393d49a642d9657c076e17ba1107ee675752f5ebfb1d99793c279da01f4f91bd\",\"kdf\":\"scrypt\",\"kdfparams\":{\"salt\":\"0f0f48479ede1ab73071c55357c2b96267800710ee5d3bde0979c63d10311eaa\",\"n\":2,\"dklen\":32,\"p\":1,\"r\":8},\"mac\":\"0c65b782ac32ba8d6a13da2a811d3d515ab86aea82116957baa272f722645c7d\"},\"x-ethers\":{\"client\":\"ethers.js\",\"gethFilename\":\"UTC--2023-05-18T09-22-18.0Z--d52c27cc2c7d3fb5ba4440ffa825c12ea5658d60\",\"mnemonicCounter\":\"ab94cbdbd95bc4403096258ca65b3bc3\",\"mnemonicCiphertext\":\"f0337df718235c35a00f6f875d094eb668cc6ccc5b65159c71f4b743c38d56b7\",\"path\":\"m/44'/60'/0'/0/0\",\"locale\":\"en\",\"version\":\"0.1\"}}"
+            console.log('loadDemoClientWallet',"saving wallet");
+           
+
+            //store in secure store
+            await SecureStore.setItemAsync('wallet', encryptedWallet);
+            console.log('loadDemoClientWallet',"wallet saved");
+            await SecureStore.setItemAsync('privateKey', wallet.privateKey);
+            await SecureStore.setItemAsync('mnemonic', wallet.mnemonic.phrase);
+            console.log('loadDemoClientWallet',"mnemonic saved");
+            await SecureStore.setItemAsync('pin', "1111");
+
+            console.log('loadDemoClientWallet',"saved wallet");
+            return {
+              mnemonicPhrase: wallet.mnemonic.phrase,
+              keyChainData: { //only used for updating the state
+                wallet: encryptedWallet,
+                privateKey: wallet.privateKey,
+                mnemonic: wallet.mnemonic.phrase,
+                pin: "1111"} as KeyChainData
+            }
+          } catch (error) {
+            return thunkAPI.rejectWithValue(error)
+          }
+        }
+);
+
+
+
+
+
 //get token from backend
 export const getToken = createAsyncThunk(
     'secure/getToken',
@@ -296,6 +355,18 @@ export const removeToken = createAsyncThunk(
     'secure/removeToken',
     async ( _,thunkAPI) => {
         await SecureStore.deleteItemAsync('token');
+        return null;
+    }
+);
+export const full_signout = createAsyncThunk(
+    'secure/full_signout',
+    async ( _,thunkAPI) => {
+        await SecureStore.deleteItemAsync('token');
+        await SecureStore.deleteItemAsync('wallet');
+        await SecureStore.deleteItemAsync('privateKey');
+        await SecureStore.deleteItemAsync('mnemonic');
+        await SecureStore.deleteItemAsync('pin');
+
         return null;
     }
 );

@@ -28,6 +28,7 @@ import React from 'react';
 import * as Location from 'expo-location';
 import { LocationObject } from 'expo-location';
 import CryptoES from 'crypto-es';
+import { loadDemoClientWallet } from '../../data/secure';
 
 export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'>,) {
   const user = useAppSelector((state) => state.user);
@@ -53,6 +54,11 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
 
     //console.log(secure.userData);
 
+    
+
+
+    // console.log(secure);
+
     (async () => {
 
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -65,6 +71,15 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
       let location = await Location.getCurrentPositionAsync({});
       setLocation(location);
     })();
+
+    // (async () => {
+    //   await dispatch(loadDemoClientWallet()).unwrap().then((result) => {
+    //     console.log(result);
+    //   }).catch((error) => {
+    //     console.log(error);
+    //   });
+    // })();
+
 
   }, [])
   
@@ -113,30 +128,30 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
         inaccuracy : location?.coords.accuracy!,
       }
       // 3. Get solution from api 
-      //const response = await getBoxAccessKey({challenge:challenge,preciseLocation:preciseLocation,boxId:1}).unwrap();
+      const response = await getBoxAccessKey({challenge:challenge,preciseLocation:preciseLocation,boxId:1}).unwrap();
       
 
       
-        console.log("challenge: " + challenge);
-      //solve here 
-        let key = "cQfTjWnZr4u7x!z%"
-        const key128Bits = CryptoES.enc.Utf8.parse(key);
-        //ecb mode
-        const encrypted = CryptoES.AES.encrypt(challenge, key128Bits, { mode: CryptoES.mode.ECB, padding: CryptoES.pad.NoPadding });
-        //to hex
-        let encryptedHex = encrypted.ciphertext.toString(CryptoES.enc.Hex);
-        //to uppercase
-        encryptedHex = encryptedHex.toUpperCase();
-        console.log("encrypted: " + encryptedHex);
-        let solved_challenge = encryptedHex
+      //   console.log("challenge: " + challenge);
+      // //solve here 
+      //   let key = "cQfTjWnZr4u7x!z%"
+      //   const key128Bits = CryptoES.enc.Utf8.parse(key);
+      //   //ecb mode
+      //   const encrypted = CryptoES.AES.encrypt(challenge, key128Bits, { mode: CryptoES.mode.ECB, padding: CryptoES.pad.NoPadding });
+      //   //to hex
+      //   let encryptedHex = encrypted.ciphertext.toString(CryptoES.enc.Hex);
+      //   //to uppercase
+      //   encryptedHex = encryptedHex.toUpperCase();
+      //   console.log("encrypted: " + encryptedHex);
+      //   let solved_challenge = encryptedHex
 
 
 
 
-      const response = {
-        boxId:1,
-        accessKey:solved_challenge
-      }
+      // const response = {
+      //   boxId:1,
+      //   accessKey:solved_challenge
+      // }
       console.log("getBoxAccessKey",response.accessKey);
 
       // 4. Authenticate
