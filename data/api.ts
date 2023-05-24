@@ -430,45 +430,9 @@ export const apiSlice = createApi({
     }),
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   }),
 })
-//using fetch because it's easier to implement 
-// export const getBoxAccessKey = createAsyncThunk(
-//   'boxes/getAccessKey',
-//   async ({ id, challenge, location }: {id: string, challenge: string, location: PreciseLocation},thunkAPI) => {
-//     // You should use your own API calling mechanism here
-//     // fetch is used as an example
-//     const state = thunkAPI.getState() as RootState;
 
-//     const user_token = state.secure.userData?.token;
-//     console.log('getBoxAccessKey', id, challenge, location, user_token);
-//     const response = await fetch(API_URL+`box/${id}/access-key?challenge=${challenge}&location=${JSON.stringify(location)}`, { method: 'GET' , headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user_token}` }});
-
-//     if (!response.ok) {
-//       console.log('error getBoxAccessKey', response.status, response);
-
-//       throw new Error('Failed to fetch access key');
-//     }
-
-//     const data = await response.json();
-//     console.log('getBoxAccessKey fulfilled', JSON.stringify(data));
-//     return data;
-//   }
-// );
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 /**

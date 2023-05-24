@@ -3,7 +3,8 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "strict": true,
-    
-    
+    "types": [
+      "jest"
+    ]
   }
 }

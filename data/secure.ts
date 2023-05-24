@@ -108,12 +108,6 @@ const secureSlice = createSlice({
         );
 
 
-        //get token
-        builder.addCase(getToken.fulfilled, (state, action) => {
-            console.log('getToken.fulfilled');
-            state.userData.token = action.payload
-        }
-        );
         //remove token
         builder.addCase(removeToken.fulfilled, (state, action) => {
             console.log('removeToken.fulfilled');
@@ -128,17 +122,7 @@ const secureSlice = createSlice({
             state.is_user_logged_in = true;
         }
         );
-        //pending
-        builder.addCase(getToken.pending, (state, action) => {
-            console.log('getToken.pending');
-        }
-        );
-        //rejected
-        builder.addCase(getToken.rejected, (state, action) => {
-            console.log('getToken.rejected', action.error);
-        }
-        );
-
+       
         //full sign out
         builder.addCase(full_signout.fulfilled, (state, action) => {
             console.log('full_signout.fulfilled');
@@ -334,21 +318,6 @@ export const loadDemoClientWallet = createAsyncThunk(
 );
 
 
-
-
-
-//get token from backend
-export const getToken = createAsyncThunk(
-    'secure/getToken',
-    async (pin: string, thunkAPI) => {
-
-        //wait 3 seconds
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-
-
-        return 'hahhahaha'; //
-    }
-);
 
 //remove token from backend
 export const removeToken = createAsyncThunk(
