@@ -65,7 +65,6 @@ export default function Layout() {
 
 
         />
-        <Stack.Screen name="sign-in" />
-        <Stack.Screen name="sign-up" />
+       
     </Stack>
 }

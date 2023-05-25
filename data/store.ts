@@ -1,46 +1,34 @@
-//create reduxt
-import { combineReducers, configureStore } from '@reduxjs/toolkit';
-import { persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-//import { ConfigApi } from 'src/services'; //https://github.com/maetio/expo-template/blob/main/src/services/auth-api.ts
-import userReducer from './user-slice';
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import secureReducer from './secure';
-import bleReducer from '../ble/bleSlice';
-import { reducer as apiReducer, middleware as apiMiddleware } from './api';
+import {
+    PayloadAction,
+    PreloadedState,
+    combineReducers,
+    configureStore,
+    createSlice
+} from '@reduxjs/toolkit';
 import { setupListeners } from '@reduxjs/toolkit/dist/query';
+import { FLUSH, PAUSE, PERSIST, PURGE, REGISTER, REHYDRATE, persistReducer } from 'redux-persist';
+import bleReducer from '../ble/bleSlice';
+import { middleware as apiMiddleware, reducer as apiReducer } from './api';
+import secureReducer from './secure';
+import userReducer from './user-slice';
 
-
-
-/**
- * @remarks
- * set the persist configuration
- *
- * @resources
- * Usage with redux persist: https://redux-toolkit.js.org/usage/usage-guide#use-with-redux-persist
- * Helpful tutorial: https://edvins.io/how-to-use-redux-persist-with-redux-toolkit
- * Splitting the rtk-query api: https://stackoverflow.com/questions/71466817/splitting-api-definitions-with-rtk-query
- */
+// Persistence configurations
 const persistConfig = {
     key: 'root',
     version: 1,
     storage: AsyncStorage,
-    whitelist: ['user','api'], // only user will be persisted
-    
-
+    whitelist: ['user', 'api'],
 };
 
 const apiPersistConfig = {
     key: 'api',
     version: 1,
     storage: AsyncStorage,
-    blacklist: ['AuthMsg'], // only user will be persisted
+    blacklist: ['AuthMsg'], 
 };
 
-
-
-
-//create loading slice
+// Loading slice
 const loadingSlice = createSlice({
     name: 'loading',
     initialState: false,
@@ -51,39 +39,41 @@ const loadingSlice = createSlice({
     },
 });
 
-
-
-// combine reducers
-const reducers = combineReducers({
+// Root reducer
+const rootReducer = combineReducers({
     user: userReducer,
     loading: loadingSlice.reducer,
     secure: secureReducer,
-    //[ConfigApi.reducerPath]: ConfigApi.reducer,
     ble: bleReducer,
     api: persistReducer(apiPersistConfig, apiReducer)
 });
 
-// set the persisting reducers
-const persistedReducers = persistReducer(persistConfig, reducers);
+// Persisted root reducer
+const persistedReducers = persistReducer(persistConfig, rootReducer);
 
-// configure the store
-export const store = configureStore({
-    reducer: persistedReducers,
-    middleware: (getDefaultMiddleware) =>
-        getDefaultMiddleware({
-            serializableCheck: {
-                ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
-            },
-        }).concat(apiMiddleware),
-});
+// Store setup function
+export function setupStore(preloadedState?: PreloadedState<RootState>) {
+    const store = configureStore({
+        reducer: persistedReducers,
+        preloadedState,
+        middleware: (getDefaultMiddleware) =>
+            getDefaultMiddleware({
+                serializableCheck: {
+                    ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+                },
+            }).concat(apiMiddleware)
+    });
 
-setupListeners(store.dispatch) //for rtk-query fetch on x 
+    setupListeners(store.dispatch); // For RTK Query
 
+    return store;
+}
 
-// export the redux dispatch and root states
+// Store instance
+export const store = setupStore();
+
 export const { setLoading } = loadingSlice.actions;
 
-export type AppDispatch = typeof store.dispatch;
-export type RootState = ReturnType<typeof store.getState>;
-
-
+export type RootState = ReturnType<typeof rootReducer>;
+export type AppStore = ReturnType<typeof setupStore>;
+export type AppDispatch = AppStore['dispatch'];
