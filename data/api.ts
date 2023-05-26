@@ -2,7 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { REHYDRATE } from 'redux-persist';
 import { setToken } from './secure';
 import { RootState } from './store';
-interface User {
+export interface User {
   _createTime: string;
   _createUser: null;
   _updateTime: string;
@@ -23,7 +23,7 @@ interface User {
     username: string;
   };
   birthDate: null;
-  crypto: null;
+  crypto: Array<CryptoUserData>;
   details: any[];
   firstName: null;
   id: number;
@@ -33,7 +33,19 @@ interface User {
   tableName: string;
   userType: null;
 }
-interface AuthResponse { //message to sign
+interface CryptoUserData {
+  id: number;
+  _createTime: string;
+  _createUser: null;
+  _updateTime: string;
+  _updateUser: null;
+  status: number;
+  wallet: string;
+  user_id: number;
+  default: number;
+  tableName: string;
+}
+export interface AuthResponse { //message to sign
   authToken: {
     data: string
   },
@@ -121,6 +133,41 @@ interface getBoxAccessKeyResponse{
   boxId: number;
   accessKey: string;
 }
+export interface CreateParcelByUsers{
+    nftId: number;
+    trackingNumber: string;
+    transactionHash: string;
+    recipient_id: number;
+    courier_id: number;
+    box_id: number;
+    location : PreciseLocation;
+  
+}
+export interface CreateParcelByWallet {
+  nftId: string;
+  transactionHash: string;
+  location_id?: number;
+  location?: PreciseLocation;
+  recipient_addr: string;
+  courier_addr: string;
+  box_did: string;
+}
+
+export interface ParcelData {
+  id: number;
+  trackingNumber: string;
+  nftId: string;
+  transactionHash: string;
+  recipient_id: string;
+  courier_id: string;
+  box_id: string;
+  location_id: number;
+  depositTime: Date;
+  withdrawTime: Date;
+}
+
+
+
 
 
 import Constants from 'expo-constants';
@@ -208,7 +255,7 @@ export const apiSlice = createApi({
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         console.info('onQueryStarted /auth/login/wallet', arg);
         try {
-          const { data } = await queryFulfilled;
+          const { data,meta } = await queryFulfilled;
           dispatch(setToken(data.authToken.data))
           //mannually update the user cache with the new data
           dispatch(apiSlice.util.updateQueryData('getMe', undefined, (draft) => {
@@ -238,8 +285,9 @@ export const apiSlice = createApi({
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         console.log(' /users/me started');
         try {
-          const { data } = await queryFulfilled;
-          console.log('data', data);
+          const { data,meta } = await queryFulfilled;
+          //console.log('data', data);
+          //console.log(meta)
         } catch (error) { }
       },
       transformErrorResponse: (response: any) => {
@@ -248,6 +296,27 @@ export const apiSlice = createApi({
       },
 
       providesTags: ['User'],
+    }),
+    getUserDetails: builder.query<User, void>({
+      query: () => ({
+        url: '/users/details',
+        method: 'GET',
+      }),
+      transformResponse: (response: any) => response,
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log(' /users/details started');
+        try {
+          const { data,meta } = await queryFulfilled;
+          console.log('data', data);
+          console.log(meta)
+        } catch (error) { }
+      },
+      transformErrorResponse: (response: any) => {
+        console.log('error /users/details', response);
+        return response
+      },
+
+   
     }),
     //box endpoints
     getBoxes: builder.query<GetBoxesResponse, void>({
@@ -384,6 +453,8 @@ export const apiSlice = createApi({
           return response
       }
     }),
+
+    //parcel 
     
   
 
@@ -429,6 +500,27 @@ export const apiSlice = createApi({
       },
     }),
 
+    createParcelByWallet: builder.mutation<ParcelData, CreateParcelByWallet>({
+      query: (body) => ({
+        url: '/parcel/create/by-wallet',
+        method: 'POST',
+        body,}),
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('onQueryStarted /parcel/create/by-wallet', arg, dispatch);
+        try {
+          const { data } = await queryFulfilled;
+          console.log('/parcel/create/by-wallet fulfiled', JSON.stringify(data));
+        } catch (error) {
+        }
+      },
+      transformErrorResponse: (response: any) => {
+        console.log('error /parcel/create/by-wallet', response);
+        return response
+      }
+
+    }),
+
+
 
   }),
 })
@@ -459,6 +551,6 @@ export function isErrorWithMessage(
 // Export the reducer and middleware separately
 export const { reducer, middleware } = apiSlice
 // Export the endpoint for use in components
-export const { useGetAuthMsgQuery, useRegisterWalletMutation, useLoginWalletMutation, useGetMeQuery, useLazyGetAuthMsgQuery
+export const { useGetAuthMsgQuery, useRegisterWalletMutation, useLoginWalletMutation, useGetMeQuery, useLazyGetAuthMsgQuery,useLazyGetMeQuery,useGetUserDetailsQuery, useCreateParcelByWalletMutation
   , useGetBoxesQuery, useGetBoxQuery, useLazyGetBoxQuery, useLazyGetBoxesQuery, useConnectBoxMutation, useSetBoxPreciseLocationMutation, useGetBoxPreciseLocationQuery, useCreateApproximateLocationMutation, useUpdateApproximateLocationMutation,useGetBoxAccessKeyQuery,useLazyGetBoxAccessKeyQuery
 } = apiSlice
