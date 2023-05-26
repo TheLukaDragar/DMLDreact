@@ -30,7 +30,7 @@ jest.mock('react-native-ble-plx', () => ({
 }));
 
 
-async function setupAndLoadUser(loadFunction) {
+async function setupAndLoadUser(loadFunction: AsyncThunk<{ mnemonicPhrase: string; keyChainData: KeyChainData; }, void, { state?: unknown; dispatch?: Dispatch<AnyAction> | undefined; extra?: unknown; rejectValue?: unknown; serializedErrorType?: unknown; pendingMeta?: unknown; fulfilledMeta?: unknown; rejectedMeta?: unknown; }>) {
   const component = renderWithProviders(<TestComponent />);
   
   await act(async () => {
