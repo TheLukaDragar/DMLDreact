@@ -8,7 +8,7 @@ import { useAppDispatch, useAppSelector } from '../../data/hooks';
 import { ethers } from 'ethers';
 import React, { useEffect } from 'react';
 import { isErrorWithMessage, isFetchBaseQueryError, useLazyGetAuthMsgQuery, useLoginWalletMutation } from '../../data/api';
-import { loadDemoClientWallet } from '../../data/secure';
+import { loadDemoClientWallet, loadDemoCourierWallet } from '../../data/secure';
 
 
 
@@ -80,17 +80,53 @@ export default function TabTwoScreen() {
     try {
 
 
-      const secure_data = await dispatch(loadDemoClientWallet()) 
+      const secure_data = await dispatch(loadDemoClientWallet()).unwrap()
+
+      const msg = await getMessageToSign().unwrap();
+
+  
+      console.log(secure_data.keyChainData?.privateKey!, "private key");
+      console.log(msg?.message!, "message");
+      const signer = new ethers.Wallet(secure_data.keyChainData?.privateKey!);
+      const signature = await signer.signMessage(msg?.message!);
+
+      const recoveredAddress = ethers.utils.verifyMessage(msg?.message!, signature);
+  
+      console.log(recoveredAddress === signer.address, "recovered address === wallet address");
+  
+      const result = await Login({
+        wallet: signer.address,
+        signature: signature,
+        timestamp: msg?.timestamp!,
+      }).unwrap();
+  
+      console.log(result);
+    } catch (err) {
+      if (isFetchBaseQueryError(err)) {
+        const errMsg = 'error' in err ? err.error : JSON.stringify(err.data)
+        console.log("fetch error", err);
+        setError(errMsg);
+      } else if (isErrorWithMessage(err)) {
+        console.log("error with message , ", err);
+        setError(err.message);
+      }
+    }
+    
+  }
+
+  async function demo_courier_login() {
+    try {
+
+
+      const secure_data = await dispatch(loadDemoCourierWallet()).unwrap()
+
+      //here we use the outut of the dispatch direclt because the secure state is updated asyncronously
 
       const msg = await getMessageToSign().unwrap();
   
-      if (secure.is_wallet_setup === false) {
-        throw new Error("wallet not setup");
-      }
-  
-      console.log(secure.keyChainData?.privateKey!, "private key");
+      console.log(secure_data.keyChainData?.privateKey!, "private key");
       console.log(msg?.message!, "message");
-      const signer = new ethers.Wallet(secure.keyChainData?.privateKey!);
+      const signer = new ethers.Wallet(secure_data.keyChainData?.privateKey!);
       const signature = await signer.signMessage(msg?.message!);
 
       const recoveredAddress = ethers.utils.verifyMessage(msg?.message!, signature);
@@ -155,7 +191,7 @@ export default function TabTwoScreen() {
         Client (Demo)
       </Button>
       <Button
-        onPress={() => router.push('auth/step_1_choose_role')}
+        onPress={() => demo_courier_login()}
         mode="contained"
         contentStyle={{ padding: 20, width: 300 }}
         style={{ marginTop: 20 }}>

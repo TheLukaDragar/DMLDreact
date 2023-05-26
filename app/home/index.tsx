@@ -29,6 +29,7 @@ import * as Location from 'expo-location';
 import { LocationObject } from 'expo-location';
 import CryptoES from 'crypto-es';
 import { loadDemoClientWallet } from '../../data/secure';
+import { getBalance } from '../../data/blockchain';
 
 export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'>,) {
   const user = useAppSelector((state) => state.user);
@@ -57,7 +58,7 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
     
 
 
-    // console.log(secure);
+    console.log(secure);
 
     (async () => {
 
@@ -84,7 +85,7 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
   }, [])
   
   async function test() {
-    let result = await dispatch(testbutton({ h: "" })).unwrap().then((result) => {
+    let result = await dispatch(getBalance("0x5f2b7077a7e5b4fdd97cbb56d9ad02a4f326896d")).unwrap().then((result) => {
       console.log(result);
       return result;
     }).catch((error) => {

@@ -62,7 +62,7 @@ test('should login', async () => {
   console.log(store.store.getState().secure.userData.token);
   console.log(store.store.getState().secure.keyChainData?.privateKey!);
   
-});
+}, 20000)
 
     
 

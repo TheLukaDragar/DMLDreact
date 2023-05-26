@@ -12,6 +12,7 @@ import bleReducer from '../ble/bleSlice';
 import { middleware as apiMiddleware, reducer as apiReducer } from './api';
 import secureReducer from './secure';
 import userReducer from './user-slice';
+import blockchainReducer from './blockchain';
 
 // Persistence configurations
 const persistConfig = {
@@ -45,7 +46,8 @@ const rootReducer = combineReducers({
     loading: loadingSlice.reducer,
     secure: secureReducer,
     ble: bleReducer,
-    api: persistReducer(apiPersistConfig, apiReducer)
+    api: persistReducer(apiPersistConfig, apiReducer),
+    blockchain: blockchainReducer,
 });
 
 // Persisted root reducer

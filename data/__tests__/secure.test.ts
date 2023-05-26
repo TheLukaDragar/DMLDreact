@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 import { configureStore } from '@reduxjs/toolkit';
 import * as SecureStore from 'expo-secure-store';
 import { AnyAction } from 'redux';
