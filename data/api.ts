@@ -124,12 +124,12 @@ interface setBoxPreciseLocation{
   boxId: number;
   preciseLocation: PreciseLocation;
 }
-interface getBoxAccessKeyParams{
+export interface getBoxAccessKeyParams{
   boxId: number;
   preciseLocation: PreciseLocation;
   challenge: string;
 }
-interface getBoxAccessKeyResponse{
+export interface getBoxAccessKeyResponse{
   boxId: number;
   accessKey: string;
 }
@@ -387,7 +387,7 @@ export const apiSlice = createApi({
       },
       transformResponse: (response: any) => response,
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-        console.log('onQueryStarted /location/box/precise', arg, dispatch);
+        console.log('setBoxPreciseLocation /location/box/precise', arg, dispatch);
         try {
           const { data } = await queryFulfilled;
           console.log('/location/box/precise fulfiled', JSON.stringify(data));
@@ -410,9 +410,9 @@ export const apiSlice = createApi({
     //   You should only call this endpoint when refreshing precise location for a box
     //    without refreshing the entire box.
 
-    getBoxPreciseLocation: builder.query<any, string>({
+    getBoxPreciseLocation: builder.query<any, number>({
       query: (id) => ({
-        url: `/location/box/precise/${id}`,
+        url: `/location/box/${id}/precise`,
         method: 'GET',
       }),
       transformResponse: (response: any) => response,
@@ -453,6 +453,35 @@ export const apiSlice = createApi({
           return response
       }
     }),
+
+    //box/id/permission GET
+    getDoesUserHavePermissionToBox: builder.query<any, number>({
+      query: (id) => ({
+        url: `/box/1/permission`,
+        method: 'GET',
+      }),
+      transformResponse: (response: any) => response,
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('getDoesUserHavePermissionToBox', arg)
+        try {
+          const { data } = await queryFulfilled;
+          console.log('getDoesUserHavePermissionToBox fulfilled', JSON.stringify(data));
+        } catch (error) { }
+      },
+      transformErrorResponse: (response: any) => {
+        console.log('error getDoesUserHavePermissionToBox', response);
+        return response
+      }
+    }),
+
+
+
+
+
+
+
+
+
 
     //parcel 
     
@@ -551,6 +580,6 @@ export function isErrorWithMessage(
 // Export the reducer and middleware separately
 export const { reducer, middleware } = apiSlice
 // Export the endpoint for use in components
-export const { useGetAuthMsgQuery, useRegisterWalletMutation, useLoginWalletMutation, useGetMeQuery, useLazyGetAuthMsgQuery,useLazyGetMeQuery,useGetUserDetailsQuery, useCreateParcelByWalletMutation
+export const { useGetAuthMsgQuery, useRegisterWalletMutation, useLoginWalletMutation, useGetMeQuery, useLazyGetAuthMsgQuery,useLazyGetMeQuery,useGetUserDetailsQuery, useCreateParcelByWalletMutation,useLazyGetDoesUserHavePermissionToBoxQuery,useLazyGetBoxPreciseLocationQuery
   , useGetBoxesQuery, useGetBoxQuery, useLazyGetBoxQuery, useLazyGetBoxesQuery, useConnectBoxMutation, useSetBoxPreciseLocationMutation, useGetBoxPreciseLocationQuery, useCreateApproximateLocationMutation, useUpdateApproximateLocationMutation,useGetBoxAccessKeyQuery,useLazyGetBoxAccessKeyQuery
 } = apiSlice
