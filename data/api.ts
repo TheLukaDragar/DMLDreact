@@ -339,9 +339,9 @@ export const apiSlice = createApi({
       providesTags: ['Boxes'],
     }),
     //get a box data by id
-    getBox: builder.query<any, string>({
+    getBox: builder.query<Box, number>({
       query: (id) => ({
-        url: `/box/data/${id}`,
+        url: `/box/${id}/data`,
         method: 'GET',
       }),
       transformResponse: (response: any) => response,
@@ -454,7 +454,7 @@ export const apiSlice = createApi({
       }
     }),
 
-    //box/id/permission GET
+    //box/id/permission GET not used deprecated
     getDoesUserHavePermissionToBox: builder.query<any, number>({
       query: (id) => ({
         url: `/box/1/permission`,
@@ -549,6 +549,78 @@ export const apiSlice = createApi({
 
     }),
 
+    //deposit parcel  @Post('/:id/deposit')
+    depositParcel: builder.mutation<any, number>({
+      query: (id) => ({
+        url: `/parcel/${id}/deposit`,
+        method: 'POST'
+      }),
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('onQueryStarted /parcel/deposit', arg, dispatch);
+        try {
+          const { data } = await queryFulfilled;
+          console.log('/parcel/deposit fulfiled', JSON.stringify(data));
+        } catch (error) {
+        }
+      },
+      transformErrorResponse: (response: any) => {
+        console.log('error /parcel/deposit', response);
+        return response
+      }
+    }),
+
+    //withdraw parcel @Post('/:id/withdraw')
+    withdrawParcel: builder.mutation<any, number>({
+      query: (id) => ({
+        url: `/parcel/${id}/withdraw`,
+        method: 'POST'
+      }),
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('onQueryStarted /parcel/withdraw', arg, dispatch);
+        try {
+          const { data } = await queryFulfilled;
+          console.log('/parcel/withdraw fulfiled', JSON.stringify(data));
+        } catch (error) {
+        }
+      },
+      transformErrorResponse: (response: any) => {
+        console.log('error /parcel/withdraw', response);
+        return response
+      }
+    }),
+
+
+    //get parcel by id
+    getParcelById: builder.query<ParcelData, number>({
+      query: (id) => ({
+        url: `/parcel/${id}`,
+        method: 'GET',
+
+      }),
+      transformResponse: (response: any) => response,
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('getParcelById', arg)
+        try {
+          const { data } = await queryFulfilled;
+          console.log('getParcelById fulfilled', JSON.stringify(data));
+        } catch (error) { 
+          console.log('getParcelById error', error);
+          console.log('getParcelById error', JSON.stringify(error));
+        }
+      },
+      transformErrorResponse: (response: any) => {
+        console.log('error getParcelById', response);
+        return response
+      }
+    }),
+
+
+
+      
+        
+
+
+
 
 
   }),
@@ -582,4 +654,5 @@ export const { reducer, middleware } = apiSlice
 // Export the endpoint for use in components
 export const { useGetAuthMsgQuery, useRegisterWalletMutation, useLoginWalletMutation, useGetMeQuery, useLazyGetAuthMsgQuery,useLazyGetMeQuery,useGetUserDetailsQuery, useCreateParcelByWalletMutation,useLazyGetDoesUserHavePermissionToBoxQuery,useLazyGetBoxPreciseLocationQuery
   , useGetBoxesQuery, useGetBoxQuery, useLazyGetBoxQuery, useLazyGetBoxesQuery, useConnectBoxMutation, useSetBoxPreciseLocationMutation, useGetBoxPreciseLocationQuery, useCreateApproximateLocationMutation, useUpdateApproximateLocationMutation,useGetBoxAccessKeyQuery,useLazyGetBoxAccessKeyQuery
+  ,useDepositParcelMutation,useLazyGetParcelByIdQuery,useGetParcelByIdQuery,useWithdrawParcelMutation
 } = apiSlice

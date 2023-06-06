@@ -12,13 +12,13 @@ import '@testing-library/jest-dom';
 import "whatwg-fetch"
 
 import { KeyChainData, loadDemoClientWallet, loadDemoCourierWallet } from '../data/secure';
-import { useLoginWalletMutation, useLazyGetAuthMsgQuery, useLazyGetMeQuery, User, AuthResponse, ParcelData, CreateParcelByWallet, useCreateParcelByWalletMutation, useLazyGetBoxAccessKeyQuery, useLazyGetBoxesQuery, useLazyGetDoesUserHavePermissionToBoxQuery, PreciseLocation, useSetBoxPreciseLocationMutation, useLazyGetBoxPreciseLocationQuery, isFetchBaseQueryError, isErrorWithMessage } from '../data/api';
+import { useLoginWalletMutation, useLazyGetAuthMsgQuery, useLazyGetMeQuery, User, AuthResponse, ParcelData, CreateParcelByWallet, useCreateParcelByWalletMutation, useLazyGetBoxAccessKeyQuery, useLazyGetBoxesQuery, useLazyGetDoesUserHavePermissionToBoxQuery, PreciseLocation, useSetBoxPreciseLocationMutation, useLazyGetBoxPreciseLocationQuery, isFetchBaseQueryError, isErrorWithMessage, useDepositParcelMutation, useLazyGetParcelByIdQuery, useLazyGetBoxQuery, useWithdrawParcelMutation } from '../data/api';
 import { useAppDispatch, useAppSelector } from '../data/hooks';
 import { AsyncThunk } from '@reduxjs/toolkit';
 import { Dispatch, AnyAction } from 'redux';
 import { Provider } from 'react-redux';
 import { ethers } from 'ethers';
-import { connectDeviceById, demoDevice, getChallenge, setDemoMode } from '../ble/bleSlice';
+import { authenticate, connectDeviceById, demoDevice, getChallenge, setDemoMode } from '../ble/bleSlice';
 
 
 jest.mock('@react-native-async-storage/async-storage', () =>
@@ -29,18 +29,8 @@ jest.mock('react-native-ble-plx', () => ({
     createClient: jest.fn(),
   })),
 }));
+jest.mock('expo-constants', () => require('./mockExpoConstants.js'));
 
-jest.mock('expo-constants', () => ({
-  expoConfig: {
-      extra: {
-        API_URL: "https://4gkntp89fl.execute-api.eu-central-1.amazonaws.com/development/",
-        reputationSCAddress: "0x883957F3bc621DEc82d4522379E67bA4a8118820",
-        parcelNFTSCAddress: "0xDD2EBb698bfCcD711E3Cc352a9E3C17b484fB339",
-        RPCUrl: "https://bellecour.iex.ec",
-        use_demo_device: true,
-      },
-  },
-}));
 
 
 async function setupAndLoadUser(loadFunction: AsyncThunk<{ mnemonicPhrase: string; keyChainData: KeyChainData; }, void, { state?: unknown; dispatch?: Dispatch<AnyAction> | undefined; extra?: unknown; rejectValue?: unknown; serializedErrorType?: unknown; pendingMeta?: unknown; fulfilledMeta?: unknown; rejectedMeta?: unknown; }>) {
@@ -289,7 +279,177 @@ describe('Test Scenario', () => {
     expect(access_key.accessKey).not.toBeUndefined();
     expect(access_key.accessKey).not.toBeNull();
 
+
+    //authenticate with the box
+    const auth_result = await courierComponent.store.dispatch(authenticate({solved_challenge: access_key.accessKey}) as unknown as AnyAction).unwrap();
+    expect(auth_result).not.toBeUndefined();
+    expect(auth_result).toBe(true);
+
+    //unlock the box .. 
+
+
+
+    //connect to the box and unloc it 
+
+    //TODO REPUTATION
+
+    //useDepositParcelMutation
+    const { result: depositParcelResult } = renderHook(() => useDepositParcelMutation(), {
+      wrapper: ({ children }) => <Provider store={courierComponent.store}>{children}</Provider>,
+    });
+
+    const depositParcelResponse = await act(async () => {
+      const result = await depositParcelResult.current[0](box?.id || -1).unwrap();
+      console.log("deposit parcel result: ", result);
+      return result;
+    }
+    );
+
+    expect(depositParcelResponse).not.toBeUndefined(); //can be null it musnt throw an error
+    //TODO CORS ERROR FIX
+
+
+
+    //USER SIDE
+
+    //get the parcel useLazyGetParcelByIdQuery
+    const { result: getParcelResult } = renderHook(() => useLazyGetParcelByIdQuery(), {
+      wrapper: ({ children }) => <Provider store={clientComponent.store}>{children}</Provider>,
+
+    });
+
+    const parcel_response = await act(async () => {
+      const result = await getParcelResult.current[0](parcel_respose.id).unwrap();
+      console.log("get parcel result: ", result);
+      return result;
+    }
+    );
+
+    expect(parcel_response).not.toBeUndefined();
+    expect(parcel_response.id).not.toBeUndefined();
+    expect(parcel_response.id).not.toBeNull();
+
+
+    //get box location
+    const { result: getBoxPreciseLocationResult_client } = renderHook(() => useLazyGetBoxPreciseLocationQuery(), {
+      wrapper: ({ children }) => <Provider store={clientComponent.store}>{children}</Provider>,
+    });
+
+    const box_location_client = await act(async () => {
+      const result = await getBoxPreciseLocationResult_client.current[0](box!.id).unwrap();
+      console.log("box location: ", result);
+      return result;
+    }
+    );
+
+    //check that they are not null
+    expect(box_location_client.latitude).not.toBeNull();
+    expect(box_location_client.longitude).not.toBeNull();
+    expect(box_location_client.inaccuracy).not.toBeNull();
+
+    //get box details lAZYgetBox
+    const { result: getBoxResult } = renderHook(() => useLazyGetBoxQuery(), {
+      wrapper: ({ children }) => <Provider store={clientComponent.store}>{children}</Provider>,
+    });
+
+    const box_client = await act(async () => {
+      const result = await getBoxResult.current[0](parseInt(parcel_response.box_id)).unwrap();
+      console.log("box result: ", result);
+      return result;
+    });
+
+    expect(box_client).not.toBeUndefined();
+    expect(box_client.id).not.toBeUndefined();
+    expect(box_client.id).not.toBeNull();
+
+
     //connect to the box
+   
+
+    const ble_Device_client = await clientComponent.store.dispatch(connectDeviceById({
+      id: mac_addres,
+    }) as unknown as AnyAction).unwrap();
+
+    expect(ble_Device_client).not.toBeUndefined();
+    expect(ble_Device_client.id).not.toBeUndefined();
+
+    //get box access key
+    const { result: getBoxAccessKeyResult } = renderHook(() => useLazyGetBoxAccessKeyQuery(), {
+      wrapper: ({ children }) => <Provider store={clientComponent.store}>{children}</Provider>,
+    });
+
+    const challenge2 = await clientComponent.store.dispatch(getChallenge() as unknown as AnyAction).unwrap();
+    //expect string
+    expect(challenge2).not.toBeUndefined();
+    expect(typeof challenge2).toBe("string");
+
+
+    const access_key_client = await act(async () => {
+      const result = await getBoxAccessKeyResult.current[0]({
+        challenge: challenge2 as unknown as string,
+        boxId: box_client?.id || -1,
+        //courier has to be in the box location
+        preciseLocation: {
+          longitude: box_location_client.longitude,
+          latitude: box_location_client.latitude,
+          inaccuracy: box_location_client.inaccuracy,
+        },
+      }).unwrap();
+      console.log("access key result: ", result);
+      return result;
+    }
+    );
+
+    expect(access_key_client).not.toBeUndefined();
+    expect(access_key_client.accessKey).not.toBeUndefined();
+    expect(access_key_client.accessKey).not.toBeNull();
+
+    //authenticate with the box
+    const auth_result_client = await clientComponent.store.dispatch(authenticate({solved_challenge: access_key_client.accessKey}) as unknown as AnyAction).unwrap();
+    expect(auth_result_client).not.toBeUndefined();
+    expect(auth_result_client).toBe(true);
+
+    //unlock the box ..
+
+    //REPUTATION
+
+    //withdraw parcel
+    const { result: withdrawParcelResult } = renderHook(() => useWithdrawParcelMutation(), {
+      wrapper: ({ children }) => <Provider store={clientComponent.store}>{children}</Provider>,
+    });
+
+    const withdrawParcelResponse = await act(async () => {
+      const result = await withdrawParcelResult.current[0](parcel_response.id).unwrap();
+      console.log("withdraw parcel result: ", result);
+      return result;
+    }
+    );
+
+    expect(withdrawParcelResponse).not.toBeUndefined(); //can be null it musnt throw an error
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+    
+    
+
+    
+
+    
+
+
     
 
 
