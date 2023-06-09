@@ -49,6 +49,7 @@
     "expo-system-ui": "~2.2.1",
     "expo-updates": "~0.16.4",
     "expo-web-browser": "~12.1.1",
+    "iexec": "^8.1.4",
     "metro": "^0.76.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -66,7 +67,6 @@
     "react-redux": "^8.0.5",
     "redux": "^4.2.0",
     "redux-persist": "^6.0.0"
-   
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
@@ -80,9 +80,9 @@
     "jest-environment-jsdom": "^29.5.0",
     "jest-expo": "~47.0.1",
     "node-fetch": "^3.3.1",
-    "whatwg-fetch": "^3.6.2",
     "react-test-renderer": "18.1.0",
-    "typescript": "^4.6.3"
+    "typescript": "^4.6.3",
+    "whatwg-fetch": "^3.6.2"
   },
   "private": true
 }

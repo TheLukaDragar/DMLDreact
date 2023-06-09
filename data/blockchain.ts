@@ -6,6 +6,8 @@ import { RootState } from './store';
 
 import Constants from 'expo-constants';
 import { ethers } from "ethers";
+import { IExec } from 'iexec';
+
 
 const RPCUrl = Constants?.expoConfig?.extra?.RPCUrl;
 const reputationSCAddress = Constants?.expoConfig?.extra?.reputationSCAddress;
@@ -70,6 +72,57 @@ export const isWhitelisted = createAsyncThunk(
     }
 );
 
+//mint parcel
+export const mintParcel = createAsyncThunk(
+    'blockchain/mintParcel',
+    async (_, thunkAPI) => {
+        try {
+            // Get the current state
+            const state = thunkAPI.getState() as RootState;
+
+            // Get the wallet from the state
+            const privateKey = state.blockchain.privateKey;
+
+            // Check if the wallet exists
+            if (!privateKey) {
+                throw new Error("Wallet not found");
+            }
+
+
+            const wallet = new ethers.Wallet(privateKey, provider);
+
+            const contract = new ethers.Contract(parcelNFTSCAddress, parcelNFTSC_ABI, wallet);
+            //mint(_reciever,_uuid,parcel_id,_dataset)
+            //random address
+            const reciever = "0xaAde65481e74Ebe7EA7D2Ecf767eC2266020C7df";
+            const mintParcel = await contract.mint(reciever, "12345", "69", "0x12345");
+
+            return mintParcel;
+
+
+
+
+
+
+
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                // If the error is an instance of Error, handle it
+                return thunkAPI.rejectWithValue(error.message);
+            } else {
+                // If the error is not an instance of Error, handle it differently
+                return thunkAPI.rejectWithValue('An unknown error occurred');
+
+            }
+        }
+
+    }   
+);
+
+
+            
+
 
 
 
@@ -85,16 +138,18 @@ export const isWhitelisted = createAsyncThunk(
 //Push encryption key to the SMS (da ga lahko docker masina dekriptira)
 
 
-
+//__uuid -- neki unique karkil lahko  parcel id 
 //courir mint 2. mint __uuid 
 //courirer si na svoj addres naredi nft
 
+
+//getIdFromUUID()
 //pred update box klici approve(0xDD2EBb698bfCcD711E3Cc352a9E3C17b484fB339, getIdFromUUID())
 //ko courier odpre avto je prvi dataset ki sporoci da se odpre
 //ko se zapre je drugi dataset ki sporoci da se zapre in nek dodaten parmeter ki 10. updateBox → transferownership true
 //update box klice samo owner nftja
 
-//client(reciver) je zdaj owner nftja in lahko odpira box spet klice dvakrat updatebox
+//client(reciver) je zdaj owner nftja in lahko odpira box spet klice dvakrat updatebox    // ko odpre in zapre 
 
 
 
@@ -121,3 +176,57 @@ const blockchainSlice = createSlice({
 export const { setPrivateKey } = blockchainSlice.actions;
 
 export default blockchainSlice.reducer;
+
+
+
+
+//za dataset rabimo file
+//Prepare encrypted dataset 
+
+// const encrypted = await iexec.dataset.encrypt(fileBytes, key);
+// const checksum = await iexec.dataset.computeEncryptedFileChecksum(
+//   encrypted
+// );
+
+// datasetsEncryptOutput.innerText = "Uploading encrypted file to IPFS";
+// const ipfs = create("/dns4/ipfs-upload.iex.ec/https/");
+// const uploadResult = await ipfs.add(encrypted);
+// const { cid } = uploadResult;
+// const multiaddr = `ipfs/${cid.toString()}`;
+// const publicUrl = `https://ipfs.iex.ec/${multiaddr}`;
+
+// datasetsEncryptOutput.innerText = "Checking file on IPFS";
+// await fetch(publicUrl).then((res) => {
+//   if (!res.ok) {
+//     throw Error(`Failed to load uploaded file at ${publicUrl}`);
+//   }
+// });
+
+//zdaj mamo na ipfs  encrypted file in dobim link do fila 
+//
+
+
+//2. Deploy dataset
+//Dataset name 
+// https:::bitbucket.org:theluka:pbd2023-lab-9:
+// Dataset url/ipfs 
+// ipfs/QmNmg67ehHQrNt7SivsmgvMSLRcqevqMBqg7ERpKnvQUhN
+// Dataset checksum 
+// 0x15d67caed6eb13d6b8ea9ac1c80db256e706fbd3862be2aca7693f891f2f7501
+
+//rezultat Dataset deployed at address 0x23F08F97B90733876CA04bc05D61204d9F33509f
+
+//3.Push encryption key to the SMS
+
+//4.Sell dataset
+//Restrict to app 0x00000000000
+
+//5 .get dataset problematicno poglej iexec api https://explorer.iex.ec/bellecour/dataset/0xF21719618F1c842a9da4e62989FC3715716fB528
+
+
+
+
+
+
+
+

@@ -4,6 +4,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { AnyAction } from 'redux';
 import blockchainSlice, { isWhitelisted, setPrivateKey } from '../blockchain';
+import { act } from '@testing-library/react';
 jest.mock('expo-constants', () => ({
     expoConfig: {
         extra: {
@@ -61,6 +62,13 @@ describe('blockchainSlice', () => {
     it('confirms that an unwhitelisted address is recognized as not whitelisted', async () => {
         await checkWhitelistedStatus(privateKey_UnWhitelisted, false);
     });
+
+
+    
+
+
+
+
 
     
 });
