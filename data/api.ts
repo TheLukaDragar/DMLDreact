@@ -166,6 +166,26 @@ export interface ParcelData {
   withdrawTime: Date;
 }
 
+export enum RatingType {
+  COURIER = 1,
+  SMART_BOX = 2,
+}
+
+export interface RateTransactionDto {
+  parcel_id: number;
+  recipient_id: number;
+  ratingType: RatingType;
+  rating: number;
+}
+
+export interface RateTransactionResponse {
+  parcel_id: number;
+  recipient_id: number;
+  author_id: number;
+  ratingType: RatingType;
+  rating: number;
+}
+
 
 
 
@@ -605,6 +625,12 @@ export const apiSlice = createApi({
           console.log('getParcelById fulfilled', JSON.stringify(data));
         } catch (error) { 
           console.log('getParcelById error', error);
+
+          //get to object
+          
+
+
+
           console.log('getParcelById error', JSON.stringify(error));
         }
       },
@@ -613,6 +639,32 @@ export const apiSlice = createApi({
         return response
       }
     }),
+
+    //rate-transaction
+    rateTransaction: builder.mutation<RateTransactionResponse, RateTransactionDto>({
+      query: (body) => ({
+        url: '/reputation/rate-transaction'
+        , method: 'POST',
+        body,}),
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('onQueryStarted /rate-transaction', arg, dispatch);
+        try {
+          const { data } = await queryFulfilled;
+          console.log('/rate-transaction fulfiled', JSON.stringify(data));
+        } catch (error) {
+        }
+      },
+      transformErrorResponse: (response: any) => {
+        console.log('error /rate-transaction', response);
+        return response
+      }
+    }),
+
+
+
+
+
+
 
 
 
@@ -654,5 +706,5 @@ export const { reducer, middleware } = apiSlice
 // Export the endpoint for use in components
 export const { useGetAuthMsgQuery, useRegisterWalletMutation, useLoginWalletMutation, useGetMeQuery, useLazyGetAuthMsgQuery,useLazyGetMeQuery,useGetUserDetailsQuery, useCreateParcelByWalletMutation,useLazyGetDoesUserHavePermissionToBoxQuery,useLazyGetBoxPreciseLocationQuery
   , useGetBoxesQuery, useGetBoxQuery, useLazyGetBoxQuery, useLazyGetBoxesQuery, useConnectBoxMutation, useSetBoxPreciseLocationMutation, useGetBoxPreciseLocationQuery, useCreateApproximateLocationMutation, useUpdateApproximateLocationMutation,useGetBoxAccessKeyQuery,useLazyGetBoxAccessKeyQuery
-  ,useDepositParcelMutation,useLazyGetParcelByIdQuery,useGetParcelByIdQuery,useWithdrawParcelMutation
+  ,useDepositParcelMutation,useLazyGetParcelByIdQuery,useGetParcelByIdQuery,useWithdrawParcelMutation,useRateTransactionMutation
 } = apiSlice

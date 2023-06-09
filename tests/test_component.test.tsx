@@ -4,7 +4,7 @@
 import 'whatwg-fetch';
 import React from 'react'
 
-import { act, fireEvent, screen, waitFor ,renderHook} from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, renderHook } from '@testing-library/react'
 // We're using our own custom render function and not RTL's render.
 import { renderWithProviders } from '../utils/test-utils'
 import TestComponent, { getUserDataPassed, loginPassed } from './test_component'
@@ -12,7 +12,7 @@ import '@testing-library/jest-dom';
 import "whatwg-fetch"
 
 import { KeyChainData, loadDemoClientWallet, loadDemoCourierWallet } from '../data/secure';
-import { useLoginWalletMutation, useLazyGetAuthMsgQuery, useLazyGetMeQuery, User, AuthResponse, ParcelData, CreateParcelByWallet, useCreateParcelByWalletMutation, useLazyGetBoxAccessKeyQuery, useLazyGetBoxesQuery, useLazyGetDoesUserHavePermissionToBoxQuery, PreciseLocation, useSetBoxPreciseLocationMutation, useLazyGetBoxPreciseLocationQuery, isFetchBaseQueryError, isErrorWithMessage, useDepositParcelMutation, useLazyGetParcelByIdQuery, useLazyGetBoxQuery, useWithdrawParcelMutation } from '../data/api';
+import { useLoginWalletMutation, useLazyGetAuthMsgQuery, useLazyGetMeQuery, User, AuthResponse, ParcelData, CreateParcelByWallet, useCreateParcelByWalletMutation, useLazyGetBoxAccessKeyQuery, useLazyGetBoxesQuery, useLazyGetDoesUserHavePermissionToBoxQuery, PreciseLocation, useSetBoxPreciseLocationMutation, useLazyGetBoxPreciseLocationQuery, isFetchBaseQueryError, isErrorWithMessage, useDepositParcelMutation, useLazyGetParcelByIdQuery, useLazyGetBoxQuery, useWithdrawParcelMutation, RateTransactionDto, RatingType, useRateTransactionMutation } from '../data/api';
 import { useAppDispatch, useAppSelector } from '../data/hooks';
 import { AsyncThunk } from '@reduxjs/toolkit';
 import { Dispatch, AnyAction } from 'redux';
@@ -35,7 +35,7 @@ jest.mock('expo-constants', () => require('./mockExpoConstants.js'));
 
 async function setupAndLoadUser(loadFunction: AsyncThunk<{ mnemonicPhrase: string; keyChainData: KeyChainData; }, void, { state?: unknown; dispatch?: Dispatch<AnyAction> | undefined; extra?: unknown; rejectValue?: unknown; serializedErrorType?: unknown; pendingMeta?: unknown; fulfilledMeta?: unknown; rejectedMeta?: unknown; }>) {
   const component = renderWithProviders(<TestComponent />);
-  
+
   await act(async () => {
     const secureData = await loadFunction()(component.store.dispatch, component.store.getState, undefined).unwrap();
     expect(secureData).not.toBeUndefined();
@@ -71,21 +71,21 @@ async function setupAndLoadUser(loadFunction: AsyncThunk<{ mnemonicPhrase: strin
   console.log("user: ", loginResult);
 
   console.log("login passed");
-  
+
   expect(component.store.getState().secure.userData.token).not.toBeUndefined();
   expect(component.store.getState().secure.userData.token).not.toBeNull();
-  
+
   return { component, loginResult };
 }
 
 describe('Test Scenario', () => {
-  test('1. courier should create a parcel', async () => {
+  test('Courier - Client full scenario', async () => {
     const { component: courierComponent, loginResult: courierResult } = await setupAndLoadUser(loadDemoCourierWallet);
     const { component: clientComponent, loginResult: clientResult } = await setupAndLoadUser(loadDemoClientWallet);
     const courierUserData = courierResult.profile;
     const clientUserData = clientResult.profile;
 
-    const demo_box_did="KeyBot_000000000000"
+    const demo_box_did = "KeyBot_000000000000"
 
 
     //client get boxes that he can access
@@ -148,37 +148,24 @@ describe('Test Scenario', () => {
         //check if status PRECISE_LOCATION_EXISTS and if so, ignore
         if (err.status === 422) {
           console.log('PRECISE_LOCATION_EXISTS');
-        }else{
+        } else {
           throw err;
         }
 
 
 
-      
+
       } else if (isErrorWithMessage(err)) {
         console.log('error with message, ', err);
-       
+
       }
     }
-    
-
-    
-
-
-
-    
-    
-
-
-
-
 
     const courier_loocation1 = {
       latitude: 45.767,
       longitude: 4.833,
       inaccuracy: 10,
     } as PreciseLocation;
-
 
 
 
@@ -190,8 +177,8 @@ describe('Test Scenario', () => {
       courier_addr: courierUserData.crypto[0].wallet,
       box_did: demo_box_did,
       preciseLocation: courier_loocation1,
-    } as CreateParcelByWallet ;
-    
+    } as CreateParcelByWallet;
+
     const { result: createParcelResult } = renderHook(() => useCreateParcelByWalletMutation(), {
       wrapper: ({ children }) => <Provider store={courierComponent.store}>{children}</Provider>,
     });
@@ -225,17 +212,7 @@ describe('Test Scenario', () => {
     expect(box_location.longitude).not.toBeNull();
     expect(box_location.inaccuracy).not.toBeNull();
 
-    
-    
-    
-
-
-
-
     //connect to the box
-
-    
-
 
     const mac_addres = demoDevice.id;
 
@@ -281,17 +258,11 @@ describe('Test Scenario', () => {
 
 
     //authenticate with the box
-    const auth_result = await courierComponent.store.dispatch(authenticate({solved_challenge: access_key.accessKey}) as unknown as AnyAction).unwrap();
+    const auth_result = await courierComponent.store.dispatch(authenticate({ solved_challenge: access_key.accessKey }) as unknown as AnyAction).unwrap();
     expect(auth_result).not.toBeUndefined();
     expect(auth_result).toBe(true);
 
     //unlock the box .. 
-
-
-
-    //connect to the box and unloc it 
-
-    //TODO REPUTATION
 
     //useDepositParcelMutation
     const { result: depositParcelResult } = renderHook(() => useDepositParcelMutation(), {
@@ -306,8 +277,6 @@ describe('Test Scenario', () => {
     );
 
     expect(depositParcelResponse).not.toBeUndefined(); //can be null it musnt throw an error
-    //TODO CORS ERROR FIX
-
 
 
     //USER SIDE
@@ -364,7 +333,7 @@ describe('Test Scenario', () => {
 
 
     //connect to the box
-   
+
 
     const ble_Device_client = await clientComponent.store.dispatch(connectDeviceById({
       id: mac_addres,
@@ -405,13 +374,71 @@ describe('Test Scenario', () => {
     expect(access_key_client.accessKey).not.toBeNull();
 
     //authenticate with the box
-    const auth_result_client = await clientComponent.store.dispatch(authenticate({solved_challenge: access_key_client.accessKey}) as unknown as AnyAction).unwrap();
+    const auth_result_client = await clientComponent.store.dispatch(authenticate({ solved_challenge: access_key_client.accessKey }) as unknown as AnyAction).unwrap();
     expect(auth_result_client).not.toBeUndefined();
     expect(auth_result_client).toBe(true);
 
     //unlock the box ..
 
     //REPUTATION
+
+    //rate the box
+    const rating_courier: RateTransactionDto = {
+      rating: 5,
+      recipient_id: courierUserData.id, //for now only recipient can rate
+      parcel_id: parcel_respose.id,
+      ratingType: RatingType.COURIER,
+    };
+
+    const { result: rateTransactionResult } = renderHook(() => useRateTransactionMutation(), {
+      wrapper: ({ children }) => <Provider store={clientComponent.store}>{children}</Provider>,
+    });
+
+    const rateTransactionResponse = await act(async () => {
+      const result = await rateTransactionResult.current[0](rating_courier).unwrap();
+      console.log("rate transaction result: ", result);
+      return result;
+    }
+    );
+
+    expect(rateTransactionResponse).not.toBeUndefined();
+    expect(rateTransactionResponse.rating).not.toBeUndefined();
+    expect(rateTransactionResponse.rating).not.toBeNull();
+
+    expect(rateTransactionResponse.author_id).not.toBeUndefined();
+    expect(rateTransactionResponse.author_id).not.toBeNull();
+    expect(rateTransactionResponse.author_id).toBe(clientUserData.id);
+
+
+
+
+    const rating_client: RateTransactionDto = {
+      rating: 5,
+      recipient_id: box_client.id,
+      parcel_id: parcel_respose.id,
+      ratingType: RatingType.SMART_BOX,
+    };
+
+    const { result: rateTransactionResult_client } = renderHook(() => useRateTransactionMutation(), {
+      wrapper: ({ children }) => <Provider store={clientComponent.store}>{children}</Provider>,
+    });
+
+    const rateTransactionResponse_client = await act(async () => {
+      const result = await rateTransactionResult_client.current[0](rating_client).unwrap();
+      console.log("rate transaction result: ", result);
+      return result;
+    }
+    );
+
+    expect(rateTransactionResponse_client).not.toBeUndefined();
+    expect(rateTransactionResponse_client.rating).not.toBeUndefined();
+    expect(rateTransactionResponse_client.rating).not.toBeNull();
+
+    expect(rateTransactionResponse_client.author_id).not.toBeUndefined();
+    expect(rateTransactionResponse_client.author_id).not.toBeNull();
+    expect(rateTransactionResponse_client.author_id).toBe(clientUserData.id);
+
+
 
     //withdraw parcel
     const { result: withdrawParcelResult } = renderHook(() => useWithdrawParcelMutation(), {
@@ -425,46 +452,9 @@ describe('Test Scenario', () => {
     }
     );
 
-    expect(withdrawParcelResponse).not.toBeUndefined(); //can be null it musnt throw an error
-
-
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-    
-    
-
-    
-
-    
-
-
-    
-
-
-
-
-
-    
-
-
-
-    
-
-
-  
-
+    expect(withdrawParcelResponse).not.toBeUndefined(); 
+    //expect empyt object
+    expect(withdrawParcelResponse).toEqual({});
   }, 20000);
 });
 
@@ -486,13 +476,13 @@ describe('Test Scenario', () => {
     // });
 
 
-    
 
 
 
 
-  
 
-  
+
+
+
 
 
