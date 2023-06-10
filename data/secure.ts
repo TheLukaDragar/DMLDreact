@@ -9,6 +9,7 @@ import "react-native-get-random-values";
 import "@ethersproject/shims";
 
 import { ethers } from 'ethers';
+import { setPrivateKey } from './blockchain';
 
 
 //from gimly
@@ -195,6 +196,9 @@ export const getSecure = createAsyncThunk(
             userData.token = await SecureStore.getItemAsync('token');
 
             console.log('getSecure', userData);
+
+            //setting Private key in blockgain
+            thunkAPI.dispatch(setPrivateKey(keyChainData.privateKey));
 
 
             return {

@@ -8,13 +8,22 @@ import Constants from 'expo-constants';
 import { ethers } from "ethers";
 //import dataserRegistryABI from '../contracts/DatasetRegistry.json';
 import DatasetRegistry from './iexec/DatasetRegistry';
-import { getAddress } from "ethers/lib/utils";
+import Token from './iexec/token';
+import { _TypedDataEncoder, arrayify, getAddress, hexlify, keccak256, randomBytes } from "ethers/lib/utils";
+import { IPFSGateways, encryptAes256Cbc, generateAes256Key, sha256Sum, uploadToIPFS, uploadToIPFSTesting } from "./iexec/IPFSGateway";
+import { Buffer } from 'buffer'
+
+
 
 
 const RPCUrl = Constants?.expoConfig?.extra?.RPCUrl;
 const reputationSCAddress = Constants?.expoConfig?.extra?.reputationSCAddress;
 const parcelNFTSCAddress = Constants?.expoConfig?.extra?.parcelNFTSCAddress;
 const provider = new ethers.providers.JsonRpcProvider(RPCUrl);
+const smsURL = "https://sms.scone-prod.v8-bellecour.iex.ec";
+const marketplaceURL = "https://api.market.v8-bellecour.iex.ec";
+const hub_addres = "0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f"
+const chainId = '134';
 
 console.log(RPCUrl);
 console.log(reputationSCAddress);
@@ -29,6 +38,7 @@ console.log(parcelNFTSCAddress);
 // ];
 const parcelNFTSC_ABI=[{"type":"constructor","inputs":[{"type":"string","name":"_name","internalType":"string"},{"type":"string","name":"_symbol","internalType":"string"},{"type":"string","name":"_newBaseURI","internalType":"string"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"approve","inputs":[{"type":"address","name":"to","internalType":"address"},{"type":"uint256","name":"tokenId","internalType":"uint256"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"balanceOf","inputs":[{"type":"address","name":"owner","internalType":"address"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"string","name":"","internalType":"string"}],"name":"baseUri","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"string","name":"parcelId","internalType":"string"},{"type":"address","name":"sender","internalType":"address"},{"type":"address","name":"receiver","internalType":"address"}],"name":"boxes","inputs":[{"type":"uint256","name":"","internalType":"uint256"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"address","name":"","internalType":"address"}],"name":"getApproved","inputs":[{"type":"uint256","name":"tokenId","internalType":"uint256"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"address[]","name":"","internalType":"address[]"}],"name":"getBoxDatasets","inputs":[{"type":"string","name":"_uuid","internalType":"string"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"getIdFromUUID","inputs":[{"type":"string","name":"_uuid","internalType":"string"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"string","name":"","internalType":"string"}],"name":"getParcelId","inputs":[{"type":"string","name":"_uuid","internalType":"string"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"bool","name":"","internalType":"bool"}],"name":"isApprovedForAll","inputs":[{"type":"address","name":"owner","internalType":"address"},{"type":"address","name":"operator","internalType":"address"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"mint","inputs":[{"type":"address","name":"_receiver","internalType":"address"},{"type":"string","name":"_uuid","internalType":"string"},{"type":"string","name":"_parcelId","internalType":"string"},{"type":"address","name":"_dataset","internalType":"address"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"string","name":"","internalType":"string"}],"name":"name","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"address","name":"","internalType":"address"}],"name":"owner","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"address","name":"","internalType":"address"}],"name":"ownerOf","inputs":[{"type":"uint256","name":"tokenId","internalType":"uint256"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"renounceOwnership","inputs":[]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"safeTransferFrom","inputs":[{"type":"address","name":"from","internalType":"address"},{"type":"address","name":"to","internalType":"address"},{"type":"uint256","name":"tokenId","internalType":"uint256"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"safeTransferFrom","inputs":[{"type":"address","name":"from","internalType":"address"},{"type":"address","name":"to","internalType":"address"},{"type":"uint256","name":"tokenId","internalType":"uint256"},{"type":"bytes","name":"data","internalType":"bytes"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"setApprovalForAll","inputs":[{"type":"address","name":"operator","internalType":"address"},{"type":"bool","name":"approved","internalType":"bool"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"setBaseURI","inputs":[{"type":"string","name":"_newBaseURI","internalType":"string"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"bool","name":"","internalType":"bool"}],"name":"supportsInterface","inputs":[{"type":"bytes4","name":"interfaceId","internalType":"bytes4"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"string","name":"","internalType":"string"}],"name":"symbol","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"string","name":"","internalType":"string"}],"name":"tokenURI","inputs":[{"type":"uint256","name":"tokenId","internalType":"uint256"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"transferFrom","inputs":[{"type":"address","name":"from","internalType":"address"},{"type":"address","name":"to","internalType":"address"},{"type":"uint256","name":"tokenId","internalType":"uint256"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"transferOwnership","inputs":[{"type":"address","name":"newOwner","internalType":"address"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"updateBox","inputs":[{"type":"string","name":"_uuid","internalType":"string"},{"type":"address","name":"_dataset","internalType":"address"},{"type":"bool","name":"_transferOwnershipToReceiver","internalType":"bool"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"bool","name":"","internalType":"bool"}],"name":"whitelist","inputs":[{"type":"address","name":"","internalType":"address"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"whitelistAddresses","inputs":[{"type":"address[]","name":"_list","internalType":"address[]"},{"type":"bool","name":"_whitelist","internalType":"bool"}]},{"type":"event","name":"Approval","inputs":[{"type":"address","name":"owner","indexed":true},{"type":"address","name":"approved","indexed":true},{"type":"uint256","name":"tokenId","indexed":true}],"anonymous":false},{"type":"event","name":"ApprovalForAll","inputs":[{"type":"address","name":"owner","indexed":true},{"type":"address","name":"operator","indexed":true},{"type":"bool","name":"approved","indexed":false}],"anonymous":false},{"type":"event","name":"OwnershipTransferred","inputs":[{"type":"address","name":"previousOwner","indexed":true},{"type":"address","name":"newOwner","indexed":true}],"anonymous":false},{"type":"event","name":"Transfer","inputs":[{"type":"address","name":"from","indexed":true},{"type":"address","name":"to","indexed":true},{"type":"uint256","name":"tokenId","indexed":true}],"anonymous":false}]
 const DatasetABI = DatasetRegistry.abi;
+const TokenABI = Token.abi;
 //isWhitelisted
 export const isWhitelisted = createAsyncThunk(
     'blockchain/isWhitelisted',
@@ -82,10 +92,118 @@ const tokenIdToAddress = (tokenId: { toHexString: () => string; }) => {
     ).concat(hexTokenId);
     return getAddress(lowerCaseAddress);
   };
+  const concatenateAndHash = (...hexStringArray: string[]) => {
+    const buffer = Buffer.concat(
+      hexStringArray.map((hexString) => Buffer.from(arrayify(hexString))),
+    );
+    return keccak256(buffer);
+  };
+export const getChallengeForSetWeb3Secret = (secretAddress: string, secretValue: WithImplicitCoercion<string> | { [Symbol.toPrimitive](hint: "string"): string; }) =>
+  concatenateAndHash(
+    keccak256(Buffer.from('IEXEC_SMS_DOMAIN', 'utf8')),
+    secretAddress,
+    keccak256(Buffer.from(secretValue, 'utf8')),
+  );
+export const pushWeb3Secret = async (secretAddress:string, secretValue:string, signed_chall:string) => {
+    // sign the challenge
+    const signature = signed_chall;
+  
+    // create headers
+    const headers = new Headers();
+    headers.append("Authorization", signature);
+
+    console.log("pushing secret to sms server");
+    console.log("secretAddress: " + secretAddress);
+    console.log("secretValue: " + secretValue);
+    console.log("signature: " + signature);
+    
+  
+    // make the request
+    const response = await fetch(`${smsURL}/secrets/web3?secretAddress=${secretAddress}`, {
+      method: 'POST',
+      headers: headers,
+      body: secretValue
+    });
+  
+    if (!response.ok) {
+        console.log(JSON.stringify(response));
+      throw new Error(`HTTP error! status: ${response.status}`);
+    } else {
+        //check if 204
+        console.log(JSON.stringify(response));
+
+      //no response all ok
+    }
+  }
+
+const getIExecMarketChallenge = async (address:string, chainId:string) => {
+    try {
+        const url = `${marketplaceURL}/challenge?address=${address}&chainId=${chainId}`;
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.ok) {
+           
+            return data;
+        } else {
+            throw new Error('Failed to login to iExec');
+        }
+    } catch (error) {
+        console.error('Error logging in to iExec:', error);
+        throw error;
+    }
+};
+const postDatasetOrder = async (order:any, chainId:string, signed_chall:string) => {
+    try {
+      const url = `${marketplaceURL}/datasetorders?chainId=${chainId}`;
+      const headers = new Headers();
+      headers.append("Authorization", signed_chall);
+      headers.append("Content-Type", "application/json");
+
+      console.log("posting dataset order to marketplace" + JSON.stringify(order));
+
+    
+  
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(order)
+      }); 
+  
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      } else {
+        throw new Error(`Failed to post dataset order. Status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Error posting dataset order:', error);
+      throw error;
+    }
+  };
+
+export const hashEIP712 = (typedData:any) => {
+    try {
+      const { domain, message } = typedData;
+      const { EIP712Domain, ...types } = typedData.types;
+      // use experimental ether utils._TypedDataEncoder (to change when TypedDataEncoder is included)
+      // https://docs.ethers.io/v5/api/utils/hashing/#TypedDataEncoder
+      /* eslint no-underscore-dangle: ["error", { "allow": ["_TypedDataEncoder"] }] */
+      return _TypedDataEncoder.hash(domain, types, message);
+    } catch (error) {
+        console.error('Error hashing EIP712:', error);
+      throw error;
+    }
+  };
+
+  
 // callDatasetContract
 export const callDatasetContract = createAsyncThunk(
     'blockchain/callDatasetContract',
-    async (args: { name: string; multiaddr: string; checksum: string; }, thunkAPI) => {
+    async (args: {
+        testingEnv: any; name: string; multiaddr: string; checksum: string; 
+}, thunkAPI) => {
         try {
             // Get the current state
             const state = thunkAPI.getState() as RootState;
@@ -101,14 +219,51 @@ export const callDatasetContract = createAsyncThunk(
             // Create a new wallet instance
             const wallet = new ethers.Wallet(privateKey, provider);
 
+            const somedata = {
+                "name": "test",
+
+            }
+            const dataBuffer = Buffer.from(JSON.stringify(somedata));
+
+            // Generate AES key
+            const aesKey = generateAes256Key();
+            console.log("aesKey: " + aesKey);
+
+            // Encrypt data
+            const encryptedData = await encryptAes256Cbc(dataBuffer, aesKey);
+
+            console.log("Encrypted Data: " + encryptedData.toString('base64'));
+
+            const checksum = sha256Sum(encryptedData);
+
+            console.log("checksum: " + checksum);
+
+            //https://github.dev/iExecBlockchainComputing/iexec-sdk/blob/be1e84fbeada087a05d6fbfa1fd0711caea7d188/src/common/utils/config.js
+
+
+            
+             if (args.testingEnv) {
+                console.log("uploading to testing ipfs node");
+                var ipfsRes = await uploadToIPFSTesting(encryptedData);
+
+
+             }else{
+
+                var ipfsRes = await uploadToIPFS(encryptedData); //NOTE THIS FUNCTION IS SPECIFIC TO THE TESTING IPFS NODE
+            }
+            console.log("ipfsUrl: " + IPFSGateways.IExecGateway + ipfsRes.Hash);
+
+            const multiaddr = IPFSGateways.IExecGateway + ipfsRes.Hash;
+
+
             // Create a new contract instance using the wallet
             const contract = new ethers.Contract('0x799DAa22654128d0C64d5b79eac9283008158730', DatasetABI, wallet);
 
             console.log(`calling dataset method with args: owner=${wallet.address}, name=${args.name}, multiaddr=${args.multiaddr}, checksum=${args.checksum}`);
-            const multiaddr_bytes = ethers.utils.toUtf8Bytes(args.multiaddr);
+            const multiaddr_bytes = ethers.utils.toUtf8Bytes(multiaddr);
 
             /// Call the method on the contract
-            const tx = await contract.createDataset(wallet.address, args.name, multiaddr_bytes, args.checksum, { gasPrice: 0, gasLimit: 1000000 });
+            const tx = await contract.createDataset(wallet.address, ipfsRes.Name, multiaddr_bytes, args.checksum, { gasPrice: 0, gasLimit: 1000000 });
 
             // Wait for the transaction to be confirmed
             const txReceipt = await tx.wait(1); // replace 1 with the number of confirmations you want to wait for
@@ -128,7 +283,164 @@ export const callDatasetContract = createAsyncThunk(
             const address = tokenIdToAddress(tokenId); // replace with your actual conversion function
 
             console.log(`Dataset created with address: ${address}`);
+
+
+
+
+
+
+            //push SMS https://sms.scone-prod.v8-bellecour.iex.ec TEE_FRAMEWORKS.SCONE tee,scone
+
+            const challenge = arrayify(getChallengeForSetWeb3Secret(address,aesKey));
+            //sign challenge
+            const signed_chall = await wallet.signMessage(challenge);
+            //console.log("signed_chall: " + JSON.stringify(signed_chall));
+
+            await pushWeb3Secret(address, aesKey, signed_chall);
+
+            console.log("pushed web3 secret");
+
+
+
+
+
+           
             
+            
+
+            const salt = hexlify(randomBytes(32));
+            console.log("rrrrrrrrrr");
+
+           
+
+
+            const salted_iexecMarketOrder = {
+               
+                    "dataset": address,
+                    "datasetprice": "0", //free for all users
+                    "volume": "10",  //number of allowed purchases
+                    "tag": "0x0000000000000000000000000000000000000000000000000000000000000003", //tee,scone
+                    "apprestrict": "0xdEad000000000000000000000000000000000000",
+                    "workerpoolrestrict": "0x0000000000000000000000000000000000000000",
+                    "requesterrestrict": "0xdEad000000000000000000000000000000000000",
+                    "salt": salt,
+                    //"sign": "0x5c801076539228015eaffd0a5671ca376ed9f8fa2187648364acb13b9c22ce4b6218cf8f86eb19b3d8d13b29eae663a65624eaae08767d9c59929fa173cb90281b"
+                
+            }
+
+            const typess= {
+                'DatasetOrder': [
+                  { name: 'dataset', type: 'address' },
+                  { name: 'datasetprice', type: 'uint256' },
+                  { name: 'volume', type: 'uint256' },
+                  { name: 'tag', type: 'bytes32' },
+                  { name: 'apprestrict', type: 'address' },
+                  { name: 'workerpoolrestrict', type: 'address' },
+                  { name: 'requesterrestrict', type: 'address' },
+                  { name: 'salt', type: 'bytes32' },
+                ]
+              };
+
+              //getEIP712Domain
+            //   {
+            //     name,
+            //     version,
+            //     chainId,
+            //     verifyingContract,
+            //   } = contract.domain;
+
+
+            const tokencontract = new ethers.Contract (hub_addres,TokenABI, wallet);
+
+            //check if undef
+
+            console.log("tokencontract");
+
+            //call .domain on the contract
+            const domainn = await tokencontract.domain();
+            console.log("tokencontract3");
+            const EIP712Domainn = {
+                name: domainn.name,
+                version: domainn.version,
+                chainId: domainn.chainId.toString(),
+                verifyingContract: domainn.verifyingContract,
+            };
+            console.log("EIP712Domain: " + JSON.stringify(EIP712Domainn));
+
+            const signer = wallet;
+
+            const sign = await signer._signTypedData(EIP712Domainn, typess,salted_iexecMarketOrder );
+
+            //get hash
+            const hash = await _TypedDataEncoder.hash(EIP712Domainn, typess, salted_iexecMarketOrder);
+
+            console.log("hash: " + hash);
+
+            //call .verifySignature on the contract
+            const isVerified = await tokencontract.verifySignature(wallet.address,hash, sign);
+            console.log("isVerified: " + isVerified);
+
+           
+
+
+            console.log("salted_iexecMarketOrder: " + sign);
+
+            const iexecMarketOrder = { ...salted_iexecMarketOrder, sign };
+
+            console.log("iexecMarketOrder: " + JSON.stringify(iexecMarketOrder));
+
+
+             //sell dataset
+             const iexecMarketChallenge = await getIExecMarketChallenge(wallet.address, chainId);
+             console.log("iexecMarketChallenge: " + iexecMarketChallenge);
+
+             const typedData = iexecMarketChallenge.data || iexecMarketChallenge;
+             const { domain, message } = typedData || {};
+             const { EIP712Domain, ...types } = typedData.types || {};
+
+             const signature2 = await wallet._signTypedData(domain, types, message);
+             const hash2 = hashEIP712(typedData);
+             const separator = '_'
+             const iexecMarketSignature = hash2
+             .concat(separator)
+             .concat(signature2)
+             .concat(separator)
+             .concat(wallet.address);
+
+                console.log("final: " + iexecMarketSignature);
+
+
+                console.log("iexecMarketSignature: " + iexecMarketSignature);
+
+                const ordr= {order:iexecMarketOrder};
+
+            const sell_res = await postDatasetOrder(ordr, chainId,iexecMarketSignature);
+
+            console.log("sell_res: " + JSON.stringify(sell_res));
+
+
+ 
+
+
+
+
+
+
+            
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             return { address, txHash: txReceipt.transactionHash };
 
@@ -240,6 +552,7 @@ const blockchainSlice = createSlice({
     reducers: {
 
         setPrivateKey: (state, action) => {
+            console.log("setPrivateKey: " + action.payload);
             state.privateKey = action.payload;
         },
     },

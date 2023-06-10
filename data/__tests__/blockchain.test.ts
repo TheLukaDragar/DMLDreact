@@ -1,6 +1,8 @@
 /**
  * @jest-environment jsdom
  */
+import "whatwg-fetch"
+
 import { configureStore } from '@reduxjs/toolkit';
 import { AnyAction } from 'redux';
 import blockchainSlice, { callDatasetContract, isWhitelisted, setPrivateKey } from '../blockchain';
@@ -14,6 +16,9 @@ jest.mock('expo-constants', () => ({
         },
     },
 }));
+
+
+
 describe('blockchainSlice', () => {
     let store: ReturnType<typeof configureStore>;
 
@@ -73,6 +78,7 @@ describe('blockchainSlice', () => {
             name: "cv.pdf",
             multiaddr: "ipfs/QmUZxd6edNcwQEgjpvTNjmLDgzZxSjwDSMKwRrHEcKnUyM",
             checksum: '0x82fe3d68048079af009667e5800223f37d1d9adaf1402b2e5723c93ebcf3a749',
+            testingEnv: true,
         };
         
 
