@@ -49,7 +49,6 @@
     "expo-system-ui": "~2.2.1",
     "expo-updates": "~0.16.4",
     "expo-web-browser": "~12.1.1",
-    "iexec": "^8.1.4",
     "metro": "^0.76.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",

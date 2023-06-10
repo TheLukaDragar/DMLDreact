@@ -6,7 +6,9 @@ import { RootState } from './store';
 
 import Constants from 'expo-constants';
 import { ethers } from "ethers";
-import { IExec } from 'iexec';
+//import dataserRegistryABI from '../contracts/DatasetRegistry.json';
+import DatasetRegistry from './iexec/DatasetRegistry';
+import { getAddress } from "ethers/lib/utils";
 
 
 const RPCUrl = Constants?.expoConfig?.extra?.RPCUrl;
@@ -26,7 +28,7 @@ console.log(parcelNFTSCAddress);
 //     "function totalSupply() external view returns (uint256)",
 // ];
 const parcelNFTSC_ABI=[{"type":"constructor","inputs":[{"type":"string","name":"_name","internalType":"string"},{"type":"string","name":"_symbol","internalType":"string"},{"type":"string","name":"_newBaseURI","internalType":"string"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"approve","inputs":[{"type":"address","name":"to","internalType":"address"},{"type":"uint256","name":"tokenId","internalType":"uint256"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"balanceOf","inputs":[{"type":"address","name":"owner","internalType":"address"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"string","name":"","internalType":"string"}],"name":"baseUri","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"string","name":"parcelId","internalType":"string"},{"type":"address","name":"sender","internalType":"address"},{"type":"address","name":"receiver","internalType":"address"}],"name":"boxes","inputs":[{"type":"uint256","name":"","internalType":"uint256"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"address","name":"","internalType":"address"}],"name":"getApproved","inputs":[{"type":"uint256","name":"tokenId","internalType":"uint256"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"address[]","name":"","internalType":"address[]"}],"name":"getBoxDatasets","inputs":[{"type":"string","name":"_uuid","internalType":"string"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"getIdFromUUID","inputs":[{"type":"string","name":"_uuid","internalType":"string"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"string","name":"","internalType":"string"}],"name":"getParcelId","inputs":[{"type":"string","name":"_uuid","internalType":"string"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"bool","name":"","internalType":"bool"}],"name":"isApprovedForAll","inputs":[{"type":"address","name":"owner","internalType":"address"},{"type":"address","name":"operator","internalType":"address"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"mint","inputs":[{"type":"address","name":"_receiver","internalType":"address"},{"type":"string","name":"_uuid","internalType":"string"},{"type":"string","name":"_parcelId","internalType":"string"},{"type":"address","name":"_dataset","internalType":"address"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"string","name":"","internalType":"string"}],"name":"name","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"address","name":"","internalType":"address"}],"name":"owner","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"address","name":"","internalType":"address"}],"name":"ownerOf","inputs":[{"type":"uint256","name":"tokenId","internalType":"uint256"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"renounceOwnership","inputs":[]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"safeTransferFrom","inputs":[{"type":"address","name":"from","internalType":"address"},{"type":"address","name":"to","internalType":"address"},{"type":"uint256","name":"tokenId","internalType":"uint256"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"safeTransferFrom","inputs":[{"type":"address","name":"from","internalType":"address"},{"type":"address","name":"to","internalType":"address"},{"type":"uint256","name":"tokenId","internalType":"uint256"},{"type":"bytes","name":"data","internalType":"bytes"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"setApprovalForAll","inputs":[{"type":"address","name":"operator","internalType":"address"},{"type":"bool","name":"approved","internalType":"bool"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"setBaseURI","inputs":[{"type":"string","name":"_newBaseURI","internalType":"string"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"bool","name":"","internalType":"bool"}],"name":"supportsInterface","inputs":[{"type":"bytes4","name":"interfaceId","internalType":"bytes4"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"string","name":"","internalType":"string"}],"name":"symbol","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"string","name":"","internalType":"string"}],"name":"tokenURI","inputs":[{"type":"uint256","name":"tokenId","internalType":"uint256"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"transferFrom","inputs":[{"type":"address","name":"from","internalType":"address"},{"type":"address","name":"to","internalType":"address"},{"type":"uint256","name":"tokenId","internalType":"uint256"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"transferOwnership","inputs":[{"type":"address","name":"newOwner","internalType":"address"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"updateBox","inputs":[{"type":"string","name":"_uuid","internalType":"string"},{"type":"address","name":"_dataset","internalType":"address"},{"type":"bool","name":"_transferOwnershipToReceiver","internalType":"bool"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"bool","name":"","internalType":"bool"}],"name":"whitelist","inputs":[{"type":"address","name":"","internalType":"address"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"whitelistAddresses","inputs":[{"type":"address[]","name":"_list","internalType":"address[]"},{"type":"bool","name":"_whitelist","internalType":"bool"}]},{"type":"event","name":"Approval","inputs":[{"type":"address","name":"owner","indexed":true},{"type":"address","name":"approved","indexed":true},{"type":"uint256","name":"tokenId","indexed":true}],"anonymous":false},{"type":"event","name":"ApprovalForAll","inputs":[{"type":"address","name":"owner","indexed":true},{"type":"address","name":"operator","indexed":true},{"type":"bool","name":"approved","indexed":false}],"anonymous":false},{"type":"event","name":"OwnershipTransferred","inputs":[{"type":"address","name":"previousOwner","indexed":true},{"type":"address","name":"newOwner","indexed":true}],"anonymous":false},{"type":"event","name":"Transfer","inputs":[{"type":"address","name":"from","indexed":true},{"type":"address","name":"to","indexed":true},{"type":"uint256","name":"tokenId","indexed":true}],"anonymous":false}]
-
+const DatasetABI = DatasetRegistry.abi;
 //isWhitelisted
 export const isWhitelisted = createAsyncThunk(
     'blockchain/isWhitelisted',
@@ -71,6 +73,81 @@ export const isWhitelisted = createAsyncThunk(
 
     }
 );
+export const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
+const tokenIdToAddress = (tokenId: { toHexString: () => string; }) => {
+    const hexTokenId = tokenId.toHexString().substring(2);
+    const lowerCaseAddress = NULL_ADDRESS.substring(
+      0,
+      42 - hexTokenId.length,
+    ).concat(hexTokenId);
+    return getAddress(lowerCaseAddress);
+  };
+// callDatasetContract
+export const callDatasetContract = createAsyncThunk(
+    'blockchain/callDatasetContract',
+    async (args: { name: string; multiaddr: string; checksum: string; }, thunkAPI) => {
+        try {
+            // Get the current state
+            const state = thunkAPI.getState() as RootState;
+
+            // Get the wallet from the state
+            const privateKey = state.blockchain.privateKey;
+
+            // Check if the wallet exists
+            if (!privateKey) {
+                throw new Error("Wallet not found");
+            }
+
+            // Create a new wallet instance
+            const wallet = new ethers.Wallet(privateKey, provider);
+
+            // Create a new contract instance using the wallet
+            const contract = new ethers.Contract('0x799DAa22654128d0C64d5b79eac9283008158730', DatasetABI, wallet);
+
+            console.log(`calling dataset method with args: owner=${wallet.address}, name=${args.name}, multiaddr=${args.multiaddr}, checksum=${args.checksum}`);
+            const multiaddr_bytes = ethers.utils.toUtf8Bytes(args.multiaddr);
+
+            /// Call the method on the contract
+            const tx = await contract.createDataset(wallet.address, args.name, multiaddr_bytes, args.checksum, { gasPrice: 0, gasLimit: 1000000 });
+
+            // Wait for the transaction to be confirmed
+            const txReceipt = await tx.wait(1); // replace 1 with the number of confirmations you want to wait for
+
+             // Extract Transfer event from the transaction receipt logs
+            const transferEvent = txReceipt.events.find((event: { event: string; }) => event.event === 'Transfer');
+
+            // If Transfer event is not found, throw an error
+            if (!transferEvent) {
+                throw new Error('Transfer event not found in transaction logs');
+            }
+
+            // Extract tokenId from the arguments of the Transfer event
+            const tokenId = transferEvent.args.tokenId;
+
+            // Convert tokenId into an address
+            const address = tokenIdToAddress(tokenId); // replace with your actual conversion function
+
+            console.log(`Dataset created with address: ${address}`);
+            
+
+            return { address, txHash: txReceipt.transactionHash };
+
+
+
+            
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                // If the error is an instance of Error, handle it
+                return thunkAPI.rejectWithValue(error.message);
+            } else {
+                // If the error is not an instance of Error, handle it differently
+                return thunkAPI.rejectWithValue('An unknown error occurred');
+            }
+        }
+    }
+);
+
 
 //mint parcel
 export const mintParcel = createAsyncThunk(

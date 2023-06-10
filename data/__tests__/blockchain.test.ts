@@ -3,7 +3,7 @@
  */
 import { configureStore } from '@reduxjs/toolkit';
 import { AnyAction } from 'redux';
-import blockchainSlice, { isWhitelisted, setPrivateKey } from '../blockchain';
+import blockchainSlice, { callDatasetContract, isWhitelisted, setPrivateKey } from '../blockchain';
 import { act } from '@testing-library/react';
 jest.mock('expo-constants', () => ({
     expoConfig: {
@@ -62,6 +62,27 @@ describe('blockchainSlice', () => {
     it('confirms that an unwhitelisted address is recognized as not whitelisted', async () => {
         await checkWhitelistedStatus(privateKey_UnWhitelisted, false);
     });
+
+
+    it('test', async () => {
+        await checkWhitelistedStatus(privateKey_Courier, true);
+
+        //call callDatasetContract
+        //owner: string; name: string; multiaddr: string; checksum: string; 
+        const args = {
+            name: "cv.pdf",
+            multiaddr: "ipfs/QmUZxd6edNcwQEgjpvTNjmLDgzZxSjwDSMKwRrHEcKnUyM",
+            checksum: '0x82fe3d68048079af009667e5800223f37d1d9adaf1402b2e5723c93ebcf3a749',
+        };
+        
+
+        const res = await store.dispatch(callDatasetContract( args ) as unknown as AnyAction).unwrap();
+            
+        console.log(res);
+
+    }, 1000000);
+
+
 
 
     
