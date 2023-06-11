@@ -66,7 +66,7 @@ interface connectBox {
   macAddress: string
   did: string
 }
-interface GetBoxesResponse {
+export interface GetBoxesResponse {
   items: BoxItem[];
   total: number;
 }
