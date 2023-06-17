@@ -118,22 +118,22 @@ describe('Test Scenario', () => {
 
    
 
-    it('Client gets a list of Boxes', async () => {
+    it('(PDC Parcel pickup) Client gets a list of Boxes', async () => {
         boxes = await testClientGetsBoxes(clientComponent);
         expect(boxes).toBeTruthy();
     });
 
-    it('Client sees DEMO Box in the list', async () => {
+    it('(PDC Parcel pickup) Client sees DEMO Box in the list', async () => {
         box = await testFindBoxByDID(boxes, demo_box_did);
         expect(box).toBeTruthy();
         expect(box?.did).toBe(demo_box_did);
     });
 
-    it('Client updates Box location to car location', async () => {
+    it('(PDC Parcel pickup) Client updates Box location to car location', async () => {
         return await testUpdateBoxLocation(clientComponent, box!, car_location);
     });
 
-    it('Courier create a parcel', async () => {
+    it('(PDC Parcel pickup) Courier create a parcel', async () => {
        parcel = await testCreateParcelByWallet(courierComponent, courierUserData, clientUserData, demo_box_did, courier_loocation1,"0x00000","1")
        expect(parcel).toBeTruthy();
 
@@ -141,42 +141,42 @@ describe('Test Scenario', () => {
     //najprej je nft id 0topem nareis parce lpotem klics smart contract in UPDATAS NFT ID na parcelu
     
 
-    it('Courier gets Box precise location', async () => {
+    it('(PDC Parcel pickup) Courier gets Box precise location', async () => {
        boxLocation = await testGetBoxPreciseLocation(courierComponent, box?.id!);
       expect(boxLocation).toBeTruthy();
     });
-    it('Courier connects to Box and with access key from API', async () => {
+    it('(OpenBox) Courier connects to Box and with access key from API', async () => {
       const accessKey = await testConnectToDeviceAndGetAccessKey(courierComponent, demoDevice.id, box?.id!, boxLocation);
       expect(accessKey).toBeTruthy();
     });
 
-    it('Courier deposits a parcel', async () => {
+    it('(PDC Parcel pickup) Courier deposits a parcel', async () => {
       const depositParcelResponse = await testDepositParcel(courierComponent, box?.id!)
       expect(depositParcelResponse).toBeTruthy();
     });
 
 
-    it('Client gets a parcel by ID', async () => {
+    it('(PDC Parcel pickup) Client gets a parcel by ID', async () => {
       const parcel_response = await testGetParcelById(clientComponent, parcel.id);
       expect(parcel_response).toBeTruthy();
     });
 
-    it('Client gets Box precise location', async () => {
+    it('(PDC Parcel pickup) Client gets Box precise location', async () => {
       const box_location_client = await testGetBoxPreciseLocation(clientComponent, box?.id!);
       expect(box_location_client).toBeTruthy();
     });
 
-    it('Client gets Box details', async () => {
+    it('(PDC Parcel pickup) Client gets Box details', async () => {
       const box_details = await testGetBox(clientComponent, box?.id!);
       expect(box_details).toBeTruthy();
     });
 
-    it('Client connects to box and with access key from API', async () => {
+    it('(Open Box)Client connects to box and with access key from API', async () => {
       const accessKey = await testConnectToDeviceAndGetAccessKey(clientComponent, demoDevice.id, box?.id!, boxLocation);
       expect(accessKey).toBeTruthy();
     });
 
-    it('Client rates the courier', async () => {
+    it('(PDC Parcel pickup) Client rates the courier', async () => {
       const rating_courier: RateTransactionDto = {
         rating: 5,
         recipient_id: courierUserData.id, //for now only recipient can rate
@@ -189,7 +189,7 @@ describe('Test Scenario', () => {
     
     });
 
-    it('Client rates the box', async () => {
+    it('(PDC Parcel pickup) Client rates the box', async () => {
       const rating_box: RateTransactionDto = {
         rating: 5,
         recipient_id: box?.id!, //for now only recipient can rate

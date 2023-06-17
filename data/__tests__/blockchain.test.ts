@@ -97,7 +97,7 @@ describe('blockchainSlice', () => {
     });
 
     //upload to ipfs
-    it('upload to ipfs', async () => {
+    it('upload MetaData to IPFS', async () => {
 
         //call uploadToIPFS
 
@@ -120,7 +120,7 @@ describe('blockchainSlice', () => {
     }, 1000000);
 
     //create dataset nft
-    it('create dataset', async () => {
+    it('create Dataset', async () => {
         await checkWhitelistedStatus(privateKey_Courier, true);
 
         createDataset_Result = await store.dispatch(callCreateDataset( {
@@ -148,7 +148,7 @@ describe('blockchainSlice', () => {
     }, 1000000);
 
     //callPushToSMS
-    it('push secret to sms', async () => {
+    it('push secret to SMS', async () => {
         await checkWhitelistedStatus(privateKey_Courier, true);
 
         //call callPushToSMS
@@ -164,7 +164,7 @@ describe('blockchainSlice', () => {
     }, 1000000);
 
     //sell dataset
-    it('sell dataset', async () => {
+    it('sell Dataset', async () => {
         
         await checkWhitelistedStatus(privateKey_Courier, true);
 
@@ -193,7 +193,7 @@ describe('blockchainSlice', () => {
 
     // }, 1000000);
 
-      it('mint parcel', async () => {
+      it('(Mint Parcel NFT) mint the NFT', async () => {
 
         await checkWhitelistedStatus(privateKey_Courier, true);
 
@@ -218,7 +218,7 @@ describe('blockchainSlice', () => {
 
     }, 1000000);
 
-    it('approve transfer of nft', async () => {
+    it('Approve transfer of NFT', async () => {
 
         await checkWhitelistedStatus(privateKey_Courier, true);
 
@@ -238,7 +238,7 @@ describe('blockchainSlice', () => {
 
     }, 1000000);
 
-    it('updates box data when opening the box', async () => {
+    it('Updates MetaData when opening the Box', async () => {
 
         await checkWhitelistedStatus(privateKey_Courier, true);
 
@@ -263,7 +263,7 @@ describe('blockchainSlice', () => {
         
     }, 1000000);
 
-    it('updates box data when closing the box and transfers ownership', async () => {
+    it('Updates MetaData when closing the Box and transfers  NFT ownership', async () => {
 
         await checkWhitelistedStatus(privateKey_Courier, true);
 
