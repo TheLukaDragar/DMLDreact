@@ -70,25 +70,32 @@ export const IPFSGateways ={
     return false;
   }
   
-  export async function uploadToIPFSTesting(data :any ) : Promise<IpfsData>{
-    const result = await callIpfsCommandTesting(new Blob([data]));
+  export async function uploadToIPFSTesting(data :Buffer ) : Promise<IpfsData>{
+    const result = await callIpfsCommandTesting(data);
     //let url = IPFSGateways.IExecGateway + result.Hash;
     return result;
   }
 
-  export async function uploadToIPFS(data :any) : Promise<IpfsData>{
+  export async function uploadToIPFS(data :Buffer) : Promise<IpfsData>{
     const result = await callIpfsCommand(data);
     //let url = IPFSGateways.IExecGateway + result.Hash;
     return result;
   }
   
-  async function callIpfsCommandTesting(data : string | Blob |File) : Promise<IpfsData>{
+  async function callIpfsCommandTesting(data : Buffer) : Promise<IpfsData>{
+
     const formData = new FormData();
-    if((data as File).name){
-      formData.append("file" , data , (data as File).name);
-    } else {
-      formData.append("file" , data );
-    }
+
+    //print type of data and 
+    console.log("data", data);
+    console.log("typeof data", typeof data);
+    console.log("data instanceof Blob", data instanceof Blob);
+    console.log("data instanceof File", data instanceof File);
+
+    const blob = new Blob([new Uint8Array(data)], {type: 'application/octet-stream'});
+
+    
+    formData.append("file" , blob, "metadata.txt");
   
     const options = {
       method: 'POST',
@@ -106,6 +113,7 @@ export const IPFSGateways ={
     let json = await res.json();
   console.log("json", json);
   
+  
     if(isIpfsData(json)){
       return json;
     }else if( (json as IpfsError).Message){
@@ -115,15 +123,32 @@ export const IPFSGateways ={
     }
   }
 
-  async function callIpfsCommand(data : any) : Promise<IpfsData>{
+  async function callIpfsCommand(data : Buffer) : Promise<IpfsData>{
 
     // Generate a temporary filename in the app's document directory
     const dataString = data.toString();
 
-    const filename = FileSystem.documentDirectory + Math.random().toString(36).substring(2, 15) + '.txt';
+    const filename = FileSystem.documentDirectory +'metadata' + '.txt';
 
   // Write your data to the file
     await FileSystem.writeAsStringAsync(filename, dataString, { encoding: FileSystem.EncodingType.UTF8 });
+
+    //compute sha256
+
+    // //get file to blob 
+    // const blob = await FileSystem.readAsStringAsync(filename, { encoding: FileSystem.EncodingType.UTF8 });
+    // const blobBuffer = Buffer.from(blob);
+    // //compute sha256
+    // const sha256Hash = await sha256Sum(blobBuffer);
+    // console.log("sha256Hash2", sha256Hash);
+
+    // //compute hash of data
+    // const dataBuffer = Buffer.from(dataString);
+    // const sha256Hash2 = await sha256Sum(dataBuffer);
+    // console.log("sha256Hash3", sha256Hash2);
+
+
+
 
    
   

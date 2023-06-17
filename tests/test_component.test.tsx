@@ -138,6 +138,8 @@ describe('Test Scenario', () => {
        expect(parcel).toBeTruthy();
 
     });
+    //najprej je nft id 0topem nareis parce lpotem klics smart contract in UPDATAS NFT ID na parcelu
+    
 
     it('Courier gets Box precise location', async () => {
        boxLocation = await testGetBoxPreciseLocation(courierComponent, box?.id!);
