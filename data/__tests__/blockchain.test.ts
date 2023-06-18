@@ -1,12 +1,12 @@
 /**
  * @jest-environment jsdom
  */
-import "whatwg-fetch"
+import "whatwg-fetch";
 
 import { configureStore } from '@reduxjs/toolkit';
 import { AnyAction } from 'redux';
-import blockchainSlice, { ApproveTransfer, CreateDatasetResponse, Metadata, MintBox, UpdateBox, UploadMetadataToIPFSResponse, approveTransfer, callCreateDataset, callDatasetContract, callPushToSMS, callSellDataset, isWhitelisted, mintBox, setPrivateKey, updateBox, uploadMetadataToIPFS } from '../blockchain';
-import { act } from '@testing-library/react';
+import blockchainSlice, { ApproveTransfer, ApproveTransferResponse, CreateDatasetResponse, Metadata, MintBox, MintBoxResponse, UpdateBox, UpdateBoxResponse, UploadMetadataToIPFSResponse, approveTransfer, callCreateDataset, callPushToSMS, callSellDataset, getBoxDatasets, isWhitelisted, mintBox, setPrivateKey, updateBox, uploadMetadataToIPFS } from '../blockchain';
+import { approveTransferAndCheck, checkWhitelistedStatus, createDatasetAndCheck, make_newDatasetAndCheck, mintBoxAndCheck, pushToSMSAndCheck, sellDataset, setPrivateKeyAndCheckIt, updateBoxAndCheck, uploadMetadataAndCheck } from "./blockchain_utility";
 
 jest.mock('expo-constants', () => require('../../tests/mockExpoConstants'));
 
@@ -25,31 +25,8 @@ describe('blockchainSlice', () => {
     let uploadToIPFS_Result: UploadMetadataToIPFSResponse;
     let createDataset_Result: CreateDatasetResponse;
 
-    let mintBox_Result: { tokenId: string ,txHash: string; };
-
-    const make_newDataset = async (metadata: Metadata) => {
-        //ipfs
-        const ipfs: UploadMetadataToIPFSResponse = await store.dispatch(uploadMetadataToIPFS(metadata) as unknown as AnyAction).unwrap();
-        //dataset
-        const dataset: CreateDatasetResponse = await store.dispatch(callCreateDataset(ipfs) as unknown as AnyAction).unwrap();
-        //sms
-        await store.dispatch(callPushToSMS( {
-            dataset_address: dataset.datasetAddress,
-            aesKey: dataset.aesKey,
-        }
-        ) as unknown as AnyAction).unwrap();
-
-        //sell dataset
-        await store.dispatch(callSellDataset( {
-            dataset_address: dataset.datasetAddress,
-            price: 0,
-        }
-        ) as unknown as AnyAction).unwrap();
-
-        return createDataset_Result.datasetAddress;
-    }
-
-        
+    let mintBox_Result: MintBoxResponse;
+    let datasets: string[] = [];
 
 
 
@@ -63,231 +40,216 @@ describe('blockchainSlice', () => {
         });
     });
 
-    async function setPrivateKeyAndCheckIt(privateKey: string) {
-        await store.dispatch(setPrivateKey(privateKey) as unknown as AnyAction);
-
-        const state: any = store.getState();
-        const privateKeyInStore = state.blockchain.privateKey;
-
-        expect(privateKeyInStore).toBe(privateKey);
-    }
+   
 
     it('sets the private key correctly in the store', async () => {
-        await setPrivateKeyAndCheckIt(privateKey_Client);
+        await setPrivateKeyAndCheckIt(privateKey_Client, store);
     });
 
-    async function checkWhitelistedStatus(privateKey: string, expectedStatus: boolean) {
-        await store.dispatch(setPrivateKey(privateKey) as unknown as AnyAction);
-
-        const result = await store.dispatch(isWhitelisted() as unknown as AnyAction).unwrap();
-
-        expect(result).toBe(expectedStatus);
-    }
 
     it('confirms that a whitelisted client is recognized as whitelisted', async () => {
-        await checkWhitelistedStatus(privateKey_Client, true);
+        await checkWhitelistedStatus(privateKey_Client, true, store);
     });
 
     it('confirms that a whitelisted courier is recognized as whitelisted', async () => {
-        await checkWhitelistedStatus(privateKey_Courier, true);
+        await checkWhitelistedStatus(privateKey_Courier, true, store);
     });
 
     it('confirms that an unwhitelisted address is recognized as not whitelisted', async () => {
-        await checkWhitelistedStatus(privateKey_UnWhitelisted, false);
+        await checkWhitelistedStatus(privateKey_UnWhitelisted, false, store);
     });
 
     //upload to ipfs
     it('upload MetaData to IPFS', async () => {
 
         //call uploadToIPFS
+        await checkWhitelistedStatus(privateKey_Courier, true, store);
 
-        const metadata : Metadata = {
+
+        const metadata: Metadata = {
             location: "test",
             timestamp: Date.now().toString(),
-            testingEnv:true,
+            testingEnv: true,
         }
 
-        uploadToIPFS_Result = await store.dispatch(uploadMetadataToIPFS(metadata) as unknown as AnyAction).unwrap();
-        console.log("upload to ipfs successfully");
-        expect(uploadToIPFS_Result).not.toBeUndefined();
-        expect(uploadToIPFS_Result).not.toBeNull();
-        expect(uploadToIPFS_Result.ipfsRes.Hash).not.toBeUndefined();
-        expect(uploadToIPFS_Result.ipfsRes.Hash).not.toBeNull();
-        expect(uploadToIPFS_Result.ipfsRes.Hash).not.toBe("");
-
+        uploadToIPFS_Result = await uploadMetadataAndCheck(metadata, store);
+        console.log("metadata uploaded successfully");
         console.log(uploadToIPFS_Result);
 
     }, 1000000);
 
     //create dataset nft
     it('create Dataset', async () => {
-        await checkWhitelistedStatus(privateKey_Courier, true);
 
-        createDataset_Result = await store.dispatch(callCreateDataset( {
-            ipfsRes: uploadToIPFS_Result.ipfsRes,
-            aesKey: uploadToIPFS_Result.aesKey,
-            checksum: uploadToIPFS_Result.checksum,
-        }
-        ) as unknown as AnyAction).unwrap();
+        await checkWhitelistedStatus(privateKey_Courier, true, store);
 
+
+        createDataset_Result = await createDatasetAndCheck(uploadToIPFS_Result, store);
         console.log("dataset created successfully");
-        expect(createDataset_Result).not.toBeUndefined();
-        expect(createDataset_Result).not.toBeNull();
-
-        expect(createDataset_Result.datasetAddress).not.toBeUndefined();
-        expect(createDataset_Result.datasetAddress).not.toBeNull();
-        expect(createDataset_Result.datasetAddress).not.toBe("");
-
-        expect(createDataset_Result.txHash).not.toBeUndefined();
-        expect(createDataset_Result.txHash).not.toBeNull();
-        expect(createDataset_Result.txHash).not.toBe("");
-
         console.log(createDataset_Result);
-
 
     }, 1000000);
 
     //callPushToSMS
     it('push secret to SMS', async () => {
-        await checkWhitelistedStatus(privateKey_Courier, true);
 
-        //call callPushToSMS
+        await checkWhitelistedStatus(privateKey_Courier, true, store);
 
-        await store.dispatch(callPushToSMS( {
-            dataset_address: createDataset_Result.datasetAddress,
-            aesKey: uploadToIPFS_Result.aesKey,
-        }
-        ) as unknown as AnyAction).unwrap();
 
+        await pushToSMSAndCheck(createDataset_Result.datasetAddress, createDataset_Result.aesKey, store);
         console.log("pushed to sms successfully");
 
     }, 1000000);
 
     //sell dataset
     it('sell Dataset', async () => {
-        
-        await checkWhitelistedStatus(privateKey_Courier, true);
 
-        //call callSellDataset
-        let res = await store.dispatch(callSellDataset( {
-            dataset_address: createDataset_Result.datasetAddress,
-            price: 0,
-        }
-        ) as unknown as AnyAction).unwrap();
+        await checkWhitelistedStatus(privateKey_Courier, true, store);
 
-        console.log("dataset sell order placed successfully");
+
+
+        let res = await sellDataset(createDataset_Result, 0, store);
+
+        console.log("dataset sold successfully");
         console.log(res);
 
     }, 1000000);
 
+    it('(Mint Parcel NFT) mint the NFT', async () => {
 
-    // it('create dataset', async () => {
-    //     await checkWhitelistedStatus(privateKey_Courier, true);
+        await checkWhitelistedStatus(privateKey_Courier, true, store);
 
-    //     //call callDatasetContract
-    //     //owner: string; name: string; multiaddr: string; checksum: string; 
 
-    //     datasetres = await store.dispatch(callDatasetContract( true) as unknown as AnyAction).unwrap();
-    //     console.log("dataset created successfully");
-    //     console.log(datasetres);
-
-    // }, 1000000);
-
-      it('(Mint Parcel NFT) mint the NFT', async () => {
-
-        await checkWhitelistedStatus(privateKey_Courier, true);
 
         //fakers lib za uuid
-
-        
 
         const id = Math.floor(Math.random() * 10000).toString()   //use timestamp as id for parcel //p[arcel id je lahko isti vedno
         console.log(id);
 
 
-        const args : MintBox = {
+        const args: MintBox = {
             reciever_address: "0xD52C27CC2c7D3fb5BA4440ffa825c12EA5658D60",
             dataset: createDataset_Result.datasetAddress,
-            parcel_id : "1",
+            parcel_id: "1",
         }
-            
 
-        mintBox_Result = await store.dispatch(mintBox( args ) as unknown as AnyAction).unwrap();
-            
+
+        mintBox_Result = await mintBoxAndCheck(args, store);
+
+        datasets.push(createDataset_Result.datasetAddress); //store created dataset addresses for later use
+        console.log("minted NFT successfully");
         console.log(mintBox_Result);
 
     }, 1000000);
 
     it('Approve transfer of NFT', async () => {
 
-        await checkWhitelistedStatus(privateKey_Courier, true);
+        await checkWhitelistedStatus(privateKey_Courier, true, store);
 
-        const args : ApproveTransfer = {
+        const args: ApproveTransfer = {
             to: "0xD52C27CC2c7D3fb5BA4440ffa825c12EA5658D60",
             tokenId: mintBox_Result.tokenId,
         }
-        const res = await store.dispatch(approveTransfer( args ) as unknown as AnyAction).unwrap();
+        const res = await approveTransferAndCheck(args, store);
 
-        expect(res).not.toBeUndefined();
-        expect(res).not.toBeNull();
-        expect(res.txHash).not.toBeUndefined();
-        expect(res.txHash).not.toBeNull();
-        expect(res.txHash).not.toBe("");
-            
+        console.log("approved transfer of NFT successfully");
         console.log(res);
 
     }, 1000000);
 
     it('Updates MetaData when opening the Box', async () => {
 
-        await checkWhitelistedStatus(privateKey_Courier, true);
+        await checkWhitelistedStatus(privateKey_Courier, true, store);
 
-        const newMetadata : Metadata = {
+        const newMetadata: Metadata = {
             location: "test2",
             timestamp: Date.now().toString(),
-            testingEnv:true,
+            testingEnv: true,
         }
-        const newDataset = await make_newDataset(newMetadata);
-        expect(newDataset).not.toBeUndefined();
-        expect(newDataset).not.toBeNull();
-        expect(newDataset).not.toBe("");
+        const newDataset = await make_newDatasetAndCheck(newMetadata, store);
 
-        const args : UpdateBox = {
-           tokenId: mintBox_Result.tokenId,
-           dataset: newDataset,
-           transferOwnership: false,
+        const args: UpdateBox = {
+            tokenId: mintBox_Result.tokenId,
+            dataset: newDataset,
+            transferOwnership: false,
         }
-        const res = await store.dispatch(updateBox( args ) as unknown as AnyAction).unwrap();
+        const res = await updateBoxAndCheck(args, store);
+        console.log("updated box successfully");
+        console.log(res);
 
-       
-        
+        datasets.push(newDataset);
+
+
+
     }, 1000000);
 
     it('Updates MetaData when closing the Box and transfers  NFT ownership', async () => {
 
-        await checkWhitelistedStatus(privateKey_Courier, true);
+        await checkWhitelistedStatus(privateKey_Courier, true, store);
 
-        const newMetadata : Metadata = {
+
+
+        const newMetadata: Metadata = {
             location: "test3",
             timestamp: Date.now().toString(),
-            testingEnv:true,
+            testingEnv: true,
         }
-        const newDataset = await make_newDataset(newMetadata);
-        expect(newDataset).not.toBeUndefined();
-        expect(newDataset).not.toBeNull();
-        expect(newDataset).not.toBe("");
+        const newDataset = await make_newDatasetAndCheck(newMetadata, store);
 
-        const args : UpdateBox = {
-           tokenId: mintBox_Result.tokenId,
-           dataset: newDataset,
-           transferOwnership: true,
+        const args: UpdateBox = {
+            tokenId: mintBox_Result.tokenId,
+            dataset: newDataset,
+            transferOwnership: true,
         }
-        const res = await store.dispatch(updateBox( args ) as unknown as AnyAction).unwrap();
+        const res = await updateBoxAndCheck(args, store);
+        console.log("updated box successfully");
+        console.log(res);
 
-       
-        
+        datasets.push(newDataset);
+
+
+
     }, 1000000);
-    
+
+    //get box datasets
+    it('get box datasets', async () => {
+
+        await checkWhitelistedStatus(privateKey_Courier, true, store);
+
+
+
+        //call callGetBoxDatasets
+        const res = await store.dispatch(getBoxDatasets(
+            mintBox_Result.tokenId,
+        ) as unknown as AnyAction).unwrap();
+
+        console.log("got box datasets successfully");
+        console.log(res);
+
+        //rs sqould equal to datasets array
+        expect(res).not.toBeUndefined();
+        expect(res).not.toBeNull();
+        expect(res).not.toBe("");
+
+        expect(res).toEqual(datasets);
+
+
+    }
+        , 1000000);
+
+
+    //rate user /todo 
+    //ALI RATAM SAMO USERJA KI JE NFT OWNER ALI TUDI BOX SAMO BOX NIMA NASLOVA. 
+
+
+
+
+
+
+
 });
+
+
+
 
 

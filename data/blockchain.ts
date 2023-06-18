@@ -41,6 +41,7 @@ console.log(parcelNFTSCAddress);
 //     "function totalSupply() external view returns (uint256)",
 // ];
 const parcelNFTSC_ABI = [{ "type": "constructor", "inputs": [{ "type": "string", "name": "_name", "internalType": "string" }, { "type": "string", "name": "_symbol", "internalType": "string" }, { "type": "string", "name": "_newBaseURI", "internalType": "string" }] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "approve", "inputs": [{ "type": "address", "name": "to", "internalType": "address" }, { "type": "uint256", "name": "tokenId", "internalType": "uint256" }] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "uint256", "name": "", "internalType": "uint256" }], "name": "balanceOf", "inputs": [{ "type": "address", "name": "owner", "internalType": "address" }] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "string", "name": "", "internalType": "string" }], "name": "baseUri", "inputs": [] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "string", "name": "parcelId", "internalType": "string" }, { "type": "address", "name": "sender", "internalType": "address" }, { "type": "address", "name": "receiver", "internalType": "address" }], "name": "boxes", "inputs": [{ "type": "uint256", "name": "", "internalType": "uint256" }] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "address", "name": "", "internalType": "address" }], "name": "getApproved", "inputs": [{ "type": "uint256", "name": "tokenId", "internalType": "uint256" }] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "address[]", "name": "", "internalType": "address[]" }], "name": "getBoxDatasets", "inputs": [{ "type": "uint256", "name": "_tokenId", "internalType": "uint256" }] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "string", "name": "", "internalType": "string" }], "name": "getParcelId", "inputs": [{ "type": "uint256", "name": "_tokenId", "internalType": "uint256" }] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "bool", "name": "", "internalType": "bool" }], "name": "isApprovedForAll", "inputs": [{ "type": "address", "name": "owner", "internalType": "address" }, { "type": "address", "name": "operator", "internalType": "address" }] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "mint", "inputs": [{ "type": "address", "name": "_receiver", "internalType": "address" }, { "type": "string", "name": "_parcelId", "internalType": "string" }, { "type": "address", "name": "_dataset", "internalType": "address" }] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "string", "name": "", "internalType": "string" }], "name": "name", "inputs": [] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "address", "name": "", "internalType": "address" }], "name": "owner", "inputs": [] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "address", "name": "", "internalType": "address" }], "name": "ownerOf", "inputs": [{ "type": "uint256", "name": "tokenId", "internalType": "uint256" }] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "renounceOwnership", "inputs": [] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "safeTransferFrom", "inputs": [{ "type": "address", "name": "from", "internalType": "address" }, { "type": "address", "name": "to", "internalType": "address" }, { "type": "uint256", "name": "tokenId", "internalType": "uint256" }] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "safeTransferFrom", "inputs": [{ "type": "address", "name": "from", "internalType": "address" }, { "type": "address", "name": "to", "internalType": "address" }, { "type": "uint256", "name": "tokenId", "internalType": "uint256" }, { "type": "bytes", "name": "data", "internalType": "bytes" }] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "setApprovalForAll", "inputs": [{ "type": "address", "name": "operator", "internalType": "address" }, { "type": "bool", "name": "approved", "internalType": "bool" }] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "setBaseURI", "inputs": [{ "type": "string", "name": "_newBaseURI", "internalType": "string" }] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "bool", "name": "", "internalType": "bool" }], "name": "supportsInterface", "inputs": [{ "type": "bytes4", "name": "interfaceId", "internalType": "bytes4" }] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "string", "name": "", "internalType": "string" }], "name": "symbol", "inputs": [] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "string", "name": "", "internalType": "string" }], "name": "tokenURI", "inputs": [{ "type": "uint256", "name": "tokenId", "internalType": "uint256" }] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "transferFrom", "inputs": [{ "type": "address", "name": "from", "internalType": "address" }, { "type": "address", "name": "to", "internalType": "address" }, { "type": "uint256", "name": "tokenId", "internalType": "uint256" }] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "transferOwnership", "inputs": [{ "type": "address", "name": "newOwner", "internalType": "address" }] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "updateBox", "inputs": [{ "type": "uint256", "name": "_tokenId", "internalType": "uint256" }, { "type": "address", "name": "_dataset", "internalType": "address" }, { "type": "bool", "name": "_transferOwnershipToReceiver", "internalType": "bool" }] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "bool", "name": "", "internalType": "bool" }], "name": "whitelist", "inputs": [{ "type": "address", "name": "", "internalType": "address" }] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "whitelistAddresses", "inputs": [{ "type": "address[]", "name": "_list", "internalType": "address[]" }, { "type": "bool", "name": "_whitelist", "internalType": "bool" }] }, { "type": "event", "name": "Approval", "inputs": [{ "type": "address", "name": "owner", "indexed": true }, { "type": "address", "name": "approved", "indexed": true }, { "type": "uint256", "name": "tokenId", "indexed": true }], "anonymous": false }, { "type": "event", "name": "ApprovalForAll", "inputs": [{ "type": "address", "name": "owner", "indexed": true }, { "type": "address", "name": "operator", "indexed": true }, { "type": "bool", "name": "approved", "indexed": false }], "anonymous": false }, { "type": "event", "name": "OwnershipTransferred", "inputs": [{ "type": "address", "name": "previousOwner", "indexed": true }, { "type": "address", "name": "newOwner", "indexed": true }], "anonymous": false }, { "type": "event", "name": "Transfer", "inputs": [{ "type": "address", "name": "from", "indexed": true }, { "type": "address", "name": "to", "indexed": true }, { "type": "uint256", "name": "tokenId", "indexed": true }], "anonymous": false }]
+const reputationSC_ABI = [{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"MAX_SCORE","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"MIN_SCORE","inputs":[]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"addScore","inputs":[{"type":"address","name":"_user","internalType":"address"},{"type":"uint256","name":"_score","internalType":"uint256"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"address","name":"","internalType":"address"}],"name":"owner","inputs":[]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"renounceOwnership","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"score","internalType":"uint256"},{"type":"uint256","name":"cnt","internalType":"uint256"}],"name":"reputation","inputs":[{"type":"address","name":"","internalType":"address"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"transferOwnership","inputs":[{"type":"address","name":"newOwner","internalType":"address"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"bool","name":"","internalType":"bool"}],"name":"whitelist","inputs":[{"type":"address","name":"","internalType":"address"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"whitelistAddresses","inputs":[{"type":"address[]","name":"_list","internalType":"address[]"},{"type":"bool","name":"_whitelist","internalType":"bool"}]},{"type":"event","name":"OwnershipTransferred","inputs":[{"type":"address","name":"previousOwner","indexed":true},{"type":"address","name":"newOwner","indexed":true}],"anonymous":false}]
 const DatasetABI = DatasetRegistry.abi;
 const TokenABI = Token.abi;
 //isWhitelisted
@@ -298,6 +299,8 @@ export const callCreateDataset = createAsyncThunk(
 
       /// Call the method on the contract
       const tx = await contract.createDataset(wallet.address, ipfsRes.Name, multiaddr_bytes, checksum, { gasPrice: 0, gasLimit: 1000000 });
+
+      console.log(`tx: ${JSON.stringify(tx)}`);
 
       // Wait for the transaction to be confirmed
       const txReceipt = await tx.wait(1); // replace 1 with the number of confirmations you want to wait for
@@ -770,10 +773,14 @@ export interface MintBox {
   parcel_id: string;
   dataset: string;
 }
+export interface MintBoxResponse {
+  tokenId: string, txHash: string;
+}
+  
 //mint parcel
 export const mintBox = createAsyncThunk(
   'blockchain/mintParcel',
-  async (mintBox: MintBox, thunkAPI) => {
+  async (mintBox: MintBox, thunkAPI) : Promise<MintBoxResponse> => {
     try {
       // Get the current state
       const state = thunkAPI.getState() as RootState;
@@ -833,19 +840,12 @@ export const mintBox = createAsyncThunk(
 
 
 
-      return { tokenId: tokenId, txHash: txReceipt.transactionHash };
+      return { tokenId: tokenId, txHash: txReceipt.transactionHash } as MintBoxResponse;
 
 
     }
     catch (error) {
-      if (error instanceof Error) {
-        // If the error is an instance of Error, handle it
-        return thunkAPI.rejectWithValue(error.message);
-      } else {
-        // If the error is not an instance of Error, handle it differently
-        return thunkAPI.rejectWithValue('An unknown error occurred');
-
-      }
+      return handleError(error, thunkAPI);
     }
 
   }
@@ -857,10 +857,14 @@ export interface ApproveTransfer {
   to: string;
   tokenId: string; //nft id
 }
+export interface ApproveTransferResponse {
+  tokenId: string, txHash: string,owner: string, approved: string;
+}
+
 //user approves the other user to transfer the NFT to himself
 export const approveTransfer = createAsyncThunk(
   'blockchain/approveTransfer',
-  async (approveTransfer: ApproveTransfer, thunkAPI) => {
+  async (approveTransfer: ApproveTransfer, thunkAPI) : Promise<ApproveTransferResponse> => {
     try {
       // Get the current state
       const state = thunkAPI.getState() as RootState;
@@ -914,19 +918,12 @@ export const approveTransfer = createAsyncThunk(
 
       console.log("txReceipt: " + JSON.stringify(txReceipt));
 
-      return { tokenId: tokenId, txHash: txReceipt.transactionHash, owner: owner, approved: approved };
+      return { tokenId: tokenId, txHash: txReceipt.transactionHash, owner: owner, approved: approved } as ApproveTransferResponse;
 
 
     }
     catch (error) {
-      if (error instanceof Error) {
-        // If the error is an instance of Error, handle it
-        return thunkAPI.rejectWithValue(error.message);
-      } else {
-        // If the error is not an instance of Error, handle it differently
-        return thunkAPI.rejectWithValue('An unknown error occurred');
-
-      }
+      return handleError(error, thunkAPI);
     }
 
   }
@@ -937,6 +934,9 @@ export interface UpdateBox {
   dataset: string; //new dataset
   transferOwnership: boolean; //if true, transfer ownership to new owner called when box is closed
 
+}
+export interface UpdateBoxResponse {
+  tx_data: string
 }
 //user approves the other user to transfer the NFT to himself
 export const updateBox = createAsyncThunk(
@@ -976,13 +976,59 @@ export const updateBox = createAsyncThunk(
           throw new Error('Transfer event not found in transaction logs');
         }
       }
-      
+
 
 
 
 
 
       console.log("txReceipt: " + JSON.stringify(txReceipt));
+
+      return { tx_data: JSON.stringify(txReceipt) } as UpdateBoxResponse;
+
+    }
+    catch (error) {
+     return handleError(error, thunkAPI);
+    }
+
+  }
+);
+
+
+export const getBoxDatasets = createAsyncThunk(
+  'blockchain/getBoxDatasets',
+  async (tokenId:string, thunkAPI) => {
+    try {
+      // Get the current state
+      const state = thunkAPI.getState() as RootState;
+
+      // Get the wallet from the state
+      const privateKey = state.blockchain.privateKey;
+
+      // Check if the wallet exists
+      if (!privateKey) {
+        throw new Error("Wallet not found");
+      }
+
+
+      const wallet = new ethers.Wallet(privateKey, provider);
+
+      const contract = new ethers.Contract(parcelNFTSCAddress, parcelNFTSC_ABI, wallet);
+
+      console.log("calling getBoxDatasets with args: " + "tokenId: " + tokenId);
+      const datasets = await contract.getBoxDatasets(tokenId) as string[]
+      //array "0xA69daC123F22F6Ac24eB42C7a0DBeCC326159209,0xA69daC123F22F6Ac24eB42C7a0DBeCC326159209,0xA69daC123F22F6Ac24eB42C7a0DBeCC326159209"
+
+      console.log("datasets: " + datasets);
+    
+      return datasets;
+
+
+    
+
+
+
+
 
     }
     catch (error) {
@@ -998,6 +1044,93 @@ export const updateBox = createAsyncThunk(
 
   }
 );
+
+//reputation system
+
+//set reputation
+export const setReputation = createAsyncThunk(
+  'blockchain/setReputation',
+  async ({user, score}: {user: string, score: number}, thunkAPI) => {
+    try {
+      // Get the current state
+      const state = thunkAPI.getState() as RootState;
+
+      // Get the wallet from the state
+      const privateKey = state.blockchain.privateKey;
+
+      // Check if the wallet exists
+      if (!privateKey) {
+        throw new Error("Wallet not found");
+      }
+
+      //call  addScore
+      const wallet = new ethers.Wallet(privateKey, provider);
+
+      const contract = new ethers.Contract(reputationSCAddress, reputationSC_ABI, wallet);
+
+      console.log("calling addScore with args: " + "user: " + user + " score: " + score);
+
+      const tx = await contract.addScore(user,score, { gasLimit: 1000000 });
+
+      //wait for tx to be mined
+      const txReceipt = await tx.wait(1);
+      console.log("txReceipt: " + JSON.stringify(txReceipt));
+
+
+    }
+    catch (error) {
+
+      return handleError(error, thunkAPI);
+
+    }
+  }
+);
+
+//get reputation
+export const getReputation = createAsyncThunk(
+  'blockchain/getReputation',
+  async (user: string, thunkAPI) => {
+    try {
+      // Get the current state
+        // Get the current state
+        const state = thunkAPI.getState() as RootState;
+
+        // Get the wallet from the state
+        const privateKey = state.blockchain.privateKey;
+  
+        // Check if the wallet exists
+        if (!privateKey) {
+          throw new Error("Wallet not found");
+        }
+  
+        //call  addScore
+        const wallet = new ethers.Wallet(privateKey, provider);
+  
+        const contract = new ethers.Contract(reputationSCAddress, reputationSC_ABI, wallet);
+
+        console.log("calling getScore with args: " + "user: " + user);
+
+        const score = await contract.getScore(user) as number;
+
+        console.log("score: " + score);
+
+        return score;
+
+    }
+    catch (error) {
+      return handleError(error, thunkAPI);
+
+    }
+  }
+);
+
+
+      
+
+
+
+
+
 
 const handleError = (error: any, thunkAPI: any) => {
   if (error instanceof Error) {

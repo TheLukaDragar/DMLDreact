@@ -14,7 +14,13 @@
     "preset": "jest-expo",
     "transformIgnorePatterns": [
       "node_modules/(?!(jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|crypto-es)"
+    ],
+    "testPathIgnorePatterns": [
+      "data/__tests__/blockchain_utility.ts","tests/backend_utility.tsx"
+    
     ]
+
+
   },
   "dependencies": {
     "@config-plugins/react-native-ble-plx": "6.0.0",
