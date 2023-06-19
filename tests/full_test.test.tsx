@@ -2,26 +2,19 @@
  * @jest-environment jsdom
  */
 import 'whatwg-fetch';
-import React, { ComponentType } from 'react'
 
-import { act, fireEvent, screen, waitFor, renderHook } from '@testing-library/react'
 // We're using our own custom render function and not RTL's render.
-import { renderWithProviders } from '../utils/test-utils'
-import TestComponent, { getUserDataPassed, loginPassed } from './test_component'
 import '@testing-library/jest-dom';
-import "whatwg-fetch"
+import "whatwg-fetch";
 
-import { KeyChainData, loadDemoClientWallet, loadDemoCourierWallet } from '../data/secure';
-import { useLoginWalletMutation, useLazyGetAuthMsgQuery, useLazyGetMeQuery, User, AuthResponse, ParcelData, CreateParcelByWallet, useCreateParcelByWalletMutation, useLazyGetBoxAccessKeyQuery, useLazyGetBoxesQuery, useLazyGetDoesUserHavePermissionToBoxQuery, PreciseLocation, useSetBoxPreciseLocationMutation, useLazyGetBoxPreciseLocationQuery, isFetchBaseQueryError, isErrorWithMessage, useDepositParcelMutation, useLazyGetParcelByIdQuery, useLazyGetBoxQuery, useWithdrawParcelMutation, RateTransactionDto, RatingType, useRateTransactionMutation, GetBoxesResponse, BoxItem } from '../data/api';
-import { useAppDispatch, useAppSelector } from '../data/hooks';
-import { AsyncThunk } from '@reduxjs/toolkit';
-import { Dispatch, AnyAction } from 'redux';
-import { Provider } from 'react-redux';
-import { ethers } from 'ethers';
-import { authenticate, connectDeviceById, demoDevice, getChallenge, setDemoMode } from '../ble/bleSlice';
-import { setupAndLoadUser, testClientGetsBoxes, testConnectToDeviceAndGetAccessKey, testCreateParcelByWallet, testDepositParcel, testFindBoxByDID, testGetBox, testGetBoxPreciseLocation, testGetParcelById, testRateTransaction, testUpdateBoxLocation } from './backend_utility';
-import { CreateDatasetResponse, MintBoxResponse, UploadMetadataToIPFSResponse } from '../data/blockchain';
-import { checkWhitelistedStatus } from '../data/__tests__/blockchain_utility';
+import { demoDevice } from '../ble/bleSlice';
+import { approveTransferAndCheck, checkWhitelistedStatus, createDatasetAndCheck, make_newDatasetAndCheck, mintBoxAndCheck, pushToSMSAndCheck, sellDataset, updateBoxAndCheck, uploadMetadataAndCheck } from '../data/__tests__/blockchain_utility';
+import { BoxItem, GetBoxesResponse, ParcelData, PreciseLocation, RateTransactionDto, RatingType } from '../data/api';
+import { ApproveTransfer, CreateDatasetResponse, Metadata, MintBox, MintBoxResponse, UpdateBox, UploadMetadataToIPFSResponse, getBoxDatasets } from '../data/blockchain';
+import { loadDemoClientWallet, loadDemoCourierWallet } from '../data/secure';
+import { store } from '../data/store';
+import { setupAndLoadUser, testClientGetsBoxes, testConnectToDeviceAndGetAccessKey, testCreateParcelByWallet, testDepositParcel, testFindBoxByDID, testGetBox, testGetBoxPreciseLocation, testGetParcelById, testRateTransaction, testUpdateBoxLocation, testUpdateParcel, testWithdrawParcel } from './backend_utility';
+import { AnyAction } from 'redux';
 
 
 jest.mock('@react-native-async-storage/async-storage', () =>
@@ -90,7 +83,7 @@ describe('Full Test Scenario', () => {
         checkWhitelistedStatus(privateKey_Client, true, clientComponent.store);
 
        //boxes = await testClientGetsBoxes(clientComponent);
-    },20000);
+    },200000);
 
 
    
@@ -110,48 +103,232 @@ describe('Full Test Scenario', () => {
         return await testUpdateBoxLocation(clientComponent, box!, car_location);
     });
 
-    it('(PDC Parcel pickup) Courier create a parcel', async () => {
+    it('(PDC Parcel pickup) Courier creates a parcel', async () => {
        parcel = await testCreateParcelByWallet(courierComponent, courierUserData, clientUserData, demo_box_did, courier_loocation1,"0x00000","1")
        expect(parcel).toBeTruthy();
 
     });
     //najprej je nft id 0topem nareis parce lpotem klics smart contract in UPDATAS NFT ID na parcelu
+     //upload to ipfs
+    it('(Mint parcel NFT) Courier upload MetaData to IPFS', async () => {
+
+      //call uploadToIPFS
+      await checkWhitelistedStatus(privateKey_Courier, true, courierComponent.store);
+
+
+      const metadata: Metadata = {
+          location: "courier location 1",
+          timestamp: Date.now().toString(),
+          testingEnv: true,
+      }
+
+      uploadToIPFS_Result = await uploadMetadataAndCheck(metadata, courierComponent.store);
+      console.log("metadata uploaded successfully");
+      console.log(uploadToIPFS_Result);
+
+  }, 200000 );
+
+  //create dataset nft
+    it('(Mint parcel NFT) Courier creates a Dataset', async () => {
+
+      await checkWhitelistedStatus(privateKey_Courier, true, courierComponent.store);
+
+
+      createDataset_Result = await createDatasetAndCheck(uploadToIPFS_Result, courierComponent.store);
+      console.log("dataset created successfully");
+      console.log(createDataset_Result);
+
+    }, 200000 );
+
+  //callPushToSMS
+    it('(Mint parcel NFT) Courier pushes secret to SMS', async () => {
+
+      await checkWhitelistedStatus(privateKey_Courier, true, courierComponent.store);
+
+      await pushToSMSAndCheck(createDataset_Result.datasetAddress, createDataset_Result.aesKey, courierComponent.store);
+      console.log("pushed to sms successfully");
+
+    }, 200000 );
+
+  //sell dataset
+    it('(Mint parcel NFT) Courier sells the Dataset', async () => {
+
+      await checkWhitelistedStatus(privateKey_Courier, true, courierComponent.store);
+
+
+      let res = await sellDataset(createDataset_Result, 0, courierComponent.store);
+
+      console.log("dataset sold successfully");
+      console.log(res);
+
+    }, 200000 );
+
+    //mint
+    it('(Mint parcel NFT) Courier mints parcel NFT', async () => {
+      
+      const args: MintBox = {
+        reciever_address: clientUserData.crypto[0].wallet,
+        dataset: createDataset_Result.datasetAddress,
+        parcel_id: parcel.id.toString(),
+    }
+
+
+    mintBox_Result = await mintBoxAndCheck(args, courierComponent.store);
+
+    datasets.push(createDataset_Result.datasetAddress); //store created dataset addresses for later use
+    console.log("minted NFT successfully");
+    console.log(mintBox_Result);
+
+    }, 200000 );
+
+    //update parcel nft id
+
+    it('(PDC Parcel pickup) Courier updates parcel NFT ID', async () => {
+
+      parcel = {
+        ...parcel,
+        nftId: mintBox_Result.tokenId
+
+      }
+
+
+
+      const updateNFTIDResponse = await testUpdateParcel(courierComponent, parcel);
+      expect(updateNFTIDResponse).toBeTruthy();
+    });
     
 
     it('(PDC Parcel pickup) Courier gets Box precise location', async () => {
        boxLocation = await testGetBoxPreciseLocation(courierComponent, box?.id!);
       expect(boxLocation).toBeTruthy();
     });
-    it('(OpenBox) Courier connects to Box and with access key from API', async () => {
+    it('(OpenBox) Courier opens to Box and with access key from API', async () => {
       const accessKey = await testConnectToDeviceAndGetAccessKey(courierComponent, demoDevice.id, box?.id!, boxLocation);
       expect(accessKey).toBeTruthy();
     });
+    
+    it('(OpenBox) Courier Updates MetaData when opening the Box', async () => {
+
+        await checkWhitelistedStatus(privateKey_Courier, true, courierComponent.store);
+
+        const newMetadata: Metadata = {
+            location: "test2",
+            timestamp: Date.now().toString(),
+            testingEnv: true,
+        }
+        const newDataset = await make_newDatasetAndCheck(newMetadata,courierComponent.store);
+
+        const args: UpdateBox = {
+            tokenId: mintBox_Result.tokenId,
+            dataset: newDataset,
+            transferOwnership: false,
+        }
+        const res = await updateBoxAndCheck(args, courierComponent.store);
+        console.log("updated box successfully");
+        console.log(res);
+
+        datasets.push(newDataset);
+
+
+
+    }, 200000 );
+
+    it('(CloseBox) Courier Approves transfer of NFT', async () => {
+
+      await checkWhitelistedStatus(privateKey_Courier, true, courierComponent.store);
+
+      const args: ApproveTransfer = {
+          to: clientUserData.crypto[0].wallet,
+          tokenId: mintBox_Result.tokenId,
+      }
+      const res = await approveTransferAndCheck(args, courierComponent.store);
+
+      console.log("approved transfer of NFT successfully");
+      console.log(res);
+
+    }, 200000 );
+
+
+    it('(CloseBox) Courier Updates MetaData when closing the Box and transfers NFT ownership', async () => {
+
+        await checkWhitelistedStatus(privateKey_Courier, true, courierComponent.store);
+
+        const newMetadata: Metadata = {
+            location: "test3",
+            timestamp: Date.now().toString(),
+            testingEnv: true,
+        }
+        const newDataset = await make_newDatasetAndCheck(newMetadata, courierComponent.store);
+
+        const args: UpdateBox = {
+            tokenId: mintBox_Result.tokenId,
+            dataset: newDataset,
+            transferOwnership: true,
+        }
+        const res = await updateBoxAndCheck(args, courierComponent.store);
+        console.log("updated box successfully");
+        console.log(res);
+
+        datasets.push(newDataset);
+
+
+
+    }, 200000 );
+
+
 
     it('(PDC Parcel pickup) Courier deposits a parcel', async () => {
-      const depositParcelResponse = await testDepositParcel(courierComponent, box?.id!)
+      const depositParcelResponse = await testDepositParcel(courierComponent, parcel.id);
       expect(depositParcelResponse).toBeTruthy();
-    });
-
+    }, 200000 );
 
     it('(PDC Parcel pickup) Client gets a parcel by ID', async () => {
       const parcel_response = await testGetParcelById(clientComponent, parcel.id);
       expect(parcel_response).toBeTruthy();
-    });
+    }, 200000 );
 
     it('(PDC Parcel pickup) Client gets Box precise location', async () => {
       const box_location_client = await testGetBoxPreciseLocation(clientComponent, box?.id!);
       expect(box_location_client).toBeTruthy();
-    });
+    }, 200000 );
 
     it('(PDC Parcel pickup) Client gets Box details', async () => {
       const box_details = await testGetBox(clientComponent, box?.id!);
       expect(box_details).toBeTruthy();
-    });
+    }, 200000 );
 
-    it('(Open Box)Client connects to box and with access key from API', async () => {
+    it('(Open Box) Client opens the box and with access key from API', async () => {
       const accessKey = await testConnectToDeviceAndGetAccessKey(clientComponent, demoDevice.id, box?.id!, boxLocation);
       expect(accessKey).toBeTruthy();
-    });
+    }, 200000 );
+
+    it('(OpenBox) Client Updates MetaData when opening the Box', async () => {
+
+      await checkWhitelistedStatus(privateKey_Client, true, clientComponent.store);
+
+      const newMetadata: Metadata = {
+          location: "test4",
+          timestamp: Date.now().toString(),
+          testingEnv: true,
+      }
+      const newDataset = await make_newDatasetAndCheck(newMetadata, clientComponent.store);
+
+      const args: UpdateBox = {
+          tokenId: mintBox_Result.tokenId,
+          dataset: newDataset,
+          transferOwnership: false,
+      }
+      const res = await updateBoxAndCheck(args, clientComponent.store);
+      console.log("updated box successfully");
+      console.log(res);
+
+      datasets.push(newDataset);
+
+
+
+    }, 200000 );
+
+    
 
     it('(PDC Parcel pickup) Client rates the courier', async () => {
       const rating_courier: RateTransactionDto = {
@@ -164,7 +341,7 @@ describe('Full Test Scenario', () => {
       const rateTransactionResponse = await testRateTransaction(clientComponent, rating_courier, clientUserData.id);
       expect(rateTransactionResponse).toBeTruthy();
     
-    });
+    }, 200000 );
 
     it('(PDC Parcel pickup) Client rates the box', async () => {
       const rating_box: RateTransactionDto = {
@@ -176,7 +353,64 @@ describe('Full Test Scenario', () => {
 
       const rateTransactionResponse = await testRateTransaction(clientComponent, rating_box, clientUserData.id);
       expect(rateTransactionResponse).toBeTruthy();
-    });
+    }, 200000 );
+
+    it('(CloseBox) Client Updates MetaData when closing the Box', async () => {
+
+      await checkWhitelistedStatus(privateKey_Client, true, clientComponent.store);
+
+      const newMetadata: Metadata = {
+          location: "test3",
+          timestamp: Date.now().toString(),
+          testingEnv: true,
+      }
+      const newDataset = await make_newDatasetAndCheck(newMetadata, clientComponent.store);
+
+      const args: UpdateBox = {
+          tokenId: mintBox_Result.tokenId, //TODO: can get this from contract and parcel
+          dataset: newDataset,
+          transferOwnership: false,
+      }
+      const res = await updateBoxAndCheck(args, clientComponent.store);
+      console.log("updated box successfully");
+      console.log(res);
+
+      datasets.push(newDataset);
+
+
+
+    }, 200000 );
+
+
+    it('(PDC Parcel pickup) Client withdraws the parcel', async () => {
+      const withdrawParcelResponse = await testWithdrawParcel(clientComponent, parcel.id);
+      expect(withdrawParcelResponse).toBeTruthy();
+    }, 200000 );
+
+    //get box datasets
+    it('(Read audit trail datasets) Client gets Box datasets', async () => {
+
+      await checkWhitelistedStatus(privateKey_Client, true, clientComponent.store);
+      //call callGetBoxDatasets
+      const res = await  clientComponent.store.dispatch(getBoxDatasets(
+          parcel.nftId,
+      ) as unknown as AnyAction).unwrap();
+
+      console.log("got box datasets successfully");
+      console.log(res);
+
+      //rs sqould equal to datasets array
+      expect(res).not.toBeUndefined();
+      expect(res).not.toBeNull();
+      expect(res).not.toBe("");
+
+      expect(res).toEqual(datasets);
+
+
+    }, 200000 );
+
+
+
 
 
 
@@ -241,6 +475,10 @@ describe('Full Test Scenario', () => {
 
 
 
+
+  // function testMintParcelNFT(courierComponent: any, id: number) {
+  //   throw new Error('Function not implemented.');
+  // }
 // describe('Test Scenario', () => {
 //   test('Courier - Client full scenario', async () => {
 //     const { component: courierComponent, loginResult: courierResult } = await setupAndLoadUser(loadDemoCourierWallet);
@@ -619,7 +857,7 @@ describe('Full Test Scenario', () => {
 //     expect(withdrawParcelResponse).not.toBeUndefined(); 
 //     //expect empyt object
 //     expect(withdrawParcelResponse).toEqual({});
-//   }, 20000);
+//   }, 200000 00);
 // });
 
 

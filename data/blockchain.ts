@@ -305,6 +305,8 @@ export const callCreateDataset = createAsyncThunk(
       // Wait for the transaction to be confirmed
       const txReceipt = await tx.wait(1); // replace 1 with the number of confirmations you want to wait for
 
+      console.log(`txReceipt: ${JSON.stringify(txReceipt)}`);
+
       // Extract Transfer event from the transaction receipt logs
       const transferEvent = txReceipt.events.find((event: { event: string; }) => event.event === 'Transfer');
 
@@ -326,7 +328,7 @@ export const callCreateDataset = createAsyncThunk(
 
       console.log(`Dataset created with address: ${address}`);
 
-      return { datasetAddress:address, aesKey, txHash: txReceipt.transactionHash };
+      return { datasetAddress:address, aesKey, txHash: txReceipt.transactionHash } as CreateDatasetResponse;
     } catch (error) {
       return handleError(error, thunkAPI);
     }

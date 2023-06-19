@@ -19,7 +19,7 @@ import { Dispatch, AnyAction } from 'redux';
 import { Provider } from 'react-redux';
 import { ethers } from 'ethers';
 import { authenticate, connectDeviceById, demoDevice, getChallenge, setDemoMode } from '../ble/bleSlice';
-import { setupAndLoadUser, testClientGetsBoxes, testConnectToDeviceAndGetAccessKey, testCreateParcelByWallet, testDepositParcel, testFindBoxByDID, testGetBox, testGetBoxPreciseLocation, testGetParcelById, testRateTransaction, testUpdateBoxLocation } from './backend_utility';
+import { setupAndLoadUser, testClientGetsBoxes, testConnectToDeviceAndGetAccessKey, testCreateParcelByWallet, testDepositParcel, testFindBoxByDID, testGetBox, testGetBoxPreciseLocation, testGetParcelById, testRateTransaction, testUpdateBoxLocation, testUpdateParcel, testWithdrawParcel } from './backend_utility';
 
 
 jest.mock('@react-native-async-storage/async-storage', () =>
@@ -95,6 +95,17 @@ describe('Backend Test Scenario', () => {
 
     });
     //najprej je nft id 0topem nareis parce lpotem klics smart contract in UPDATAS NFT ID na parcelu
+    it('(PDC Parcel pickup) Courier updates parcel', async () => {
+
+      parcel= {
+        ...parcel,
+        nftId: "1"
+      }
+
+      parcel = await testUpdateParcel(courierComponent, parcel)
+      expect(parcel).toBeTruthy();
+
+   });
     
 
     it('(PDC Parcel pickup) Courier gets Box precise location', async () => {
@@ -107,7 +118,7 @@ describe('Backend Test Scenario', () => {
     });
 
     it('(PDC Parcel pickup) Courier deposits a parcel', async () => {
-      const depositParcelResponse = await testDepositParcel(courierComponent, box?.id!)
+      const depositParcelResponse = await testDepositParcel(courierComponent, parcel.id);
       expect(depositParcelResponse).toBeTruthy();
     });
 
@@ -157,6 +168,11 @@ describe('Backend Test Scenario', () => {
       expect(rateTransactionResponse).toBeTruthy();
     });
 
+    it('(PDC Parcel pickup) Client withdraws the parcel', async () => {
+      const withdrawParcelResponse = await testWithdrawParcel(clientComponent, parcel.id);
+      expect(withdrawParcelResponse).toBeTruthy();
+    });
+
 
 
     
@@ -189,6 +205,7 @@ describe('Backend Test Scenario', () => {
   
   
   
+
 
 
 

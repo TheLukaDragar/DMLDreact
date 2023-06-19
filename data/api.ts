@@ -569,6 +569,31 @@ export const apiSlice = createApi({
 
     }),
 
+    //TODO INVALIDATE CACHE ...
+    updateParcelById: builder.mutation<ParcelData, ParcelData>({
+      query: ({ id, ...body }) => ({
+        url: `/parcel/update/${id}`, // interpolate id into URL
+        method: 'PATCH', // use PATCH method
+        body,
+      }),
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log(`onQueryStarted /parcel/update/${arg.id}`, arg, dispatch);
+        try {
+          const { data } = await queryFulfilled;
+          console.log(`/parcel/update/${arg.id} fulfilled`, JSON.stringify(data));
+        } catch (error) {
+          // added error logging
+          console.log(`error /parcel/update/${arg.id} in onQueryStarted`, error);
+        }
+      },
+      transformErrorResponse: (error: any) => {
+        console.log('error /parcel/update/', error);
+        // handle the error and return a custom error response
+        return { error: 'An error occurred while updating the parcel by wallet.' };
+      }
+  }),
+  
+
     //deposit parcel  @Post('/:id/deposit')
     depositParcel: builder.mutation<any, number>({
       query: (id) => ({
@@ -706,5 +731,5 @@ export const { reducer, middleware } = apiSlice
 // Export the endpoint for use in components
 export const { useGetAuthMsgQuery, useRegisterWalletMutation, useLoginWalletMutation, useGetMeQuery, useLazyGetAuthMsgQuery,useLazyGetMeQuery,useGetUserDetailsQuery, useCreateParcelByWalletMutation,useLazyGetDoesUserHavePermissionToBoxQuery,useLazyGetBoxPreciseLocationQuery
   , useGetBoxesQuery, useGetBoxQuery, useLazyGetBoxQuery, useLazyGetBoxesQuery, useConnectBoxMutation, useSetBoxPreciseLocationMutation, useGetBoxPreciseLocationQuery, useCreateApproximateLocationMutation, useUpdateApproximateLocationMutation,useGetBoxAccessKeyQuery,useLazyGetBoxAccessKeyQuery
-  ,useDepositParcelMutation,useLazyGetParcelByIdQuery,useGetParcelByIdQuery,useWithdrawParcelMutation,useRateTransactionMutation
+  ,useDepositParcelMutation,useLazyGetParcelByIdQuery,useGetParcelByIdQuery,useWithdrawParcelMutation,useRateTransactionMutation,useUpdateParcelByIdMutation
 } = apiSlice

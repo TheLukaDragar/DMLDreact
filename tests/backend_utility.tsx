@@ -7,7 +7,7 @@ import '@testing-library/jest-dom';
 import "whatwg-fetch"
 
 import { KeyChainData, loadDemoClientWallet, loadDemoCourierWallet } from '../data/secure';
-import { useLoginWalletMutation, useLazyGetAuthMsgQuery, useLazyGetMeQuery, User, AuthResponse, ParcelData, CreateParcelByWallet, useCreateParcelByWalletMutation, useLazyGetBoxAccessKeyQuery, useLazyGetBoxesQuery, useLazyGetDoesUserHavePermissionToBoxQuery, PreciseLocation, useSetBoxPreciseLocationMutation, useLazyGetBoxPreciseLocationQuery, isFetchBaseQueryError, isErrorWithMessage, useDepositParcelMutation, useLazyGetParcelByIdQuery, useLazyGetBoxQuery, useWithdrawParcelMutation, RateTransactionDto, RatingType, useRateTransactionMutation, GetBoxesResponse, BoxItem } from '../data/api';
+import { useLoginWalletMutation, useLazyGetAuthMsgQuery, useLazyGetMeQuery, User, AuthResponse, ParcelData, CreateParcelByWallet, useCreateParcelByWalletMutation, useLazyGetBoxAccessKeyQuery, useLazyGetBoxesQuery, useLazyGetDoesUserHavePermissionToBoxQuery, PreciseLocation, useSetBoxPreciseLocationMutation, useLazyGetBoxPreciseLocationQuery, isFetchBaseQueryError, isErrorWithMessage, useDepositParcelMutation, useLazyGetParcelByIdQuery, useLazyGetBoxQuery, useWithdrawParcelMutation, RateTransactionDto, RatingType, useRateTransactionMutation, GetBoxesResponse, BoxItem, useUpdateParcelByIdMutation } from '../data/api';
 import { useAppDispatch, useAppSelector } from '../data/hooks';
 import { AsyncThunk } from '@reduxjs/toolkit';
 import { Dispatch, AnyAction } from 'redux';
@@ -157,6 +157,29 @@ export async function testClientGetsBoxes(component:any) {
     return parcelResponse;
   }
 
+  export async function testUpdateParcel(courierComponent: any, parcel : ParcelData): Promise<ParcelData> {
+    const { result: updateParcelResult } = renderHook(() => useUpdateParcelByIdMutation(), {
+      wrapper: ({ children }) => <Provider store={courierComponent.store}>{children}</Provider>,
+    });
+
+    const parcelResponse = await act(async () => {
+      const result = await updateParcelResult.current[0](parcel).unwrap();
+      console.log("update parcel result: ", result);
+      return result;
+    }
+    );
+
+    expect(parcelResponse).not.toBeUndefined();
+    expect(parcelResponse.id).not.toBeNull();
+    expect(parcelResponse.id).toBe(parcel.id);
+    expect(parcelResponse.nftId).toBe(parcel.nftId);
+
+
+    return parcelResponse;
+  }
+
+
+
   export async function testGetBoxPreciseLocation(
     courierComponent: any, 
     boxId: number
@@ -232,7 +255,7 @@ export async function testClientGetsBoxes(component:any) {
     return accessKey.accessKey;
   }
 
-  export async function testDepositParcel(courierComponent: any, boxId: number): Promise<any> {
+  export async function testDepositParcel(courierComponent: any, parcel_id: number): Promise<any> {
 
     // useDepositParcelMutation
     const { result: depositParcelResult } = renderHook(() => useDepositParcelMutation(), {
@@ -240,7 +263,7 @@ export async function testClientGetsBoxes(component:any) {
     });
   
     const depositParcelResponse = await act(async () => {
-      const result = await depositParcelResult.current[0](boxId).unwrap();
+      const result = await depositParcelResult.current[0](parcel_id).unwrap();
       console.log("deposit parcel result: ", result);
       return result;
     });
@@ -316,6 +339,27 @@ export async function testClientGetsBoxes(component:any) {
   
     return rateTransactionResponse;
   }
+
+  export async function testWithdrawParcel(clientComponent: any, boxId: number): Promise<any> {
+        //withdraw parcel
+    const { result: withdrawParcelResult } = renderHook(() => useWithdrawParcelMutation(), {
+      wrapper: ({ children }) => <Provider store={clientComponent.store}>{children}</Provider>,
+    });
+
+    const withdrawParcelResponse = await act(async () => {
+      const result = await withdrawParcelResult.current[0](boxId).unwrap();
+      console.log("withdraw parcel result: ", result);
+      return result;
+    }
+    );
+
+    expect(withdrawParcelResponse).not.toBeUndefined(); 
+    //expect empyt object
+    expect(withdrawParcelResponse).toEqual({});
+
+    return withdrawParcelResponse;
+  }
+
   
   
   
