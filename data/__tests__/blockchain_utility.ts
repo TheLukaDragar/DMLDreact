@@ -1,4 +1,4 @@
-import { ApproveTransfer, ApproveTransferResponse, CreateDatasetResponse, Metadata, MintBox, MintBoxResponse, UpdateBox, UpdateBoxResponse, UploadMetadataToIPFSResponse, approveTransfer, callCreateDataset, callPushToSMS, callSellDataset, downloadMetadataFromIPFS, getBoxDatasets, getOwnerOfNft, getReputation, isWhitelisted, mintBox, monitorTaskProgress, orderRequestExecution, pushWeb2Secret, runApp, setPrivateKey, updateBox, uploadMetadataToIPFS } from '../blockchain';
+import { ApproveTransfer, ApproveTransferResponse, CreateDatasetResponse, Metadata, MintBox, MintBoxResponse, UpdateBox, UpdateBoxResponse, UploadMetadataToIPFSResponse, approveTransfer, callCreateDataset, callPushToSMS, callSellDataset, downloadMetadataFromIPFS, getBoxDatasets, getOwnerOfNft, getReputation, isWhitelisted, mintBox, monitorTaskProgress, pushWeb2Secret, runApp, setPrivateKey, updateBox, uploadMetadataToIPFS } from '../blockchain';
 import { AnyAction } from 'redux';
 
 export async function uploadMetadataAndCheck(metadata: Metadata, store: any) {
@@ -152,20 +152,20 @@ export async function checkWhitelistedStatus(privateKey: string, expectedStatus:
 }
 
 
-//orderRequestExecution
-export async function orderRequestExecutionAndCheck(datasetAddress: string, price: number, store: any): Promise<string> {
-    //call callSellDataset
-    let res = await store.dispatch(orderRequestExecution({
-        dataset: datasetAddress,
-        price: price,
-    }) as unknown as AnyAction).unwrap();
+// //orderRequestExecution
+// export async function orderRequestExecutionAndCheck(datasetAddress: string, price: number, store: any): Promise<string> {
+//     //call callSellDataset
+//     let res = await store.dispatch(orderRequestExecution({
+//         dataset: datasetAddress,
+//         price: price,
+//     }) as unknown as AnyAction).unwrap();
 
-    expect(res).not.toBeUndefined();
-    expect(res).not.toBeNull();
-    expect(res).not.toBe("");
-    return res;
+//     expect(res).not.toBeUndefined();
+//     expect(res).not.toBeNull();
+//     expect(res).not.toBe("");
+//     return res;
 
-}
+// }
 
 
 export async function pushWeb2Secret_(secretName: string, store: any): Promise<string> {
