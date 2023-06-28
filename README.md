@@ -8,7 +8,7 @@ For building and deploying, the [Expo](https://expo.dev/) framework is used.
 
 ## Requirements
 
-- Node.js > 16
+- Node.js >= 16
 - NPM > v8.x
 - Expo = 48
 - React = 18
