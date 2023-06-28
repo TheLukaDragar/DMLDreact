@@ -6,7 +6,8 @@
     "start": "expo start --dev-client",
     "android": "npx expo run:android -d",
     "ios": "expo run:ios",
-    "test": "jest --watchAll",
+    "test": "jest --verbose --testPathPattern 'full_test'",
+    "test_internal": "jest --verbose --coverage --runInBand",
     "build": "npx eas-cli build --profile preview --platform android",
     "build:local": "npx eas-cli build --profile preview --platform android --local"
   },
@@ -16,11 +17,9 @@
       "node_modules/(?!(jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|crypto-es)"
     ],
     "testPathIgnorePatterns": [
-      "data/__tests__/blockchain_utility.ts","tests/backend_utility.tsx"
-    
+      "data/__tests__/blockchain_utility.ts",
+      "tests/backend_utility.tsx"
     ]
-
-
   },
   "dependencies": {
     "@config-plugins/react-native-ble-plx": "6.0.0",
@@ -57,6 +56,7 @@
     "expo-system-ui": "~2.2.1",
     "expo-updates": "~0.16.4",
     "expo-web-browser": "~12.1.1",
+    "jszip": "^3.10.1",
     "metro": "^0.76.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",

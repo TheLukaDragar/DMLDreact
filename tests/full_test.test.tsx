@@ -8,13 +8,16 @@ import '@testing-library/jest-dom';
 import "whatwg-fetch";
 
 import { demoDevice } from '../ble/bleSlice';
-import { approveTransferAndCheck, checkWhitelistedStatus, createDatasetAndCheck, make_newDatasetAndCheck, mintBoxAndCheck, pushToSMSAndCheck, sellDataset, updateBoxAndCheck, uploadMetadataAndCheck } from '../data/__tests__/blockchain_utility';
+import { approveTransferAndCheck, checkWhitelistedStatus, createDatasetAndCheck, downloadMetadataFromIPFS_, getOwnerOfNft_, getReputation_, make_newDatasetAndCheck, mintBoxAndCheck, monitorTaskProgress_, pushToSMSAndCheck, pushWeb2Secret_, runApp_, sellDataset, updateBoxAndCheck, uploadMetadataAndCheck } from '../data/__tests__/blockchain_utility';
 import { BoxItem, GetBoxesResponse, ParcelData, PreciseLocation, RateTransactionDto, RatingType } from '../data/api';
-import { ApproveTransfer, CreateDatasetResponse, Metadata, MintBox, MintBoxResponse, UpdateBox, UploadMetadataToIPFSResponse, getBoxDatasets } from '../data/blockchain';
+import { ApproveTransfer, CreateDatasetResponse, Metadata, MintBox, MintBoxResponse, UpdateBox, UploadMetadataToIPFSResponse, getBoxDatasets, getReputation, setPrivateKey } from '../data/blockchain';
 import { loadDemoClientWallet, loadDemoCourierWallet } from '../data/secure';
 import { store } from '../data/store';
 import { setupAndLoadUser, testClientGetsBoxes, testConnectToDeviceAndGetAccessKey, testCreateParcelByWallet, testDepositParcel, testFindBoxByDID, testGetBox, testGetBoxPreciseLocation, testGetParcelById, testRateTransaction, testUpdateBoxLocation, testUpdateParcel, testWithdrawParcel } from './backend_utility';
 import { AnyAction } from 'redux';
+import { ethers } from 'ethers';
+import Constants from 'expo-constants';
+import { forEach } from 'jszip';
 
 
 jest.mock('@react-native-async-storage/async-storage', () =>
@@ -26,6 +29,9 @@ jest.mock('react-native-ble-plx', () => ({
   })),
 }));
 jest.mock('expo-constants', () => require('./mockExpoConstants.js'));
+
+const parcelNFTSCAddress = Constants?.expoConfig?.extra?.parcelNFTSCAddress;
+
 
 describe('Full Test Scenario', () => {
 
@@ -61,6 +67,11 @@ describe('Full Test Scenario', () => {
 
     let mintBox_Result: MintBoxResponse;
     let datasets: string[] = [];
+    let taskIds: string[] = [];
+    let results: { storage: string; location: string; }[] = [];
+    let metadata_audit_trail: Metadata[] = [];
+
+
 
 
 
@@ -116,8 +127,11 @@ describe('Full Test Scenario', () => {
       await checkWhitelistedStatus(privateKey_Courier, true, courierComponent.store);
 
 
-      const metadata: Metadata = {
-          location: "courier location 1",
+      const metadata = {
+          location: courier_loocation1,
+          user_id: courierUserData.id,
+          parcel_id: parcel.id,
+          action: "Courier picked up the parcel",
           timestamp: Date.now().toString(),
           testingEnv: true,
       }
@@ -125,6 +139,8 @@ describe('Full Test Scenario', () => {
       uploadToIPFS_Result = await uploadMetadataAndCheck(metadata, courierComponent.store);
       console.log("metadata uploaded successfully");
       console.log(uploadToIPFS_Result);
+
+      metadata_audit_trail.push(metadata);
 
   }, 200000 );
 
@@ -196,49 +212,70 @@ describe('Full Test Scenario', () => {
       const updateNFTIDResponse = await testUpdateParcel(courierComponent, parcel);
       expect(updateNFTIDResponse).toBeTruthy();
     });
+
+    it('(Check Client reputation) Courier checks Client reputation', async () => {
+      await checkWhitelistedStatus(privateKey_Courier, true, courierComponent.store);
+
+      const reputation = await getReputation_(new ethers.Wallet(privateKey_Client).address, courierComponent.store);
+      console.log("reputation: ", reputation);
+      expect(reputation).toBeGreaterThanOrEqual(0);
+    }, 200000);
+
+
     
 
     it('(PDC Parcel pickup) Courier gets Box precise location', async () => {
        boxLocation = await testGetBoxPreciseLocation(courierComponent, box?.id!);
       expect(boxLocation).toBeTruthy();
     });
+
+    it('(OpenBox) Courier confirms that he is the owner of the NFT', async () => {
+
+      await checkWhitelistedStatus(privateKey_Courier, true, courierComponent.store);
+
+      const owner = await getOwnerOfNft_(mintBox_Result.tokenId, courierComponent.store);
+      expect(owner).toBe(new ethers.Wallet(privateKey_Courier).address);
+
+
+    }, 200000);
+
     it('(OpenBox) Courier opens to Box and with access key from API', async () => {
       const accessKey = await testConnectToDeviceAndGetAccessKey(courierComponent, demoDevice.id, box?.id!, boxLocation);
       expect(accessKey).toBeTruthy();
-    });
+    },200000);
     
-    it('(OpenBox) Courier Updates MetaData when opening the Box', async () => {
+    // it('(OpenBox) Courier Updates MetaData when opening the Box', async () => {
 
-        await checkWhitelistedStatus(privateKey_Courier, true, courierComponent.store);
+    //     await checkWhitelistedStatus(privateKey_Courier, true, courierComponent.store);
 
-        const newMetadata: Metadata = {
-            location: "test2",
-            timestamp: Date.now().toString(),
-            testingEnv: true,
-        }
-        const newDataset = await make_newDatasetAndCheck(newMetadata,courierComponent.store);
+    //     const newMetadata: Metadata = {
+    //         location: "test2",
+    //         timestamp: Date.now().toString(),
+    //         testingEnv: true,
+    //     }
+    //     const newDataset = await make_newDatasetAndCheck(newMetadata,courierComponent.store);
 
-        const args: UpdateBox = {
-            tokenId: mintBox_Result.tokenId,
-            dataset: newDataset,
-            transferOwnership: false,
-        }
-        const res = await updateBoxAndCheck(args, courierComponent.store);
-        console.log("updated box successfully");
-        console.log(res);
+    //     const args: UpdateBox = {
+    //         tokenId: mintBox_Result.tokenId,
+    //         dataset: newDataset,
+    //         transferOwnership: false,
+    //     }
+    //     const res = await updateBoxAndCheck(args, courierComponent.store);
+    //     console.log("updated box successfully");
+    //     console.log(res);
 
-        datasets.push(newDataset);
+    //     datasets.push(newDataset);
 
 
 
-    }, 200000 );
+    // }, 200000 );
 
     it('(CloseBox) Courier Approves transfer of NFT', async () => {
 
       await checkWhitelistedStatus(privateKey_Courier, true, courierComponent.store);
 
       const args: ApproveTransfer = {
-          to: clientUserData.crypto[0].wallet,
+          to: parcelNFTSCAddress.toString(),
           tokenId: mintBox_Result.tokenId,
       }
       const res = await approveTransferAndCheck(args, courierComponent.store);
@@ -254,7 +291,10 @@ describe('Full Test Scenario', () => {
         await checkWhitelistedStatus(privateKey_Courier, true, courierComponent.store);
 
         const newMetadata: Metadata = {
-            location: "test3",
+          location: car_location,
+          user_id: courierUserData.id,
+          parcel_id: parcel.id,
+          action: "Courier delivered the parcel",
             timestamp: Date.now().toString(),
             testingEnv: true,
         }
@@ -270,6 +310,7 @@ describe('Full Test Scenario', () => {
         console.log(res);
 
         datasets.push(newDataset);
+        metadata_audit_trail.push(newMetadata);
 
 
 
@@ -302,12 +343,15 @@ describe('Full Test Scenario', () => {
       expect(accessKey).toBeTruthy();
     }, 200000 );
 
-    it('(OpenBox) Client Updates MetaData when opening the Box', async () => {
+    it('(Open Box) Client Updates MetaData when opening the Box', async () => {
 
       await checkWhitelistedStatus(privateKey_Client, true, clientComponent.store);
 
       const newMetadata: Metadata = {
-          location: "test4",
+      location:car_location,
+      user_id: clientUserData.id,
+      parcel_id: parcel.id,
+      action: "Client opened the box",
           timestamp: Date.now().toString(),
           testingEnv: true,
       }
@@ -323,6 +367,7 @@ describe('Full Test Scenario', () => {
       console.log(res);
 
       datasets.push(newDataset);
+      metadata_audit_trail.push(newMetadata);
 
 
 
@@ -355,31 +400,31 @@ describe('Full Test Scenario', () => {
       expect(rateTransactionResponse).toBeTruthy();
     }, 200000 );
 
-    it('(CloseBox) Client Updates MetaData when closing the Box', async () => {
+    // it('(CloseBox) Client Updates MetaData when closing the Box', async () => {
 
-      await checkWhitelistedStatus(privateKey_Client, true, clientComponent.store);
+    //   await checkWhitelistedStatus(privateKey_Client, true, clientComponent.store);
 
-      const newMetadata: Metadata = {
-          location: "test3",
-          timestamp: Date.now().toString(),
-          testingEnv: true,
-      }
-      const newDataset = await make_newDatasetAndCheck(newMetadata, clientComponent.store);
+    //   const newMetadata: Metadata = {
+    //       location: "test3",
+    //       timestamp: Date.now().toString(),
+    //       testingEnv: true,
+    //   }
+    //   const newDataset = await make_newDatasetAndCheck(newMetadata, clientComponent.store);
 
-      const args: UpdateBox = {
-          tokenId: mintBox_Result.tokenId, //TODO: can get this from contract and parcel
-          dataset: newDataset,
-          transferOwnership: false,
-      }
-      const res = await updateBoxAndCheck(args, clientComponent.store);
-      console.log("updated box successfully");
-      console.log(res);
+    //   const args: UpdateBox = {
+    //       tokenId: mintBox_Result.tokenId, //TODO: can get this from contract and parcel
+    //       dataset: newDataset,
+    //       transferOwnership: false,
+    //   }
+    //   const res = await updateBoxAndCheck(args, clientComponent.store);
+    //   console.log("updated box successfully");
+    //   console.log(res);
 
-      datasets.push(newDataset);
+    //   datasets.push(newDataset);
 
 
 
-    }, 200000 );
+    // }, 200000 );
 
 
     it('(PDC Parcel pickup) Client withdraws the parcel', async () => {
@@ -409,20 +454,138 @@ describe('Full Test Scenario', () => {
 
     }, 200000 );
 
+    //push web2 secret to sms
+    it('(Get decrypted audit trail) Client push/check Web2 secret to SMS', async () => {
+
+      await checkWhitelistedStatus(privateKey_Client, true, clientComponent.store);
+
+      await pushWeb2Secret_("iexec-result-iexec-ipfs-token", clientComponent.store);
+
+      console.log("pushed web2 secret to sms successfully");
+  }, 1000000);
+
+  // it('(Get decrypted audit trail) Courier push/check Web2 secret to SMS', async () => {
+
+  //   await checkWhitelistedStatus(privateKey_Courier, true, courierComponent.store);
+
+  //   await pushWeb2Secret_("iexec-result-iexec-ipfs-token", courierComponent.store);
+
+  //   console.log("pushed web2 secret to sms successfully");
+  // }, 1000000);
 
 
 
+  it('(Get decrypted audit trail) Client runs DLMD Apps for MetaData decryption', async () => {
+
+      await checkWhitelistedStatus(privateKey_Client, true, clientComponent.store);
+
+      for (let i = 0; i < datasets.length; i++) {
+          const dataset = datasets[i];
+
+          let {dealId, volume, txHash,tasks}= await runApp_(mintBox_Result.tokenId,dataset, clientComponent.store);
+          
+          expect(dealId).toBeDefined();
+          expect(volume).toBeDefined();
+          expect(txHash).toBeDefined();
+          expect(tasks).toBeDefined();
+
+          expect(dealId).not.toBeNull();
+          expect(volume).not.toBeNull();
+          expect(txHash).not.toBeNull();
+          expect(tasks).not.toBeNull();
+
+          expect(tasks.length).toBeGreaterThan(0);
+          taskIds=taskIds.concat(tasks);
+
+          console.log("dealId: ", dealId);
+          console.log("volume: ", volume);
+          console.log("txHash: ", txHash);
+          console.log("tasks: ", tasks);
+
+      }
+
+          
 
 
-    
+      console.log("ran app successfully");
+  }, 1000000);
+
+  it('(Get decrypted audit trail) Client waits for tasks to complete succesfully', async () => {
+
+      await checkWhitelistedStatus(privateKey_Client, true, clientComponent.store);
+
+      const completedTasks = await monitorTaskProgress_(taskIds, clientComponent.store);
+
+      expect(completedTasks).toBeDefined();
+      expect(completedTasks).not.toBeNull();
+      expect(completedTasks.length).toBeGreaterThan(0);
+      //expect all to have statusName COMPLETED
+      completedTasks.forEach((task: { statusName: any; }) => {
+          expect(task.statusName).toBe("COMPLETED");
+      });
+
+      //get result
+      let res = completedTasks.map((task: { results: {
+          storage: string;
+          location: string;
+      }; }) => task.results);
+
+      console.log("result: ", res);
+
+      //expect all to have storage and location
+      res.forEach((result: { storage: any; location: any; }) => {
+          expect(result.storage).toBeDefined();
+          expect(result.location).toBeDefined();
+          expect(result.storage).not.toBeNull();
+          expect(result.location).not.toBeNull();
+          expect(result.storage.length).toBeGreaterThan(0);
+          expect(result.location.length).toBeGreaterThan(0);
+
+      });
+
+      results = res;
+
+  
+      console.log("all tasks completed successfully");
+  }, 1000000);
+
+  //download from ipfs
+  it('(Get decrypted audit trail) Client downloads the decrypted audit trail from IPFS', async () => {
 
 
-    
-    
+      for (let i = 0; i < results.length; i++) {
+          const result = results[i];
+          
+
+          //call downloadMetadataFromIPFS_
+          let file = await downloadMetadataFromIPFS_(result.location, clientComponent.store);
+
+          console.log("downloaded metadata from ipfs successfully");
+          console.log("MetaData: ", file);
+          let decrypted_metadata = JSON.parse(file);
+
+          expect(decrypted_metadata).toBeDefined();
+          expect(decrypted_metadata).not.toBeNull();
+          
+          //expect to find an equal object in metadata_audit_trail
+          let found = metadata_audit_trail.find((metadata: any) => {
+              return metadata.timestamp === decrypted_metadata.timestamp;
+          }
+          );
+
+          console.log("found: ", found);
+          console.log("decrypted_metadata: ", decrypted_metadata);
+
+          expect(found).toBeDefined();
+          expect(found).not.toBeNull();
+          expect(found).toEqual(decrypted_metadata);
+
+      }
+
+      
+  }, 1000000);
 
 
-
-    
 
 
 

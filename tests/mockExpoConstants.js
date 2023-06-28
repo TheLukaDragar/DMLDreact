@@ -9,6 +9,7 @@ export default {
       reputationSCAddress: expoConfig.extra.reputationSCAddress,
       parcelNFTSCAddress: expoConfig.extra.parcelNFTSCAddress,
       RPCUrl: expoConfig.extra.RPCUrl,
+      DLMDApp: expoConfig.extra.DLMDApp, 
       use_demo_device: true,
     },
   },

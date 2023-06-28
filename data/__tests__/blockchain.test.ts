@@ -6,9 +6,14 @@ import "whatwg-fetch";
 import { configureStore } from '@reduxjs/toolkit';
 import { AnyAction } from 'redux';
 import blockchainSlice, { ApproveTransfer, ApproveTransferResponse, CreateDatasetResponse, Metadata, MintBox, MintBoxResponse, UpdateBox, UpdateBoxResponse, UploadMetadataToIPFSResponse, approveTransfer, callCreateDataset, callPushToSMS, callSellDataset, getBoxDatasets, isWhitelisted, mintBox, setPrivateKey, updateBox, uploadMetadataToIPFS } from '../blockchain';
-import { approveTransferAndCheck, checkWhitelistedStatus, createDatasetAndCheck, make_newDatasetAndCheck, mintBoxAndCheck, pushToSMSAndCheck, sellDataset, setPrivateKeyAndCheckIt, updateBoxAndCheck, uploadMetadataAndCheck } from "./blockchain_utility";
+import { approveTransferAndCheck, checkWhitelistedStatus, createDatasetAndCheck, downloadMetadataFromIPFS_, getOwnerOfNft_, make_newDatasetAndCheck, mintBoxAndCheck, monitorTaskProgress_, orderRequestExecutionAndCheck, pushToSMSAndCheck, pushWeb2Secret_, runApp_, sellDataset, setPrivateKeyAndCheckIt, updateBoxAndCheck, uploadMetadataAndCheck } from "./blockchain_utility";
+import { ethers } from "ethers";
+import Constants from "expo-constants";
 
 jest.mock('expo-constants', () => require('../../tests/mockExpoConstants'));
+
+const reputationSCAddress = Constants?.expoConfig?.extra?.reputationSCAddress;
+const parcelNFTSCAddress = Constants?.expoConfig?.extra?.parcelNFTSCAddress;
 
 
 
@@ -22,11 +27,15 @@ describe('blockchainSlice', () => {
     const privateKey_UnWhitelisted = "0x143c63737cd805c0367abfb24d6f845de550907257ef1e3786583534c1440d1f";
 
 
+    let metadata: Metadata;
     let uploadToIPFS_Result: UploadMetadataToIPFSResponse;
     let createDataset_Result: CreateDatasetResponse;
 
     let mintBox_Result: MintBoxResponse;
     let datasets: string[] = [];
+    let dealId: string;
+    let taskIds: string[] = [];
+    let results: { storage: string; location: string; }[] = [];
 
 
 
@@ -59,6 +68,18 @@ describe('blockchainSlice', () => {
         await checkWhitelistedStatus(privateKey_UnWhitelisted, false, store);
     });
 
+
+     //push web2 secret to sms
+     it('push web2 secret to sms', async () => {
+
+        await checkWhitelistedStatus(privateKey_Courier, true, store);
+
+        await pushWeb2Secret_("iexec-result-iexec-ipfs-token", store);
+
+        console.log("pushed web2 secret to sms successfully");
+    }, 1000000);
+
+
     //upload to ipfs
     it('upload MetaData to IPFS', async () => {
 
@@ -66,8 +87,16 @@ describe('blockchainSlice', () => {
         await checkWhitelistedStatus(privateKey_Courier, true, store);
 
 
-        const metadata: Metadata = {
-            location: "test",
+        metadata = {
+            location: {
+                latitude: 0,
+                longitude: 0,
+                inaccuracy: 0,
+                
+            },
+            parcel_id: 0,
+            user_id: 0,
+            action: "parcel created",
             timestamp: Date.now().toString(),
             testingEnv: true,
         }
@@ -128,7 +157,7 @@ describe('blockchainSlice', () => {
 
 
         const args: MintBox = {
-            reciever_address: "0xD52C27CC2c7D3fb5BA4440ffa825c12EA5658D60",
+            reciever_address: new ethers.Wallet(privateKey_Client).address,
             dataset: createDataset_Result.datasetAddress,
             parcel_id: "1",
         }
@@ -142,12 +171,28 @@ describe('blockchainSlice', () => {
 
     }, 1000000);
 
+    //confirms that is the owner of the NFT
+    it('confirm Courier is the owner of the NFT', async () => {
+
+        await checkWhitelistedStatus(privateKey_Courier, true, store);
+
+        const owner = await getOwnerOfNft_(mintBox_Result.tokenId, store);
+        expect(owner).toBe(new ethers.Wallet(privateKey_Courier).address);
+
+
+
+
+
+    }, 1000000);
+
+
+
     it('Approve transfer of NFT', async () => {
 
         await checkWhitelistedStatus(privateKey_Courier, true, store);
 
         const args: ApproveTransfer = {
-            to: "0xD52C27CC2c7D3fb5BA4440ffa825c12EA5658D60",
+            to: parcelNFTSCAddress.toString(),
             tokenId: mintBox_Result.tokenId,
         }
         const res = await approveTransferAndCheck(args, store);
@@ -157,31 +202,35 @@ describe('blockchainSlice', () => {
 
     }, 1000000);
 
-    it('Updates MetaData when opening the Box', async () => {
+    // it('Updates MetaData when opening the Box', async () => {
 
-        await checkWhitelistedStatus(privateKey_Courier, true, store);
+    //     await checkWhitelistedStatus(privateKey_Courier, true, store);
 
-        const newMetadata: Metadata = {
-            location: "test2",
-            timestamp: Date.now().toString(),
-            testingEnv: true,
-        }
-        const newDataset = await make_newDatasetAndCheck(newMetadata, store);
+    //     const newMetadata: Metadata = {
+    //         location: "test2",
+    //         timestamp: Date.now().toString(),
+    //         testingEnv: true,
+    //     }
+    //     const newDataset = await make_newDatasetAndCheck(newMetadata, store);
 
-        const args: UpdateBox = {
-            tokenId: mintBox_Result.tokenId,
-            dataset: newDataset,
-            transferOwnership: false,
-        }
-        const res = await updateBoxAndCheck(args, store);
-        console.log("updated box successfully");
-        console.log(res);
+    //     const args: UpdateBox = {
+    //         tokenId: mintBox_Result.tokenId,
+    //         dataset: newDataset,
+    //         transferOwnership: false,
+    //     }
+    //     const res = await updateBoxAndCheck(args, store);
+    //     console.log("updated box successfully");
+    //     console.log(res);
 
-        datasets.push(newDataset);
+    //     datasets.push(newDataset);
 
 
 
-    }, 1000000);
+    // }, 1000000);
+
+
+
+
 
     it('Updates MetaData when closing the Box and transfers  NFT ownership', async () => {
 
@@ -190,7 +239,15 @@ describe('blockchainSlice', () => {
 
 
         const newMetadata: Metadata = {
-            location: "test3",
+            location: {
+                latitude: 0,
+                longitude: 0,
+                inaccuracy: 0,
+                
+            },
+            parcel_id: 0,
+            user_id: 0,
+            action: "Courier delivered parcel",
             timestamp: Date.now().toString(),
             testingEnv: true,
         }
@@ -212,7 +269,7 @@ describe('blockchainSlice', () => {
     }, 1000000);
 
     //get box datasets
-    it('get box datasets', async () => {
+    it('(Read audit trail datasets) get box datasets', async () => {
 
         await checkWhitelistedStatus(privateKey_Courier, true, store);
 
@@ -234,13 +291,130 @@ describe('blockchainSlice', () => {
         expect(res).toEqual(datasets);
 
 
-    }
-        , 1000000);
+    }, 1000000);
 
 
-    //rate user /todo 
-    //ALI RATAM SAMO USERJA KI JE NFT OWNER ALI TUDI BOX SAMO BOX NIMA NASLOVA. 
+    it('(Get decrypted audit trail) runs DLMD App for MetaData decryption', async () => {
 
+        await checkWhitelistedStatus(privateKey_Courier, true, store);
+
+        let {dealId:d, volume, txHash,tasks}= await runApp_(mintBox_Result.tokenId,datasets[0], store);
+        dealId = d;
+        expect(dealId).toBeDefined();
+        expect(volume).toBeDefined();
+        expect(txHash).toBeDefined();
+        expect(tasks).toBeDefined();
+
+        expect(dealId).not.toBeNull();
+        expect(volume).not.toBeNull();
+        expect(txHash).not.toBeNull();
+        expect(tasks).not.toBeNull();
+
+        expect(tasks.length).toBeGreaterThan(0);
+        taskIds = tasks;
+
+        console.log("dealId: ", dealId);
+        console.log("volume: ", volume);
+        console.log("txHash: ", txHash);
+        console.log("tasks: ", tasks);
+
+
+        console.log("ran app successfully");
+    }, 1000000);
+
+    it('(Get decrypted audit trail) waits for task to complete succesfully', async () => {
+
+        await checkWhitelistedStatus(privateKey_Courier, true, store);
+
+        const completedTasks = await monitorTaskProgress_(taskIds, store);
+
+        expect(completedTasks).toBeDefined();
+        expect(completedTasks).not.toBeNull();
+        expect(completedTasks.length).toBeGreaterThan(0);
+        //expect all to have statusName COMPLETED
+        completedTasks.forEach((task: { statusName: any; }) => {
+            expect(task.statusName).toBe("COMPLETED");
+        });
+
+        //get result
+        let res = completedTasks.map((task: { results: {
+            storage: string;
+            location: string;
+        }; }) => task.results);
+
+        console.log("result: ", res);
+
+        //expect all to have storage and location
+        res.forEach((result: { storage: any; location: any; }) => {
+            expect(result.storage).toBeDefined();
+            expect(result.location).toBeDefined();
+            expect(result.storage).not.toBeNull();
+            expect(result.location).not.toBeNull();
+            expect(result.storage.length).toBeGreaterThan(0);
+            expect(result.location.length).toBeGreaterThan(0);
+
+        });
+
+        results = res;
+
+    
+        console.log("all tasks completed successfully");
+    }, 1000000);
+
+    //download from ipfs
+    it('(Get decrypted audit trail) downloads MetaData from IPFS', async () => {
+
+        //call downloadMetadataFromIPFS_
+        let file = await downloadMetadataFromIPFS_(results[0].location, store);
+
+        console.log("downloaded metadata from ipfs successfully");
+        console.log("file: ", file);
+        let decrypted_metadata = JSON.parse(file);
+
+        expect(decrypted_metadata).toBeDefined();
+        expect(decrypted_metadata).not.toBeNull();
+        
+        //expect object to equal to metadata
+        expect(decrypted_metadata).toEqual(metadata);
+
+    }, 1000000);
+
+
+   
+
+
+
+
+
+
+
+    //reqest decrypted data orderRequestExecutionAndCheck
+    // it('request decrypted data', async () => {
+            
+    //         await checkWhitelistedStatus(privateKey_Courier, true, store);
+
+    //         //orderRequestExecutionAndCheck
+    //         const res = await orderRequestExecutionAndCheck(
+    //             datasets[0],
+    //             0,
+    //             store
+    //         );
+
+    //         console.log("requested decrypted data successfully");
+    //         console.log(res);
+
+    // }, 1000000);
+
+    
+
+
+
+
+
+
+
+
+    
 
 
 

@@ -8,11 +8,14 @@ import { ethers } from "ethers";
 import Constants from 'expo-constants';
 //import dataserRegistryABI from '../contracts/DatasetRegistry.json';
 import { Buffer } from 'buffer';
-import { _TypedDataEncoder, arrayify, getAddress, hexlify, keccak256, randomBytes } from "ethers/lib/utils";
+import { _TypedDataEncoder, arrayify, defaultAbiCoder, getAddress, hexlify, keccak256, randomBytes } from "ethers/lib/utils";
+import { PreciseLocation } from "./api";
 import DatasetRegistry from './iexec/DatasetRegistry';
-import { IPFSGateways, IpfsData, encryptAes256Cbc, generateAes256Key, sha256Sum, uploadToIPFS, uploadToIPFSTesting } from "./iexec/IPFSGateway";
+import { IPFSGateways, IpfsData, downloadFromIPFS, encryptAes256Cbc, generateAes256Key, sha256Sum, uploadToIPFS, uploadToIPFSTesting } from "./iexec/IPFSGateway";
 import {
-  NULL_ADDRESS
+  APP_ORDER,
+  DATASET_ORDER,
+  NULL_ADDRESS, NULL_BYTES, REQUEST_ORDER, WORKERPOOL_ORDER, signedOrderToStruct
 } from './iexec/objDesc';
 import Token from './iexec/token';
 
@@ -21,13 +24,16 @@ import Token from './iexec/token';
 const RPCUrl = Constants?.expoConfig?.extra?.RPCUrl;
 const reputationSCAddress = Constants?.expoConfig?.extra?.reputationSCAddress;
 const parcelNFTSCAddress = Constants?.expoConfig?.extra?.parcelNFTSCAddress;
+const DLMDApp = Constants?.expoConfig?.extra?.DLMDApp;
 const provider = new ethers.providers.JsonRpcProvider(RPCUrl);
 //const smsURL = "https://sms.scone-prod.v8-bellecour.iex.ec";
 const smsURL = "https://sms.scone-debug.v8-bellecour.iex.ec";
 const marketplaceURL = "https://api.market.v8-bellecour.iex.ec";
+const result_storageURL = "https://result.v8-bellecour.iex.ec";
 const hub_addres = "0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f"
 const iExecDatasetRegistryAddres = "0x799DAa22654128d0C64d5b79eac9283008158730";
 const chainId = '134';
+const iexecresultIPFSGateway = "https://ipfs-gateway.v8-bellecour.iex.ec";
 
 console.log(RPCUrl);
 console.log(reputationSCAddress);
@@ -41,7 +47,7 @@ console.log(parcelNFTSCAddress);
 //     "function totalSupply() external view returns (uint256)",
 // ];
 const parcelNFTSC_ABI = [{ "type": "constructor", "inputs": [{ "type": "string", "name": "_name", "internalType": "string" }, { "type": "string", "name": "_symbol", "internalType": "string" }, { "type": "string", "name": "_newBaseURI", "internalType": "string" }] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "approve", "inputs": [{ "type": "address", "name": "to", "internalType": "address" }, { "type": "uint256", "name": "tokenId", "internalType": "uint256" }] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "uint256", "name": "", "internalType": "uint256" }], "name": "balanceOf", "inputs": [{ "type": "address", "name": "owner", "internalType": "address" }] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "string", "name": "", "internalType": "string" }], "name": "baseUri", "inputs": [] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "string", "name": "parcelId", "internalType": "string" }, { "type": "address", "name": "sender", "internalType": "address" }, { "type": "address", "name": "receiver", "internalType": "address" }], "name": "boxes", "inputs": [{ "type": "uint256", "name": "", "internalType": "uint256" }] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "address", "name": "", "internalType": "address" }], "name": "getApproved", "inputs": [{ "type": "uint256", "name": "tokenId", "internalType": "uint256" }] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "address[]", "name": "", "internalType": "address[]" }], "name": "getBoxDatasets", "inputs": [{ "type": "uint256", "name": "_tokenId", "internalType": "uint256" }] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "string", "name": "", "internalType": "string" }], "name": "getParcelId", "inputs": [{ "type": "uint256", "name": "_tokenId", "internalType": "uint256" }] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "bool", "name": "", "internalType": "bool" }], "name": "isApprovedForAll", "inputs": [{ "type": "address", "name": "owner", "internalType": "address" }, { "type": "address", "name": "operator", "internalType": "address" }] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "mint", "inputs": [{ "type": "address", "name": "_receiver", "internalType": "address" }, { "type": "string", "name": "_parcelId", "internalType": "string" }, { "type": "address", "name": "_dataset", "internalType": "address" }] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "string", "name": "", "internalType": "string" }], "name": "name", "inputs": [] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "address", "name": "", "internalType": "address" }], "name": "owner", "inputs": [] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "address", "name": "", "internalType": "address" }], "name": "ownerOf", "inputs": [{ "type": "uint256", "name": "tokenId", "internalType": "uint256" }] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "renounceOwnership", "inputs": [] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "safeTransferFrom", "inputs": [{ "type": "address", "name": "from", "internalType": "address" }, { "type": "address", "name": "to", "internalType": "address" }, { "type": "uint256", "name": "tokenId", "internalType": "uint256" }] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "safeTransferFrom", "inputs": [{ "type": "address", "name": "from", "internalType": "address" }, { "type": "address", "name": "to", "internalType": "address" }, { "type": "uint256", "name": "tokenId", "internalType": "uint256" }, { "type": "bytes", "name": "data", "internalType": "bytes" }] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "setApprovalForAll", "inputs": [{ "type": "address", "name": "operator", "internalType": "address" }, { "type": "bool", "name": "approved", "internalType": "bool" }] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "setBaseURI", "inputs": [{ "type": "string", "name": "_newBaseURI", "internalType": "string" }] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "bool", "name": "", "internalType": "bool" }], "name": "supportsInterface", "inputs": [{ "type": "bytes4", "name": "interfaceId", "internalType": "bytes4" }] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "string", "name": "", "internalType": "string" }], "name": "symbol", "inputs": [] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "string", "name": "", "internalType": "string" }], "name": "tokenURI", "inputs": [{ "type": "uint256", "name": "tokenId", "internalType": "uint256" }] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "transferFrom", "inputs": [{ "type": "address", "name": "from", "internalType": "address" }, { "type": "address", "name": "to", "internalType": "address" }, { "type": "uint256", "name": "tokenId", "internalType": "uint256" }] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "transferOwnership", "inputs": [{ "type": "address", "name": "newOwner", "internalType": "address" }] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "updateBox", "inputs": [{ "type": "uint256", "name": "_tokenId", "internalType": "uint256" }, { "type": "address", "name": "_dataset", "internalType": "address" }, { "type": "bool", "name": "_transferOwnershipToReceiver", "internalType": "bool" }] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "bool", "name": "", "internalType": "bool" }], "name": "whitelist", "inputs": [{ "type": "address", "name": "", "internalType": "address" }] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "whitelistAddresses", "inputs": [{ "type": "address[]", "name": "_list", "internalType": "address[]" }, { "type": "bool", "name": "_whitelist", "internalType": "bool" }] }, { "type": "event", "name": "Approval", "inputs": [{ "type": "address", "name": "owner", "indexed": true }, { "type": "address", "name": "approved", "indexed": true }, { "type": "uint256", "name": "tokenId", "indexed": true }], "anonymous": false }, { "type": "event", "name": "ApprovalForAll", "inputs": [{ "type": "address", "name": "owner", "indexed": true }, { "type": "address", "name": "operator", "indexed": true }, { "type": "bool", "name": "approved", "indexed": false }], "anonymous": false }, { "type": "event", "name": "OwnershipTransferred", "inputs": [{ "type": "address", "name": "previousOwner", "indexed": true }, { "type": "address", "name": "newOwner", "indexed": true }], "anonymous": false }, { "type": "event", "name": "Transfer", "inputs": [{ "type": "address", "name": "from", "indexed": true }, { "type": "address", "name": "to", "indexed": true }, { "type": "uint256", "name": "tokenId", "indexed": true }], "anonymous": false }]
-const reputationSC_ABI = [{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"MAX_SCORE","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"MIN_SCORE","inputs":[]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"addScore","inputs":[{"type":"address","name":"_user","internalType":"address"},{"type":"uint256","name":"_score","internalType":"uint256"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"address","name":"","internalType":"address"}],"name":"owner","inputs":[]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"renounceOwnership","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"score","internalType":"uint256"},{"type":"uint256","name":"cnt","internalType":"uint256"}],"name":"reputation","inputs":[{"type":"address","name":"","internalType":"address"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"transferOwnership","inputs":[{"type":"address","name":"newOwner","internalType":"address"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"bool","name":"","internalType":"bool"}],"name":"whitelist","inputs":[{"type":"address","name":"","internalType":"address"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"whitelistAddresses","inputs":[{"type":"address[]","name":"_list","internalType":"address[]"},{"type":"bool","name":"_whitelist","internalType":"bool"}]},{"type":"event","name":"OwnershipTransferred","inputs":[{"type":"address","name":"previousOwner","indexed":true},{"type":"address","name":"newOwner","indexed":true}],"anonymous":false}]
+const reputationSC_ABI = [{ "type": "function", "stateMutability": "view", "outputs": [{ "type": "uint256", "name": "", "internalType": "uint256" }], "name": "MAX_SCORE", "inputs": [] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "uint256", "name": "", "internalType": "uint256" }], "name": "MIN_SCORE", "inputs": [] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "addScore", "inputs": [{ "type": "address", "name": "_user", "internalType": "address" }, { "type": "uint256", "name": "_score", "internalType": "uint256" }] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "address", "name": "", "internalType": "address" }], "name": "owner", "inputs": [] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "renounceOwnership", "inputs": [] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "uint256", "name": "score", "internalType": "uint256" }, { "type": "uint256", "name": "cnt", "internalType": "uint256" }], "name": "reputation", "inputs": [{ "type": "address", "name": "", "internalType": "address" }] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "transferOwnership", "inputs": [{ "type": "address", "name": "newOwner", "internalType": "address" }] }, { "type": "function", "stateMutability": "view", "outputs": [{ "type": "bool", "name": "", "internalType": "bool" }], "name": "whitelist", "inputs": [{ "type": "address", "name": "", "internalType": "address" }] }, { "type": "function", "stateMutability": "nonpayable", "outputs": [], "name": "whitelistAddresses", "inputs": [{ "type": "address[]", "name": "_list", "internalType": "address[]" }, { "type": "bool", "name": "_whitelist", "internalType": "bool" }] }, { "type": "event", "name": "OwnershipTransferred", "inputs": [{ "type": "address", "name": "previousOwner", "indexed": true }, { "type": "address", "name": "newOwner", "indexed": true }], "anonymous": false }]
 const DatasetABI = DatasetRegistry.abi;
 const TokenABI = Token.abi;
 //isWhitelisted
@@ -108,6 +114,131 @@ export const getChallengeForSetWeb3Secret = (secretAddress: string, secretValue:
     secretAddress,
     keccak256(Buffer.from(secretValue, 'utf8')),
   );
+
+export const getChallengeForSetWeb2Secret = (ownerAddress: string, secretKey: WithImplicitCoercion<string> | { [Symbol.toPrimitive](hint: "string"): string; }, secretValue: WithImplicitCoercion<string> | { [Symbol.toPrimitive](hint: "string"): string; }) =>
+  concatenateAndHash(
+    keccak256(Buffer.from('IEXEC_SMS_DOMAIN', 'utf8')),
+    ownerAddress,
+    keccak256(Buffer.from(secretKey, 'utf8')),
+    keccak256(Buffer.from(secretValue, 'utf8')),
+  );
+
+
+export const IExecLogin = async (address: string, authorization: string) => {
+  //iexec:storage:result-proxy
+
+  //pos to 
+  const url = result_storageURL + "/results/login" + "?chainId=" + chainId;
+  console.log("result login url: " + url);
+  const res = await fetch(url, {
+    method: 'POST',
+    body: authorization,
+
+  });
+  if (res.ok) {
+    console.log("login success");
+    return res.text();
+  }
+  else {
+    console.log("login failed");
+    throw new Error(`HTTP error! status: ${res.status}`);
+  }
+}
+
+
+
+
+
+export const pushWeb2Secret = createAsyncThunk(
+  'blockchain/pushWeb2Secret',
+  async (secretName: string, thunkAPI): Promise<boolean> => {
+    try {
+
+      const state = thunkAPI.getState() as RootState;
+
+      // Get the wallet from the state
+      const privateKey = state.blockchain.privateKey;
+
+      // Check if the wallet exists
+      if (!privateKey) {
+        throw new Error("Wallet not found");
+      }
+      // sign the challenge
+
+      const wallet = new ethers.Wallet(privateKey, provider);
+      const vOwnerAddress = wallet.address;
+
+      const res = await fetch(`${smsURL}/secrets/web2?ownerAddress=${vOwnerAddress}&secretName=${secretName}`, {
+        method: 'HEAD',
+      });
+
+      if (res.ok) {
+        console.log("secret already exists");
+        return true;
+
+      }
+
+      //login into iexec storage to get token 
+
+      const challenge = await getIExecStorageChallenge(vOwnerAddress, chainId);
+      const signedChallenge = await signIEExecStorageChallenge(challenge, privateKey);
+
+      const token = await IExecLogin(vOwnerAddress, signedChallenge);
+
+      console.log("Iexec login token: " + token);
+
+      const web2challenge = getChallengeForSetWeb2Secret(vOwnerAddress, secretName, token);
+
+      const binaryChallenge = arrayify(web2challenge);
+      const auth = await wallet.signMessage(binaryChallenge);
+
+      //put or post secret
+      const url = `${smsURL}/secrets/web2?ownerAddress=${vOwnerAddress}&secretName=${secretName}`;
+      console.log("pushing secret to sms server");
+      console.log("secretName: " + secretName);
+      console.log("secretValue: " + token);
+      console.log("auth: " + auth);
+
+
+      const headers = new Headers();
+      headers.append("Authorization", auth);
+      //sent text/plain
+      headers.append("Content-Type", "text/plain");
+
+      // make the request
+      const response = await fetch(url, {
+        method: 'POST', body: token
+        , headers: headers
+      });
+
+      if (!response.ok) {
+        console.log(JSON.stringify(response));
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      else {
+        //check if 204
+        console.log(JSON.stringify(response));
+        return true;
+      }
+
+    }
+    catch (error) {
+      return handleError(error, thunkAPI);
+    }
+  }
+);
+
+
+
+
+
+
+
+
+
+
+
+
 export const pushWeb3Secret = async (secretAddress: string, secretValue: string, signed_chall: string) => {
   // sign the challenge
   const signature = signed_chall;
@@ -140,6 +271,58 @@ export const pushWeb3Secret = async (secretAddress: string, secretValue: string,
   }
 }
 
+//get getIExecStorageChallenge
+export const getIExecStorageChallenge = async (address: string, chainId: string) => {
+  try {
+    const url = `${result_storageURL}/results/challenge?address=${address}&chainId=${chainId}`;
+    console.log("challenge url: " + url);
+    const response = await fetch(url);
+    const data = await response.json();
+    console.log("challenge data: " + JSON.stringify(data));
+
+
+    if (response.ok) {
+      return data;
+    } else {
+      throw new Error('Failed to login to iExec storage');
+    }
+  } catch (error) {
+    console.error('Error logging in to iExec storage:', error);
+    throw error;
+  }
+};
+
+export const signIEExecStorageChallenge = async (challenge: any, privateKey: string) => {
+  try {
+    const typedData = challenge.data || challenge;
+    const { domain, message } = typedData || {};
+    const { EIP712Domain, ...types } = typedData.types || {};
+    if (!domain || !types || !message) {
+      throw Error('Unexpected challenge format');
+    }
+    const signer = new ethers.Wallet(privateKey, provider);
+    const signature = await signer._signTypedData(domain, types, message)
+
+    const hash = hashEIP712(typedData);
+    const separator = '_';
+    return hash
+      .concat(separator)
+      .concat(signature)
+      .concat(separator)
+      .concat(signer.address);
+  } catch (error) {
+    console.error('Error signing iExec storage challenge:', error);
+    throw error;
+  }
+};
+
+
+
+
+
+
+
+
 const getIExecMarketChallenge = async (address: string, chainId: string) => {
   try {
     const url = `${marketplaceURL}/challenge?address=${address}&chainId=${chainId}`;
@@ -166,9 +349,31 @@ const postDatasetOrder = async (order: any, chainId: string, signed_chall: strin
     headers.append("Content-Type", "application/json");
 
     console.log("posting dataset order to marketplace" + JSON.stringify(order));
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(order)
+    });
 
+    if (response.ok) {
+      const data = await response.json();
+      return data;
+    } else {
+      throw new Error(`Failed to post dataset order. Status: ${response.status}`);
+    }
+  } catch (error) {
+    console.error('Error posting dataset order:', error);
+    throw error;
+  }
+};
+const postRequestOrder = async (order: any, chainId: string, signed_chall: string) => {
+  try {
+    const url = `${marketplaceURL}/requestorders?chainId=${chainId}`;
+    const headers = new Headers();
+    headers.append("Authorization", signed_chall);
+    headers.append("Content-Type", "application/json");
 
-
+    console.log("posting request order to marketplace" + JSON.stringify(order));
     const response = await fetch(url, {
       method: 'POST',
       headers: headers,
@@ -189,6 +394,7 @@ const postDatasetOrder = async (order: any, chainId: string, signed_chall: strin
 
 
 
+
 export const hashEIP712 = (typedData: any) => {
   try {
     const { domain, message } = typedData;
@@ -204,9 +410,12 @@ export const hashEIP712 = (typedData: any) => {
 };
 
 export interface Metadata {
-  location: string;
+  location: PreciseLocation;
+  parcel_id: number;
+  user_id: number;
+  action: string;
   timestamp: string;
-  testingEnv?:boolean 
+  testingEnv?: boolean
 }
 export interface UploadMetadataToIPFSResponse {
   ipfsRes: IpfsData;
@@ -255,6 +464,19 @@ export const uploadMetadataToIPFS = createAsyncThunk(
   }
 );
 
+export const downloadMetadataFromIPFS = createAsyncThunk(
+  'blockchain/downloadMetadataFromIPFS',
+  async (address: string, thunkAPI): Promise<any> => {
+    try {
+      let ipfsRes = await downloadFromIPFS(iexecresultIPFSGateway + address);
+
+
+      return ipfsRes;
+    } catch (error) {
+      return handleError(error, thunkAPI);
+    }
+  }
+);
 
 export interface CreateDataset {
   ipfsRes: IpfsData;
@@ -273,7 +495,7 @@ export interface CreateDatasetResponse {
 
 export const callCreateDataset = createAsyncThunk(
   'blockchain/callCreateDataset',
-  async ({ ipfsRes, aesKey, checksum }: CreateDataset, thunkAPI) : Promise<CreateDatasetResponse> => {
+  async ({ ipfsRes, aesKey, checksum }: CreateDataset, thunkAPI): Promise<CreateDatasetResponse> => {
     try {
       // Get the current state
       const state = thunkAPI.getState() as RootState;
@@ -328,7 +550,7 @@ export const callCreateDataset = createAsyncThunk(
 
       console.log(`Dataset created with address: ${address}`);
 
-      return { datasetAddress:address, aesKey, txHash: txReceipt.transactionHash } as CreateDatasetResponse;
+      return { datasetAddress: address, aesKey, txHash: txReceipt.transactionHash } as CreateDatasetResponse;
     } catch (error) {
       return handleError(error, thunkAPI);
     }
@@ -495,7 +717,7 @@ export const callSellDataset = createAsyncThunk(
 
 
 
-      
+
 
 
 
@@ -778,11 +1000,11 @@ export interface MintBox {
 export interface MintBoxResponse {
   tokenId: string, txHash: string;
 }
-  
+
 //mint parcel
 export const mintBox = createAsyncThunk(
   'blockchain/mintParcel',
-  async (mintBox: MintBox, thunkAPI) : Promise<MintBoxResponse> => {
+  async (mintBox: MintBox, thunkAPI): Promise<MintBoxResponse> => {
     try {
       // Get the current state
       const state = thunkAPI.getState() as RootState;
@@ -822,7 +1044,6 @@ export const mintBox = createAsyncThunk(
         throw new Error('Transfer event not found in transaction logs');
       }
 
-      //TODODO
       console.log(`transfer event args: ${JSON.stringify(transferEvent.args)}`);
 
 
@@ -860,13 +1081,13 @@ export interface ApproveTransfer {
   tokenId: string; //nft id
 }
 export interface ApproveTransferResponse {
-  tokenId: string, txHash: string,owner: string, approved: string;
+  tokenId: string, txHash: string, owner: string, approved: string;
 }
 
 //user approves the other user to transfer the NFT to himself
 export const approveTransfer = createAsyncThunk(
   'blockchain/approveTransfer',
-  async (approveTransfer: ApproveTransfer, thunkAPI) : Promise<ApproveTransferResponse> => {
+  async (approveTransfer: ApproveTransfer, thunkAPI): Promise<ApproveTransferResponse> => {
     try {
       // Get the current state
       const state = thunkAPI.getState() as RootState;
@@ -990,7 +1211,7 @@ export const updateBox = createAsyncThunk(
 
     }
     catch (error) {
-     return handleError(error, thunkAPI);
+      return handleError(error, thunkAPI);
     }
 
   }
@@ -999,7 +1220,7 @@ export const updateBox = createAsyncThunk(
 
 export const getBoxDatasets = createAsyncThunk(
   'blockchain/getBoxDatasets',
-  async (tokenId:string, thunkAPI) => {
+  async (tokenId: string, thunkAPI) => {
     try {
       // Get the current state
       const state = thunkAPI.getState() as RootState;
@@ -1022,11 +1243,11 @@ export const getBoxDatasets = createAsyncThunk(
       //array "0xA69daC123F22F6Ac24eB42C7a0DBeCC326159209,0xA69daC123F22F6Ac24eB42C7a0DBeCC326159209,0xA69daC123F22F6Ac24eB42C7a0DBeCC326159209"
 
       console.log("datasets: " + datasets);
-    
+
       return datasets;
 
 
-    
+
 
 
 
@@ -1052,7 +1273,7 @@ export const getBoxDatasets = createAsyncThunk(
 //set reputation
 export const setReputation = createAsyncThunk(
   'blockchain/setReputation',
-  async ({user, score}: {user: string, score: number}, thunkAPI) => {
+  async ({ user, score }: { user: string, score: number }, thunkAPI) => {
     try {
       // Get the current state
       const state = thunkAPI.getState() as RootState;
@@ -1072,7 +1293,7 @@ export const setReputation = createAsyncThunk(
 
       console.log("calling addScore with args: " + "user: " + user + " score: " + score);
 
-      const tx = await contract.addScore(user,score, { gasLimit: 1000000 });
+      const tx = await contract.addScore(user, score, { gasLimit: 1000000 });
 
       //wait for tx to be mined
       const txReceipt = await tx.wait(1);
@@ -1091,33 +1312,32 @@ export const setReputation = createAsyncThunk(
 //get reputation
 export const getReputation = createAsyncThunk(
   'blockchain/getReputation',
-  async (user: string, thunkAPI) => {
+  async (address: string, thunkAPI) => {
     try {
       // Get the current state
-        // Get the current state
-        const state = thunkAPI.getState() as RootState;
+      // Get the current state
+      const state = thunkAPI.getState() as RootState;
 
-        // Get the wallet from the state
-        const privateKey = state.blockchain.privateKey;
-  
-        // Check if the wallet exists
-        if (!privateKey) {
-          throw new Error("Wallet not found");
-        }
-  
-        //call  addScore
-        const wallet = new ethers.Wallet(privateKey, provider);
-  
-        const contract = new ethers.Contract(reputationSCAddress, reputationSC_ABI, wallet);
+      // Get the wallet from the state
+      const privateKey = state.blockchain.privateKey;
 
-        console.log("calling getScore with args: " + "user: " + user);
+      // Check if the wallet exists
+      if (!privateKey) {
+        throw new Error("Wallet not found");
+      }
 
-        const score = await contract.getScore(user) as number;
+      //call  addScore
+      const wallet = new ethers.Wallet(privateKey, provider);
 
-        console.log("score: " + score);
+      const contract = new ethers.Contract(reputationSCAddress, reputationSC_ABI, wallet);
 
-        return score;
+      const res = await contract.reputation(address);
+      const score = ethers.utils.formatUnits(res[0], 'wei'); // Converts a BigNumber to a decimal string.
+      const cnt = ethers.utils.formatUnits(res[1], 'wei'); // Converts a BigNumber to a decimal string.
 
+      console.log("score: " + score + " cnt: " + cnt);
+
+      return parseFloat(score)
     }
     catch (error) {
       return handleError(error, thunkAPI);
@@ -1126,8 +1346,594 @@ export const getReputation = createAsyncThunk(
   }
 );
 
+//getOwnerOfNft
+export const getOwnerOfNft = createAsyncThunk(
+  'blockchain/getOwnerOfNft',
+  async (tokenId: string, thunkAPI) => {
+    try {
+      // Get the current state
+      const state = thunkAPI.getState() as RootState;
 
-      
+      // Get the wallet from the state
+      const privateKey = state.blockchain.privateKey;
+
+      // Check if the wallet exists
+      if (!privateKey) {
+        throw new Error("Wallet not found");
+      }
+
+      //call  addScore
+      const wallet = new ethers.Wallet(privateKey, provider);
+
+      const contract = new ethers.Contract(parcelNFTSCAddress, parcelNFTSC_ABI, wallet);
+
+      console.log("calling getOwnerOfNft with args: " + "tokenId: " + tokenId);
+      const owner = await contract.ownerOf(tokenId) as string;
+
+      console.log("owner: " + owner);
+
+      return owner;
+
+    }
+    catch (error) {
+      return handleError(error, thunkAPI);
+    }
+  }
+);
+
+function objToQueryString(obj: any) {
+  const keyValuePairs = [];
+  for (let i = 0; i < Object.keys(obj).length; i += 1) {
+    const key = encodeURIComponent(Object.keys(obj)[i]);
+    const value = encodeURIComponent(Object.values(obj)[i] as string);
+    keyValuePairs.push(`${key}=${value}`);
+  }
+  console.log("keyValuePairs: " + keyValuePairs);
+  console.log("keyValuePairs.join('&'): " + keyValuePairs.join('&'));
+  return keyValuePairs.join('&');
+}
+
+export const runApp = createAsyncThunk(
+  'blockchain/runApp',
+  async ({ tokenId, dataset, price }: { tokenId: string, dataset: string, price: number }, thunkAPI): Promise<{ dealId: string, volume: number, txHash: string, tasks: string[] }> => {
+    try {
+
+
+      const state = thunkAPI.getState() as RootState;
+
+      // Get the wallet from the state
+      const privateKey = state.blockchain.privateKey;
+
+      // Check if the wallet exists
+      if (!privateKey) {
+        throw new Error("Wallet not found");
+      }
+
+      const wallet = new ethers.Wallet(privateKey, provider);
+
+
+      //fetch appOrder of DLMDApp
+
+      const query = {
+        "chainId": chainId,
+        "app": DLMDApp,
+        "dataset": dataset,
+        "workerpool": "0xdb214a4A444D176e22030bE1Ed89dA1b029320f2", //debug workerpool
+        "requester": wallet.address,
+        "minTag": "0x0000000000000000000000000000000000000000000000000000000000000003",
+        "maxTag": "0x0000000000000000000000000000000000000000000000000000000000000003"
+      }
+
+      const GETappOrder = await fetch(marketplaceURL + '/apporders?' + objToQueryString(query), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!GETappOrder.ok) {
+        console.log(GETappOrder);
+        throw new Error("Error fetching appOrder");
+      }
+
+      let appOrder = await GETappOrder.json()
+      appOrder = appOrder.orders[0] && appOrder.orders[0].order;
+
+      if (!appOrder) {
+        throw new Error("No appOrder found");
+      }
+
+
+      console.log("appOrderJson: " + JSON.stringify(appOrder));
+
+
+      //fetch datasetOrder of dataset
+
+      const GETdatasetOrder = await fetch(marketplaceURL + '/datasetorders?' + objToQueryString(query), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!GETdatasetOrder.ok) {
+        console.log(GETdatasetOrder);
+        throw new Error("Error fetching datasetOrder");
+      }
+
+      let datasetOrder = await GETdatasetOrder.json()
+      datasetOrder = datasetOrder.orders[0] && datasetOrder.orders[0].order;
+
+      if (!datasetOrder) {
+        throw new Error("No datasetOrder found");
+      }
+
+
+
+      console.log("datasetOrderJson: " + JSON.stringify(datasetOrder));
+
+
+      //fetch workerpoolOrder of workerpool
+      let workpool_query = { ...query, "category": "0" }
+
+
+      console.log("workpool_query: " + JSON.stringify(workpool_query));
+
+      const GETworkerpoolOrder = await fetch(marketplaceURL + '/workerpoolorders?' + objToQueryString(workpool_query), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!GETworkerpoolOrder.ok) {
+        console.log(GETworkerpoolOrder);
+        throw new Error("Error fetching workerpoolOrder");
+      }
+
+      let { orders: workerpoolOrder } = await GETworkerpoolOrder.json()
+
+      if (!workerpoolOrder) {
+        throw new Error("No workerpoolOrder found");
+      }
+
+      console.log("workerpoolOrderJson: " + JSON.stringify(workerpoolOrder));
+      //get the first workerpoolOrder with status open
+
+      const firstOpenworkerpoolOrder = workerpoolOrder.find((order: any) => order.status === 'open'); //TODO not the SDK WAY they call smartcontract and check
+      //they increment category too to find the next workerpoolOrder
+
+
+
+      if (!firstOpenworkerpoolOrder) {
+        throw new Error("No open workerpoolOrder found");
+      }
+
+      console.log("firstOpenworkerpoolOrder: " + JSON.stringify(firstOpenworkerpoolOrder));
+
+      const salt = hexlify(randomBytes(32));
+
+
+      const salted_iexecRequestOrder = {
+
+        "app": DLMDApp,
+        "appmaxprice": 0,
+        "dataset": dataset,
+        "datasetmaxprice": 0,
+        "workerpool": "0xdb214a4A444D176e22030bE1Ed89dA1b029320f2", //TODO REMOVE HARDCODE
+        "workerpoolmaxprice": 0,
+        "requester": wallet.address,
+        "volume": 1,
+        "tag": "0x0000000000000000000000000000000000000000000000000000000000000003",
+        "category": 0,
+        "trust": 0,
+        "beneficiary": wallet.address,
+        "callback": "0x0000000000000000000000000000000000000000", //todo explore beneficiary and callback
+        "params": '{"iexec_args": "' + tokenId + '","iexec_result_storage_provider": "ipfs","iexec_result_storage_proxy": "https://result.v8-bellecour.iex.ec"}',
+        "salt": salt,
+      }
+
+      const typess = {
+        'RequestOrder': [
+          { name: 'app', type: 'address' },
+          { name: 'appmaxprice', type: 'uint256' },
+          { name: 'dataset', type: 'address' },
+          { name: 'datasetmaxprice', type: 'uint256' },
+          { name: 'workerpool', type: 'address' },
+          { name: 'workerpoolmaxprice', type: 'uint256' },
+          { name: 'requester', type: 'address' },
+          { name: 'volume', type: 'uint256' },
+          { name: 'tag', type: 'bytes32' },
+          { name: 'category', type: 'uint256' },
+          { name: 'trust', type: 'uint256' },
+          { name: 'beneficiary', type: 'address' },
+          { name: 'callback', type: 'address' },
+          { name: 'params', type: 'string' },
+          { name: 'salt', type: 'bytes32' },
+        ]
+      };
+
+      const tokencontract = new ethers.Contract(hub_addres, TokenABI, wallet);
+
+      //call .domain on the contract to get the EIP712Domain for signing the order
+      const domainn = await tokencontract.domain();
+
+      const EIP712Domainn = {
+        name: domainn.name,
+        version: domainn.version,
+        chainId: domainn.chainId.toString(),
+        verifyingContract: domainn.verifyingContract,
+      };
+      console.log("EIP712Domain: " + JSON.stringify(EIP712Domainn));
+
+      const signer = wallet;
+
+      const sign = await signer._signTypedData(EIP712Domainn, typess, salted_iexecRequestOrder);
+
+      const hash = await _TypedDataEncoder.hash(EIP712Domainn, typess, salted_iexecRequestOrder);
+      console.log("hash: " + hash);
+
+      //call .verifySignature on the contract
+      const isVerified = await tokencontract.verifySignature(wallet.address, hash, sign);
+      console.log("isVerified: " + isVerified);
+      console.log("salted_iexecRequestOrder: " + sign);
+
+      const iexecRequestOrder = { ...salted_iexecRequestOrder, sign };
+      console.log("iexecRequestOrder: " + JSON.stringify(iexecRequestOrder));
+
+
+
+
+      const appOrderStruct = signedOrderToStruct(
+        APP_ORDER,
+        appOrder);
+
+      const datasetOrderStruct = signedOrderToStruct(
+        DATASET_ORDER,
+        datasetOrder,
+      );
+      const workerpoolOrderStruct = signedOrderToStruct(
+        WORKERPOOL_ORDER,
+        firstOpenworkerpoolOrder.order,
+      );
+      const requestOrderStruct = signedOrderToStruct(
+        REQUEST_ORDER,
+        iexecRequestOrder,
+      );
+
+      console.log("appOrderStruct: " + JSON.stringify(appOrderStruct));
+      console.log("datasetOrderStruct: " + JSON.stringify(datasetOrderStruct));
+      console.log("workerpoolOrderStruct: " + JSON.stringify(workerpoolOrderStruct));
+      console.log("requestOrderStruct: " + JSON.stringify(requestOrderStruct));
+
+
+
+
+      const iexecContract = new ethers.Contract(hub_addres, TokenABI, wallet);
+      const tx = await
+        iexecContract.matchOrders(
+          appOrderStruct,
+          datasetOrderStruct,
+          workerpoolOrderStruct,
+          requestOrderStruct,
+          { gasLimit: 1000000 },
+
+        );
+
+      const receipt = await tx.wait(1);
+
+      //check for  'OrdersMatched';
+
+      const OrdersMatchedEvent = receipt.events.find((event: { event: string; }) => event.event === 'OrdersMatched');
+
+      if (!OrdersMatchedEvent) {
+        throw new Error("No OrdersMatched event found");
+      }
+
+      console.log("OrdersMatchedEvent: " + JSON.stringify(OrdersMatchedEvent));
+
+      //get args names and values
+      const { dealid, volume }: { dealid: string, volume: string } = OrdersMatchedEvent.args;
+
+      console.log("dealid: " + dealid);
+      console.log("volume: " + volume);
+
+      //bignumber to int
+      const volumeInt = parseInt(volume, 10);
+
+      //console.log("receipt: " + JSON.stringify(receipt));
+
+      //call viewDeal
+      const deal = await iexecContract.viewDeal(dealid);
+
+      const dealExists =
+        deal && deal.app && deal.app.pointer && deal.app.pointer !== NULL_ADDRESS;
+
+      if (!dealExists) {
+        throw new Error("Deal not found");
+      }
+
+      console.log("deal: " + JSON.stringify(deal));
+
+      const computeTaskId = async (
+        dealid: any,
+        taskIdx: any
+      ) => {
+        try {
+          const encodedTypes = ['bytes32', 'uint256'];
+          const values = [
+            dealid,
+            taskIdx
+          ];
+          const encoded = defaultAbiCoder.encode(encodedTypes, values);
+          return keccak256(encoded);
+        } catch (error) {
+          throw error;
+        }
+      };
+
+
+      const tasksIdx = [...Array(deal.botSize.toString()).keys()].map((n) => n + deal.botFirst.toString());
+      const tasks = await Promise.all(tasksIdx.map((idx) => computeTaskId(dealid, idx)));
+
+
+
+
+      return { dealId: dealid, volume: volumeInt, txHash: receipt.transactionHash, tasks: tasks };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    }
+    catch (error) {
+      return handleError(error, thunkAPI);
+    }
+  }
+);
+
+
+//thunk for checking progress of tasks
+export const monitorTaskProgress = createAsyncThunk(
+  'blockchain/monitorTaskProgress',
+  async ({ tasks }: { tasks: string[] }, thunkAPI) => {
+    try {
+
+      // Get the current state
+      const state = thunkAPI.getState() as RootState;
+
+      // Get the wallet from the state
+      const privateKey = state.blockchain.privateKey;
+
+      // Check if the wallet exists
+      if (!privateKey) {
+        throw new Error("Wallet not found");
+      }
+
+      const TASK_STATUS_MAP = {
+        0: 'UNSET',
+        1: 'ACTIVE',
+        2: 'REVEALING',
+        3: 'COMPLETED',
+        4: 'FAILED',
+        timeout: 'TIMEOUT',
+      };
+
+      const decodeTaskResult = (results: any) => {
+        try {
+          if (results !== NULL_BYTES) {
+            return JSON.parse(
+              Buffer.from(results.substr(2), 'hex').toString('utf8'),
+            );
+          }
+        } catch (e) {
+          // nothing to do
+        }
+        return { storage: 'none' };
+      };
+
+
+      const wallet = new ethers.Wallet(privateKey, provider);
+
+      const iexecContract = new ethers.Contract(hub_addres, TokenABI, wallet);
+
+      console.log("monitoring tasks with ids: " + tasks);
+
+      const tasksProgress = await Promise.all(tasks.map(async (task) => {
+        const taskData = await iexecContract.viewTask(task);
+
+        const now = Math.floor(Date.now() / 1000);
+        const consensusTimeout = parseInt(taskData.finalDeadline, 10);
+        const taskTimedOut = taskData.status !== 3 && now >= consensusTimeout && consensusTimeout !== 0;
+        const decodedResult = decodeTaskResult(taskData.results);
+
+
+        return {
+          taskid: task,
+          //data:JSON.stringify(taskData),
+          statusName:
+            taskData.status < 3 && taskTimedOut ? TASK_STATUS_MAP.timeout
+              : TASK_STATUS_MAP[taskData.status as keyof typeof TASK_STATUS_MAP],
+          taskTimedOut,
+          results: decodedResult,
+        };
+
+      }));
+
+
+      const tasksCompleted = tasksProgress.filter((task) => task.statusName === 'COMPLETED');
+      const tasksFailed = tasksProgress.filter((task) => task.statusName === 'FAILED');
+      const tasksTimeout = tasksProgress.filter((task) => task.statusName === 'TIMEOUT');
+
+
+
+      return { tasksCompleted: tasksCompleted.length, tasksFailed: tasksFailed.length, tasksTimeout: tasksTimeout.length, tasksData: tasksProgress };
+    }
+    catch (error) {
+      return handleError(error, thunkAPI);
+    }
+  }
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// //order reqest-execution
+// export const orderRequestExecution = createAsyncThunk(
+//   'blockchain/orderRequestExecution',
+//   async ({ dataset, price }: { dataset: string, price: number }, thunkAPI) => {
+//     try {
+
+
+//       // Get the current state
+//       const state = thunkAPI.getState() as RootState;
+
+//       // Get the wallet from the state
+//       const privateKey = state.blockchain.privateKey;
+
+//       // Check if the wallet exists
+//       if (!privateKey) {
+//         throw new Error("Wallet not found");
+//       }
+
+//       const wallet = new ethers.Wallet(privateKey, provider);
+
+//       const salt = hexlify(randomBytes(32));
+
+
+//       const salted_iexecRequestOrder = {
+
+//         "app": DLMDApp,
+//         "appmaxprice": 0,
+//         "dataset": dataset,
+//         "datasetmaxprice": 0,
+//         "workerpool": "0xdb214a4A444D176e22030bE1Ed89dA1b029320f2", //TODO REMOVE HARDCODE
+//         "workerpoolmaxprice": 0,
+//         "requester": wallet.address,
+//         "volume": 1,
+//         "tag": "0x0000000000000000000000000000000000000000000000000000000000000003",
+//         "category": 0,
+//         "trust": 0,
+//         "beneficiary": wallet.address,
+//         "callback": "0x0000000000000000000000000000000000000000", //todo explore beneficiary and callback
+//         "params": '{"iexec_args": "","iexec_result_storage_provider": "ipfs","iexec_result_storage_proxy": "https://result.v8-bellecour.iex.ec"}',
+//         "salt": salt,
+//       }
+
+//       const typess = {
+//         'RequestOrder': [
+//           { name: 'app', type: 'address' },
+//           { name: 'appmaxprice', type: 'uint256' },
+//           { name: 'dataset', type: 'address' },
+//           { name: 'datasetmaxprice', type: 'uint256' },
+//           { name: 'workerpool', type: 'address' },
+//           { name: 'workerpoolmaxprice', type: 'uint256' },
+//           { name: 'requester', type: 'address' },
+//           { name: 'volume', type: 'uint256' },
+//           { name: 'tag', type: 'bytes32' },
+//           { name: 'category', type: 'uint256' },
+//           { name: 'trust', type: 'uint256' },
+//           { name: 'beneficiary', type: 'address' },
+//           { name: 'callback', type: 'address' },
+//           { name: 'params', type: 'string' },
+//           { name: 'salt', type: 'bytes32' },
+//         ]
+//       };
+
+//       const tokencontract = new ethers.Contract(hub_addres, TokenABI, wallet);
+
+//       //call .domain on the contract to get the EIP712Domain for signing the order
+//       const domainn = await tokencontract.domain();
+
+//       const EIP712Domainn = {
+//         name: domainn.name,
+//         version: domainn.version,
+//         chainId: domainn.chainId.toString(),
+//         verifyingContract: domainn.verifyingContract,
+//       };
+//       console.log("EIP712Domain: " + JSON.stringify(EIP712Domainn));
+
+//       const signer = wallet;
+
+//       const sign = await signer._signTypedData(EIP712Domainn, typess, salted_iexecRequestOrder);
+
+//       //get hash
+//       const hash = await _TypedDataEncoder.hash(EIP712Domainn, typess, salted_iexecRequestOrder);
+//       console.log("hash: " + hash);
+
+//       //call .verifySignature on the contract
+//       const isVerified = await tokencontract.verifySignature(wallet.address, hash, sign);
+//       console.log("isVerified: " + isVerified);
+//       console.log("salted_iexecRequestOrder: " + sign);
+
+//       const iexecMarketOrder = { ...salted_iexecRequestOrder, sign };
+//       console.log("iexecMarketOrder: " + JSON.stringify(iexecMarketOrder));
+
+
+//       //sell dataset
+//       const iexecMarketChallenge = await getIExecMarketChallenge(wallet.address, chainId);
+//       console.log("iexecMarketChallenge: " + iexecMarketChallenge);
+
+//       const typedData = iexecMarketChallenge.data || iexecMarketChallenge;
+//       const { domain, message } = typedData || {};
+//       const { EIP712Domain, ...types } = typedData.types || {};
+
+//       const signature = await wallet._signTypedData(domain, types, message);
+//       const hash2 = hashEIP712(typedData);
+//       const separator = '_'
+//       const iexecMarketSignature = hash2
+//         .concat(separator)
+//         .concat(signature)
+//         .concat(separator)
+//         .concat(wallet.address);
+
+//       console.log("final: " + iexecMarketSignature);
+
+
+//       console.log("iexecMarketSignature: " + iexecMarketSignature);
+
+//       const ordr = { order: iexecMarketOrder };
+
+//       const sell_res = await postRequestOrder(ordr, chainId, iexecMarketSignature);
+
+//       console.log("reqest_order_res: " + JSON.stringify(sell_res));
+
+//       return sell_res;
+
+
+
+//     } catch (error) {
+//       return handleError(error, thunkAPI);
+//     }
+//   }
+// );
+
+
+
+
+
 
 
 

@@ -3,6 +3,7 @@ import { Buffer } from 'buffer';
 import { utils } from 'ethers';
 import aesJs from 'aes-js';
 import * as FileSystem from 'expo-file-system';
+import JSZip from 'jszip';
 
 const { randomBytes, sha256 } = utils;
 
@@ -50,19 +51,54 @@ export const IPFSGateways ={
   }
   export type IpfsDataOrError = IpfsData |IpfsError;
   
-  export async function downloadFromIPFS<T>(ipfsUri : string) : Promise<T>
-  {
-    const res = await fetch(ipfsUri)
-    let receivedObject :T;
-    let text;
-    try {
-      text = await res.text();
-      receivedObject = JSON.parse(text) as T;
-    } catch(err){
-      throw new Error("could not parse json, got text instead: " + JSON.stringify(err) + " parsed text:" + text + "  ");
+  export async function downloadFromIPFS(ipfsUri: string): Promise<string> {
+    console.log("downloading from ipfs: " + ipfsUri);
+    
+    const response = await fetch(ipfsUri);
+    
+    if (!response.ok) {
+      throw new Error(`unexpected response ${response.statusText}`);
     }
-    return receivedObject;
+  
+    const data = await response.arrayBuffer();
+    const buffer = Buffer.from(data);
+    const zip = await JSZip.loadAsync(buffer);
+    
+    if (!zip.files['metadata.txt']) {
+      throw new Error('metadata.txt not found in zip');
+    }
+    if (!zip.files['result.txt']) {
+      throw new Error('result.txt not found in zip');
+    }
+
+
+  
+    const metadataFile = zip.file('metadata.txt');
+    if (!metadataFile) {
+      throw new Error('metadata.txt not found in zip');
+    }
+
+    const resultFile = zip.file('result.txt');
+    if (!resultFile) {
+      throw new Error('result.txt not found in zip');
+    }
+
+    const resultContent = await resultFile.async('string');
+    //can Be OK or UNAUTHORIZED
+    
+    if(resultContent === "UNAUTHORIZED"){
+      throw new Error("result.txt is UNAUTHORIZED");
+    }
+    if(resultContent !== "OK"){
+      throw new Error("result.txt is not OK");
+    }
+
+
+    const metadataContent = await metadataFile.async('string');
+  
+    return metadataContent;
   }
+
   function isIpfsData( toBeDetermined : IpfsDataOrError) : toBeDetermined is IpfsData{
     if ( (toBeDetermined as IpfsData).Hash ){
       return true;

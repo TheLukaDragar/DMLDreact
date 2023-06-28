@@ -1,4 +1,4 @@
-import { ApproveTransfer, ApproveTransferResponse, CreateDatasetResponse, Metadata, MintBox, MintBoxResponse, UpdateBox, UpdateBoxResponse, UploadMetadataToIPFSResponse, approveTransfer, callCreateDataset, callPushToSMS, callSellDataset, getBoxDatasets, isWhitelisted, mintBox, setPrivateKey, updateBox, uploadMetadataToIPFS } from '../blockchain';
+import { ApproveTransfer, ApproveTransferResponse, CreateDatasetResponse, Metadata, MintBox, MintBoxResponse, UpdateBox, UpdateBoxResponse, UploadMetadataToIPFSResponse, approveTransfer, callCreateDataset, callPushToSMS, callSellDataset, downloadMetadataFromIPFS, getBoxDatasets, getOwnerOfNft, getReputation, isWhitelisted, mintBox, monitorTaskProgress, orderRequestExecution, pushWeb2Secret, runApp, setPrivateKey, updateBox, uploadMetadataToIPFS } from '../blockchain';
 import { AnyAction } from 'redux';
 
 export async function uploadMetadataAndCheck(metadata: Metadata, store: any) {
@@ -86,6 +86,25 @@ export async function mintBoxAndCheck(args: MintBox, store: any): Promise<MintBo
 
 }
 
+export async function getOwnerOfNft_(tokenId: string, store: any): Promise<string> {
+
+    //call callSellDataset
+    let res = await store.dispatch(getOwnerOfNft(tokenId) as unknown as AnyAction).unwrap();
+
+    return res;
+
+}
+
+export async function getReputation_(address: string, store: any): Promise<number> {
+
+    //call callSellDataset
+    let res = await store.dispatch(getReputation(address) as unknown as AnyAction).unwrap();
+
+    return res;
+
+}
+
+
 export async function approveTransferAndCheck(args: ApproveTransfer, store: any): Promise<ApproveTransferResponse> {
 
     //call callSellDataset
@@ -123,6 +142,7 @@ export async function setPrivateKeyAndCheckIt(privateKey: string, store: any) {
     expect(privateKeyInStore).toBe(privateKey);
 }
 
+
 export async function checkWhitelistedStatus(privateKey: string, expectedStatus: boolean, store: any) {
     await store.dispatch(setPrivateKey(privateKey) as unknown as AnyAction);
 
@@ -132,8 +152,71 @@ export async function checkWhitelistedStatus(privateKey: string, expectedStatus:
 }
 
 
+//orderRequestExecution
+export async function orderRequestExecutionAndCheck(datasetAddress: string, price: number, store: any): Promise<string> {
+    //call callSellDataset
+    let res = await store.dispatch(orderRequestExecution({
+        dataset: datasetAddress,
+        price: price,
+    }) as unknown as AnyAction).unwrap();
+
+    expect(res).not.toBeUndefined();
+    expect(res).not.toBeNull();
+    expect(res).not.toBe("");
+    return res;
+
+}
 
 
+export async function pushWeb2Secret_(secretName: string, store: any): Promise<string> {
+    //call callSellDataset
+    let res = await store.dispatch(pushWeb2Secret(secretName) as unknown as AnyAction).unwrap();
+
+    expect(res).toBe(true);
+    return res;
+
+}
+
+export async function runApp_(tokenId:string,dataset: string, store: any): Promise<{dealId: string, volume: number,txHash: string,tasks: string[]}> {
+    //call callSellDataset
+    const res = await store.dispatch(runApp({
+        tokenId: tokenId,
+        dataset: dataset,
+        price: 0,
+    }) as unknown as AnyAction).unwrap();
+
+    return res;
+
+}
+
+export async function monitorTaskProgress_(tasks: string[], store: any): Promise<any> {
+    //call callSellDataset
+    while (true) {
+        const {tasksCompleted,tasksFailed ,tasksTimeout,tasksData} = await store.dispatch(
+          monitorTaskProgress({  tasks: tasks, }) as unknown as AnyAction
+        ).unwrap();
+
+        if (tasksCompleted === tasks.length || tasksFailed > 0 || tasksTimeout > 0) {
+            console.log(`Tasks finished completed: ${tasksCompleted}/${tasks.length} failed: ${tasksFailed} timeout: ${tasksTimeout}`);
+            console.log(`Tasks data: ${JSON.stringify(tasksData)}`);
+            return tasksData;
+        }
+        console.log(`Tasks completed: ${tasksCompleted}/${tasks.length}`);
+        console.log(`Tasks data: ${JSON.stringify(tasksData)}`);
+       
+        await new Promise(resolve => setTimeout(resolve, 5000));
+    }
+
+}
+
+//downloadDataset
+export async function downloadMetadataFromIPFS_(address: string, store: any): Promise<any> {
+    //call callSellDataset
+    let res = await store.dispatch(downloadMetadataFromIPFS(address) as unknown as AnyAction).unwrap();
+
+    return res;
+
+}
 
 
 
