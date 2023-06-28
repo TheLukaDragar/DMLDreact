@@ -1,3 +1,4 @@
+[![Node.js CI](https://github.com/TheLukaDragar/DMLDreact/actions/workflows/node.js.yml/badge.svg)](https://github.com/TheLukaDragar/DMLDreact/actions/workflows/node.js.yml)
 # DMLDreact
 This repository contains client application for the DLMD system.
 
