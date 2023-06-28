@@ -29,6 +29,7 @@ import * as Location from 'expo-location';
 import { LocationObject } from 'expo-location';
 import CryptoES from 'crypto-es';
 import { loadDemoClientWallet } from '../../data/secure';
+import { callDatasetContract, setPrivateKey } from '../../data/blockchain';
 
 export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'>,) {
   const user = useAppSelector((state) => state.user);
@@ -57,7 +58,7 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
     
 
 
-    // console.log(secure);
+    console.log(secure);
 
     (async () => {
 
@@ -84,7 +85,19 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
   }, [])
   
   async function test() {
-    let result = await dispatch(testbutton({ h: "" })).unwrap().then((result) => {
+    
+    const args = {
+      name: "cv.pdf",
+      multiaddr: "ipfs/QmUZxd6edNcwQEgjpvTNjmLDgzZxSjwDSMKwRrHEcKnUyM",
+      checksum: '0x82fe3d68048079af009667e5800223f37d1d9adaf1402b2e5723c93ebcf3a749',
+      testingEnv:false
+  };
+
+
+
+
+
+    let result = await dispatch(callDatasetContract( args )).unwrap().then((result) => {
       console.log(result);
       return result;
     }).catch((error) => {

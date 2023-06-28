@@ -6,12 +6,20 @@
     "start": "expo start --dev-client",
     "android": "npx expo run:android -d",
     "ios": "expo run:ios",
-    "test": "jest --watchAll",
+    "test": "jest --verbose --testPathPattern 'full_test'",
+    "test_internal": "jest --verbose --coverage --runInBand",
     "build": "npx eas-cli build --profile preview --platform android",
     "build:local": "npx eas-cli build --profile preview --platform android --local"
   },
   "jest": {
-    "preset": "jest-expo"
+    "preset": "jest-expo",
+    "transformIgnorePatterns": [
+      "node_modules/(?!(jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|crypto-es)"
+    ],
+    "testPathIgnorePatterns": [
+      "data/__tests__/blockchain_utility.ts",
+      "tests/backend_utility.tsx"
+    ]
   },
   "dependencies": {
     "@config-plugins/react-native-ble-plx": "6.0.0",
@@ -26,6 +34,8 @@
     "@react-navigation/native": "^6.1.6",
     "@react-navigation/native-stack": "^6.9.12",
     "@reduxjs/toolkit": "^1.9.1",
+    "@types/aes-js": "^3.1.1",
+    "aes-js": "^3.1.2",
     "crypto-es": "^1.2.7",
     "ethers": "^5.7.2",
     "expo": "~48.0.15",
@@ -46,6 +56,7 @@
     "expo-system-ui": "~2.2.1",
     "expo-updates": "~0.16.4",
     "expo-web-browser": "~12.1.1",
+    "jszip": "^3.10.1",
     "metro": "^0.76.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -66,12 +77,19 @@
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/react-native": "^12.1.2",
+    "@types/jest": "^29.5.1",
     "@types/react": "~18.0.27",
     "@types/react-native": "~0.70.6",
-    "jest": "^29.2.1",
+    "jest": "^29.5.0",
+    "jest-environment-jsdom": "^29.5.0",
     "jest-expo": "~47.0.1",
+    "node-fetch": "^3.3.1",
     "react-test-renderer": "18.1.0",
-    "typescript": "^4.6.3"
+    "typescript": "^4.6.3",
+    "whatwg-fetch": "^3.6.2"
   },
   "private": true
 }

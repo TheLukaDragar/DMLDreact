@@ -2,7 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { REHYDRATE } from 'redux-persist';
 import { setToken } from './secure';
 import { RootState } from './store';
-interface User {
+export interface User {
   _createTime: string;
   _createUser: null;
   _updateTime: string;
@@ -23,7 +23,7 @@ interface User {
     username: string;
   };
   birthDate: null;
-  crypto: null;
+  crypto: Array<CryptoUserData>;
   details: any[];
   firstName: null;
   id: number;
@@ -33,7 +33,19 @@ interface User {
   tableName: string;
   userType: null;
 }
-interface AuthResponse { //message to sign
+interface CryptoUserData {
+  id: number;
+  _createTime: string;
+  _createUser: null;
+  _updateTime: string;
+  _updateUser: null;
+  status: number;
+  wallet: string;
+  user_id: number;
+  default: number;
+  tableName: string;
+}
+export interface AuthResponse { //message to sign
   authToken: {
     data: string
   },
@@ -54,7 +66,7 @@ interface connectBox {
   macAddress: string
   did: string
 }
-interface GetBoxesResponse {
+export interface GetBoxesResponse {
   items: BoxItem[];
   total: number;
 }
@@ -112,15 +124,70 @@ interface setBoxPreciseLocation{
   boxId: number;
   preciseLocation: PreciseLocation;
 }
-interface getBoxAccessKeyParams{
+export interface getBoxAccessKeyParams{
   boxId: number;
   preciseLocation: PreciseLocation;
   challenge: string;
 }
-interface getBoxAccessKeyResponse{
+export interface getBoxAccessKeyResponse{
   boxId: number;
   accessKey: string;
 }
+export interface CreateParcelByUsers{
+    nftId: number;
+    trackingNumber: string;
+    transactionHash: string;
+    recipient_id: number;
+    courier_id: number;
+    box_id: number;
+    location : PreciseLocation;
+  
+}
+export interface CreateParcelByWallet {
+  nftId: string;
+  transactionHash: string;
+  location_id?: number;
+  location?: PreciseLocation;
+  recipient_addr: string;
+  courier_addr: string;
+  box_did: string;
+}
+
+export interface ParcelData {
+  id: number;
+  trackingNumber: string;
+  nftId: string;
+  transactionHash: string;
+  recipient_id: string;
+  courier_id: string;
+  box_id: string;
+  location_id: number;
+  depositTime: Date;
+  withdrawTime: Date;
+}
+
+export enum RatingType {
+  COURIER = 1,
+  SMART_BOX = 2,
+}
+
+export interface RateTransactionDto {
+  parcel_id: number;
+  recipient_id: number;
+  ratingType: RatingType;
+  rating: number;
+}
+
+export interface RateTransactionResponse {
+  parcel_id: number;
+  recipient_id: number;
+  author_id: number;
+  ratingType: RatingType;
+  rating: number;
+}
+
+
+
 
 
 import Constants from 'expo-constants';
@@ -208,7 +275,7 @@ export const apiSlice = createApi({
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         console.info('onQueryStarted /auth/login/wallet', arg);
         try {
-          const { data } = await queryFulfilled;
+          const { data,meta } = await queryFulfilled;
           dispatch(setToken(data.authToken.data))
           //mannually update the user cache with the new data
           dispatch(apiSlice.util.updateQueryData('getMe', undefined, (draft) => {
@@ -238,8 +305,9 @@ export const apiSlice = createApi({
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         console.log(' /users/me started');
         try {
-          const { data } = await queryFulfilled;
-          console.log('data', data);
+          const { data,meta } = await queryFulfilled;
+          //console.log('data', data);
+          //console.log(meta)
         } catch (error) { }
       },
       transformErrorResponse: (response: any) => {
@@ -248,6 +316,27 @@ export const apiSlice = createApi({
       },
 
       providesTags: ['User'],
+    }),
+    getUserDetails: builder.query<User, void>({
+      query: () => ({
+        url: '/users/details',
+        method: 'GET',
+      }),
+      transformResponse: (response: any) => response,
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log(' /users/details started');
+        try {
+          const { data,meta } = await queryFulfilled;
+          console.log('data', data);
+          console.log(meta)
+        } catch (error) { }
+      },
+      transformErrorResponse: (response: any) => {
+        console.log('error /users/details', response);
+        return response
+      },
+
+   
     }),
     //box endpoints
     getBoxes: builder.query<GetBoxesResponse, void>({
@@ -270,9 +359,9 @@ export const apiSlice = createApi({
       providesTags: ['Boxes'],
     }),
     //get a box data by id
-    getBox: builder.query<any, string>({
+    getBox: builder.query<Box, number>({
       query: (id) => ({
-        url: `/box/data/${id}`,
+        url: `/box/${id}/data`,
         method: 'GET',
       }),
       transformResponse: (response: any) => response,
@@ -318,7 +407,7 @@ export const apiSlice = createApi({
       },
       transformResponse: (response: any) => response,
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-        console.log('onQueryStarted /location/box/precise', arg, dispatch);
+        console.log('setBoxPreciseLocation /location/box/precise', arg, dispatch);
         try {
           const { data } = await queryFulfilled;
           console.log('/location/box/precise fulfiled', JSON.stringify(data));
@@ -341,9 +430,9 @@ export const apiSlice = createApi({
     //   You should only call this endpoint when refreshing precise location for a box
     //    without refreshing the entire box.
 
-    getBoxPreciseLocation: builder.query<any, string>({
+    getBoxPreciseLocation: builder.query<any, number>({
       query: (id) => ({
-        url: `/location/box/precise/${id}`,
+        url: `/location/box/${id}/precise`,
         method: 'GET',
       }),
       transformResponse: (response: any) => response,
@@ -384,6 +473,37 @@ export const apiSlice = createApi({
           return response
       }
     }),
+
+    //box/id/permission GET not used deprecated
+    getDoesUserHavePermissionToBox: builder.query<any, number>({
+      query: (id) => ({
+        url: `/box/1/permission`,
+        method: 'GET',
+      }),
+      transformResponse: (response: any) => response,
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('getDoesUserHavePermissionToBox', arg)
+        try {
+          const { data } = await queryFulfilled;
+          console.log('getDoesUserHavePermissionToBox fulfilled', JSON.stringify(data));
+        } catch (error) { }
+      },
+      transformErrorResponse: (response: any) => {
+        console.log('error getDoesUserHavePermissionToBox', response);
+        return response
+      }
+    }),
+
+
+
+
+
+
+
+
+
+
+    //parcel 
     
   
 
@@ -429,6 +549,141 @@ export const apiSlice = createApi({
       },
     }),
 
+    createParcelByWallet: builder.mutation<ParcelData, CreateParcelByWallet>({
+      query: (body) => ({
+        url: '/parcel/create/by-wallet',
+        method: 'POST',
+        body,}),
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('onQueryStarted /parcel/create/by-wallet', arg, dispatch);
+        try {
+          const { data } = await queryFulfilled;
+          console.log('/parcel/create/by-wallet fulfiled', JSON.stringify(data));
+        } catch (error) {
+        }
+      },
+      transformErrorResponse: (response: any) => {
+        console.log('error /parcel/create/by-wallet', response);
+        return response
+      }
+
+    }),
+
+    //TODO INVALIDATE CACHE ...
+    updateParcelById: builder.mutation<ParcelData, ParcelData>({
+      query: ({ id, ...body }) => ({
+        url: `/parcel/update/${id}`, // interpolate id into URL
+        method: 'PATCH', // use PATCH method
+        body,
+      }),
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log(`onQueryStarted /parcel/update/${arg.id}`, arg, dispatch);
+        try {
+          const { data } = await queryFulfilled;
+          console.log(`/parcel/update/${arg.id} fulfilled`, JSON.stringify(data));
+        } catch (error) {
+          // added error logging
+          console.log(`error /parcel/update/${arg.id} in onQueryStarted`, error);
+        }
+      },
+      transformErrorResponse: (error: any) => {
+        console.log('error /parcel/update/', error);
+        // handle the error and return a custom error response
+        return { error: 'An error occurred while updating the parcel by wallet.' };
+      }
+  }),
+  
+
+    //deposit parcel  @Post('/:id/deposit')
+    depositParcel: builder.mutation<any, number>({
+      query: (id) => ({
+        url: `/parcel/${id}/deposit`,
+        method: 'POST'
+      }),
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('onQueryStarted /parcel/deposit', arg, dispatch);
+        try {
+          const { data } = await queryFulfilled;
+          console.log('/parcel/deposit fulfiled', JSON.stringify(data));
+        } catch (error) {
+        }
+      },
+      transformErrorResponse: (response: any) => {
+        console.log('error /parcel/deposit', response);
+        return response
+      }
+    }),
+
+    //withdraw parcel @Post('/:id/withdraw')
+    withdrawParcel: builder.mutation<any, number>({
+      query: (id) => ({
+        url: `/parcel/${id}/withdraw`,
+        method: 'POST'
+      }),
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('onQueryStarted /parcel/withdraw', arg, dispatch);
+        try {
+          const { data } = await queryFulfilled;
+          console.log('/parcel/withdraw fulfiled', JSON.stringify(data));
+        } catch (error) {
+        }
+      },
+      transformErrorResponse: (response: any) => {
+        console.log('error /parcel/withdraw', response);
+        return response
+      }
+    }),
+
+
+    //get parcel by id
+    getParcelById: builder.query<ParcelData, number>({
+      query: (id) => ({
+        url: `/parcel/${id}`,
+        method: 'GET',
+
+      }),
+      transformResponse: (response: any) => response,
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('getParcelById', arg)
+        try {
+          const { data } = await queryFulfilled;
+          console.log('getParcelById fulfilled', JSON.stringify(data));
+        } catch (error) { 
+          console.log('getParcelById error', error);
+
+          //get to object
+          
+
+
+
+          console.log('getParcelById error', JSON.stringify(error));
+        }
+      },
+      transformErrorResponse: (response: any) => {
+        console.log('error getParcelById', response);
+        return response
+      }
+    }),
+
+    //rate-transaction
+    rateTransaction: builder.mutation<RateTransactionResponse, RateTransactionDto>({
+      query: (body) => ({
+        url: '/reputation/rate-transaction'
+        , method: 'POST',
+        body,}),
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('onQueryStarted /rate-transaction', arg, dispatch);
+        try {
+          const { data } = await queryFulfilled;
+          console.log('/rate-transaction fulfiled', JSON.stringify(data));
+        } catch (error) {
+        }
+      },
+      transformErrorResponse: (response: any) => {
+        console.log('error /rate-transaction', response);
+        return response
+      }
+    }),
 
 
 
@@ -438,7 +693,8 @@ export const apiSlice = createApi({
 
 
 
-
+      
+        
 
 
 
@@ -446,29 +702,7 @@ export const apiSlice = createApi({
 
   }),
 })
-//using fetch because it's easier to implement 
-// export const getBoxAccessKey = createAsyncThunk(
-//   'boxes/getAccessKey',
-//   async ({ id, challenge, location }: {id: string, challenge: string, location: PreciseLocation},thunkAPI) => {
-//     // You should use your own API calling mechanism here
-//     // fetch is used as an example
-//     const state = thunkAPI.getState() as RootState;
 
-//     const user_token = state.secure.userData?.token;
-//     console.log('getBoxAccessKey', id, challenge, location, user_token);
-//     const response = await fetch(API_URL+`box/${id}/access-key?challenge=${challenge}&location=${JSON.stringify(location)}`, { method: 'GET' , headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user_token}` }});
-
-//     if (!response.ok) {
-//       console.log('error getBoxAccessKey', response.status, response);
-
-//       throw new Error('Failed to fetch access key');
-//     }
-
-//     const data = await response.json();
-//     console.log('getBoxAccessKey fulfilled', JSON.stringify(data));
-//     return data;
-//   }
-// );
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 /**
@@ -495,6 +729,7 @@ export function isErrorWithMessage(
 // Export the reducer and middleware separately
 export const { reducer, middleware } = apiSlice
 // Export the endpoint for use in components
-export const { useGetAuthMsgQuery, useRegisterWalletMutation, useLoginWalletMutation, useGetMeQuery, useLazyGetAuthMsgQuery
+export const { useGetAuthMsgQuery, useRegisterWalletMutation, useLoginWalletMutation, useGetMeQuery, useLazyGetAuthMsgQuery,useLazyGetMeQuery,useGetUserDetailsQuery, useCreateParcelByWalletMutation,useLazyGetDoesUserHavePermissionToBoxQuery,useLazyGetBoxPreciseLocationQuery
   , useGetBoxesQuery, useGetBoxQuery, useLazyGetBoxQuery, useLazyGetBoxesQuery, useConnectBoxMutation, useSetBoxPreciseLocationMutation, useGetBoxPreciseLocationQuery, useCreateApproximateLocationMutation, useUpdateApproximateLocationMutation,useGetBoxAccessKeyQuery,useLazyGetBoxAccessKeyQuery
+  ,useDepositParcelMutation,useLazyGetParcelByIdQuery,useGetParcelByIdQuery,useWithdrawParcelMutation,useRateTransactionMutation,useUpdateParcelByIdMutation
 } = apiSlice

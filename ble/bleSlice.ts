@@ -9,7 +9,7 @@ import Constants from 'expo-constants';
 const bleManager = new BleManager();
 let device: Device;
 let logBuffer: string = "";
-const demoDevice = {
+export const demoDevice = {
     id: 'F9:E0:C3:CE:C3:14',
     name: 'KeyBot_000000000000',
     rssi: 0,
@@ -21,10 +21,6 @@ const stopScan = () => {
     console.log('Stopping scan');
     bleManager.stopDeviceScan();
 };
-
-import { PreciseLocation } from '../data/api';
-
-
 
 
 export const scanBleDevices = createAsyncThunk('ble/scanBleDevices', async (_, thunkAPI) => {
@@ -62,8 +58,6 @@ export const scanBleDevices = createAsyncThunk('ble/scanBleDevices', async (_, t
 
 export const authenticate = createAsyncThunk('ble/authenticate', async (params: authenticateDeviceParams, thunkAPI) => {
     //get device
-
-
     const state = thunkAPI.getState() as RootState;
     const connectedDevice = state.ble.connectedDevice;
     const demoModeOn = state.ble.use_demo_device;
@@ -116,114 +110,6 @@ export const authenticate = createAsyncThunk('ble/authenticate', async (params: 
 
 });
 
-
-
-
-
-// export const authenticateDevice = createAsyncThunk('ble/authenticateDevice', async (id : number, thunkAPI) => {
-//     // Check if demo mode is on from the global state.
-//     const state = thunkAPI.getState() as RootState;
-//     const demoModeOn = state.ble.use_demo_device;
-//     // If demo mode is on use the demo device.
-//     if (demoModeOn) {
-//         console.log('Demo mode on, using demo device in authenticateDevice');
-//         //make api call to authenticate device todo
-//         //cc39c0f66ccc4bd25202e68947e07831
-//         const demo_challenge = CryptoES.lib.WordArray.random(16).toString().substring(0, 16);
-//         console.log("demo challenge: " + demo_challenge);
-//         // let key = "cQfTjWnZr4u7x!z%"
-//         // const key128Bits = CryptoES.enc.Utf8.parse(key);
-//         // //ecb mode
-//         // const encrypted = CryptoES.AES.encrypt(demo_challenge, key128Bits, { mode: CryptoES.mode.ECB, padding: CryptoES.pad.NoPadding });
-//         // //to hex
-//         // let encryptedHex = encrypted.ciphertext.toString(CryptoES.enc.Hex);
-//         // //to uppercase
-//         // encryptedHex = encryptedHex.toUpperCase();
-//         // console.log("demo encrypted: " + encryptedHex);
-
-
-//         //call api 
-//         // define your location and boxId here
-    
-//     try {
-//         console.log(device);
-//         const location: PreciseLocation = { latitude: 123, longitude: 456, inaccuracy: 3 };
-//         const boxId: string = demoDevice.id;
-
-//       // Dispatch getBoxAccessKey thunk
-//       const resultAction = await thunkAPI.dispatch(getBoxAccessKey({id: boxId, challenge: demo_challenge, location: location }));
-
-//       if (getBoxAccessKey.fulfilled.match(resultAction)) {
-//         const accessKey = resultAction.payload;
-//         console.log('Received accessKey:', accessKey);
-
-//         // Continue your logic here
-//       } else {
-//         // Handle error here
-//         if (resultAction.error) {
-//           console.error('Failed to get accessKey:', resultAction.error.message);
-//           return false;
-//         }
-//       }
-//     } catch (err) {
-//       console.error('Error in getBoxAccessKey:', err);
-//       return false;
-//     }
-
-//         return true;
-//     }
-//      //get challenge from box
-//      let characteristic = await bleManager.readCharacteristicForDevice(device.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34fa').catch((error) => {
-//         console.log("readCharacteristicForDevice error: " + error);
-//         throw new Error(error);
-//       });
-//       if (characteristic === null) {
-//         throw new Error("Characteristic not found");
-//       }
-//       let challenge = Buffer.from(characteristic.value!, 'base64').toString('ascii').substring(0, 16);
-//       console.log("challenge: " + challenge);
-//       //solve here 
-//         let key = "cQfTjWnZr4u7x!z%"
-//         const key128Bits = CryptoES.enc.Utf8.parse(key);
-//         //ecb mode
-//         const encrypted = CryptoES.AES.encrypt(challenge, key128Bits, { mode: CryptoES.mode.ECB, padding: CryptoES.pad.NoPadding });
-//         //to hex
-//         let encryptedHex = encrypted.ciphertext.toString(CryptoES.enc.Hex);
-//         //to uppercase
-//         encryptedHex = encryptedHex.toUpperCase();
-//         console.log("encrypted: " + encryptedHex);
-//         let solved_challenge = encryptedHex
-//     let message = solved_challenge.substring(0, 16);
-//     let encoded = Buffer.from(message).toString('base64');
-//     console.log("encoded: " + encoded);
-//     let writeCharacteristic = await bleManager.writeCharacteristicWithResponseForDevice(device.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34fb', encoded);
-//     if (writeCharacteristic === null) {
-//       throw new Error("Characteristic not found");
-//     }
-//     console.log("characteristic: " + writeCharacteristic.uuid);
-//     //write the second part of the message
-//     message = solved_challenge.substring(16, 32);
-//     //encode to base64
-//     encoded = Buffer.from(message).toString('base64');
-//     console.log("encoded 2: " + encoded);
-//     writeCharacteristic = await bleManager.writeCharacteristicWithResponseForDevice(device.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34fb', encoded);
-//     if (writeCharacteristic === null) {
-//       throw new Error("Characteristic not found");
-//     }
-//     //read the auth characteristic
-//     let readCharacteristic = await bleManager.readCharacteristicForDevice(device.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34fc');
-//     if (readCharacteristic === null) {
-//       throw new Error("Characteristic not found");
-//     }
-//     let value = readCharacteristic.value;
-//     let auth = Buffer.from(value!, 'base64').toString('ascii');
-//     console.log("authenticated: " + auth? "true" : "false");
-//     if(auth === '1') {
-//       return true;
-//     }else {
-//       throw new Error("Authentication failed");
-//     }
-// });
 export const connectDeviceById = createAsyncThunk('ble/connectDeviceById', async (params: connectDeviceByIdParams, thunkAPI) => {
    
         const { id } = params; //mac adress
@@ -263,16 +149,6 @@ export const connectDeviceById = createAsyncThunk('ble/connectDeviceById', async
         //print name and id
         console.log('Device name: ', device.name);
         console.log('Device id: ', device.id);
-
-
-
-        //authenticate
-    //     thunkAPI.dispatch(setConnectionState({ status: ConnectionState.AUTHENTICATING }));
-    //    let auth_result = await thunkAPI.dispatch(authenticateDevice()).unwrap().catch((error) => {
-    //         console.log("authenticateDevice error: " + error);
-    //         throw new Error(error);
-    //     });
-    //     console.log("auth_result: " + auth_result);
        
         return toBLEDeviceVM({ ...device, serviceUUIDs });
     
@@ -448,14 +324,6 @@ export const subscribeToEvents = createAsyncThunk('ble/subscribeToEvents', async
     }
 );
 
-
-
-
-
-
-export const linkDeviceById = createAsyncThunk('ble/linkDeviceById', async (params: linkDeviceByIdParams, thunkAPI) => {
-   //todo
-});
 export const testbutton = createAsyncThunk('ble/testbutton', async (params: testbuttonParams, thunkAPI) => {
     //write test characteristic 00002a3d-0000-1000-8000-00805f9b34f0
     bleManager.writeCharacteristicWithResponseForDevice(device.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34f0', 'AQ==').then((characteristic) => {
@@ -837,152 +705,3 @@ export const selectAdapterState = (state: RootState) => state.ble.adapterState;
 export const selectConnectedDevice = (state: RootState) => state.ble.connectedDevice;
 export const selectScannedDevices = (state: RootState) => state.ble.deviceScan;
 export const selectBle= (state: RootState) => state.ble;
-// import { createAsyncThunk, createSlice, Dispatch, PayloadAction } from '@reduxjs/toolkit';
-// interface BleState {
-//   periphiralID: string | null;
-//   error: string | null;
-//   status: "disconnected" | "connecting" | "connected" | "authenticating" | "authenticated" | "ready";
-//   demo: boolean;
-//   log: log[];
-//   deviceScan: { devices: [], status: "NetworkState.PENDING", error: '' },
-// }
-// type log = {
-//   f: number;
-//   s: number;
-//   p: number;
-//   m: number;
-//   i: number;
-// }
-// import { BLEServiceInstance } from './BLEService';
-// const bleService =  BLEServiceInstance;
-// export const toBLEDeviceVM = (device: any) => {
-//   const result = {
-//       serviceUUIDs: device.serviceUUIDs,
-//       isConnectable: device.isConnectable,
-//       overflowServiceUUIDs: device.overflowServiceUUIDs,
-//       txPowerLevel: device.txPowerLevel,
-//       serviceData: device.serviceData,
-//       manufacturerData: device.manufacturerData,
-//       name: device.name,
-//       mtu: device.mtu,
-//       rssi: device.rssi,
-//       solicitedServiceUUIDs: device.solicitedServiceUUIDs,
-//       localName: device.localName,
-//       id: device.id,
-//   };
-//   return result;
-// };
-// export interface IBLEDevice {
-//   serviceUUIDs: Array<string>;
-//   isConnectable: boolean;
-//   overflowServiceUUIDs: Array<string>;
-//   txPowerLevel: string;
-//   serviceData?: any;
-//   manufacturerData?: any;
-//   name: string;
-//   mtu: number;
-//   rssi: string;
-//   solicitedServiceUUIDs: Array<string>;
-//   localName: string;
-//   id: string;
-//   _manager?: any;
-// }
-// const initialState: BleState = {
-//   periphiralID: null,
-//   error: null,
-//   status: "disconnected",
-//   demo: false,
-//   log : [{f: 0, s: 0, p: 0, m: 0, i: 0}],
-//   deviceScan: { devices: [], status: "NetworkState.PENDING", error: '' },
-// };
-// const stopScan = () => {
-//   console.log('Stopping scan');
-//   bleService.manager.stopDeviceScan();
-// };
-// export const scanBleDevices = createAsyncThunk<any, void, { dispatch: Dispatch, state: any }>('ble/scanBleDevices', async (payload, thunkAPI) => {
-//   console.log('Starting scan');
-//   try {
-//     bleService.manager.startDeviceScan(null, null, async (error, scannedDevice) => {
-//           if (error) {
-//               console.log('startDeviceScan error: ', error);
-//               throw new Error(error.toString());
-//           }
-//           if (scannedDevice) {
-//             //check if we exceed the max number of devices
-//             if (thunkAPI.getState().ble.deviceScan.devices.length > 20) {
-//               thunkAPI.dispatch(stopDeviceScan({}));
-//               return;
-//             }
-//               thunkAPI.dispatch(addScannedDevice({ device: toBLEDeviceVM(scannedDevice) }));
-//           }
-//       });
-//   } catch (error: any) {
-//       throw new Error(error.toString);
-//   }
-// });
-// const bleSlice = createSlice({
-//   name: 'ble',
-//   initialState,
-//   reducers: {
-//   addScannedDevice(state, action) {
-//       const { device } = action.payload;
-//       const existingDevices = state.deviceScan.devices.filter(existingDevice => device.id !== existingDevice?.id);
-//       const updatedDevices = [device, ...existingDevices];
-//       const sorted = updatedDevices.sort((a, b) => {
-//           a.rssi = a.rssi || -100;
-//           b.rssi = b.rssi || -100;
-//           return a.rssi > b.rssi ? -1 : b.rssi > a.rssi ? 1 : 0;
-//       });
-//       state.deviceScan.devices = sorted as any; //todo fix this
-//   },
-//   clearScannedDevices(state, action) {
-//     state.deviceScan = { devices: [], status: "NetworkState.PENDING", error: '' };
-// },
-//     stopDeviceScan(state, action) {
-//         bleService.manager.stopDeviceScan();
-//     },
-//     setPeriphiralID: (state, action: PayloadAction<string>) => {
-//       state.periphiralID = action.payload;
-//       console.log("setConnectedPeripheral: " + action.payload);
-//     },
-//     setStatus: (state, action: PayloadAction<string>) => {
-//       console.log("setStatus3: " + action.payload);
-//       //check if the status is valid
-//       if (action.payload === "disconnected" || action.payload === "connecting" || action.payload === "connected" || action.payload === "authenticating" || action.payload === "authenticated" || action.payload === "ready") {
-//         state.status = action.payload;
-//       }else {
-//         throw new Error("Invalid status");
-//       }
-//     },
-//     setDemo: (state, action: PayloadAction<boolean>) => {
-//       state.demo = action.payload;
-//       console.log("setDemo: " + action.payload);
-//     },
-//     setError: (state, action: PayloadAction<string>) => {
-//       state.error = action.payload;
-//       console.log("setError: " + action.payload);
-//     },
-//     clearError: (state) => {
-//       state.error = null;
-//       console.log("clearError");
-//     },
-//     setLog: (state, action: PayloadAction<string>) => {
-//       //{"f":2520.00,"s":5120.00,"p":0.95,"m":1.00,"i":3}
-//       //check if the log is in the correct format
-//       if (action.payload.length > 0) {
-//         const log = JSON.parse(action.payload);
-//         if (log.f === undefined || log.s === undefined || log.p === undefined || log.m === undefined || log.i === undefined) {
-//           //do nothing
-//         }else {
-//           state.log.push(log as log);
-//         }
-//       }
-//       if (state.log.length > 100) {
-//         state.log.shift();
-//       }
-//       console.log("setLog: " + action.payload);
-//     },
-//   },
-// });
-// export const { setPeriphiralID, setError, clearError, setStatus, setLog,addScannedDevice,stopDeviceScan,clearScannedDevices } = bleSlice.actions;
-// export default bleSlice.reducer;
