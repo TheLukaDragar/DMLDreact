@@ -3,7 +3,9 @@
 import { StyleSheet } from 'react-native';
 
 import { Text, View } from '../components/Themed';
-import {SplashScreen, useRouter} from 'expo-router';
+import {useRouter} from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+
 import { useAppDispatch, useAppSelector } from '../data/hooks';
 import { getSecure } from '../data/secure';
 import { useEffect } from 'react';
@@ -38,12 +40,15 @@ export default function TabTwoScreen() {
 
 
   if (!isLoadingComplete || secure.loading) {
-    return <SplashScreen />;
+    SplashScreen.preventAutoHideAsync(); //TODO MAKE THIS BEETER
+
+    return null;
   }
   else {
+    SplashScreen.hideAsync();
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Tab Two</Text>
+        <Text style={styles.title}>DLMD</Text>
       </View>
     );
   }

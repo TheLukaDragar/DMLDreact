@@ -788,7 +788,7 @@ SPEC CHECKSUMS:
   EXPermissions: 336b5b8409f4e1368a8b0636f04282e7f04ced3b
   Expo: 9e72fb8ba10f6ee5e95745f69a845b16bceeef00
   expo-dev-client: 95aec73a232c2bcc4dab2f06f5ba1ae65967fa4f
-  expo-dev-launcher: 2894adff1d67b866a6b41df0f024c19504e3123a
+  expo-dev-launcher: 6a5c2bc04d52a2b4208a1ca3540daedc88c73723
   expo-dev-menu: ff9a3b8043c61359a722abf4494a41de41cffdc7
   expo-dev-menu-interface: bda969497e73dadc2663c479e0fa726ca79a306e
   ExpoDevice: 1c1b0c9cad96c292c1de73948649cfd654b2b3c0
@@ -851,6 +851,6 @@ SPEC CHECKSUMS:
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
   Yoga: 1d6727ed193122f6adaf435c3de1a768326ff83b
 
-PODFILE CHECKSUM: 3d51bb5c6357a2693f8ee7d8f437e2afeb0b12a0
+PODFILE CHECKSUM: 0294098ed7471df2f4b13f4e37d11fef4552e54f
 
 COCOAPODS: 1.11.3
