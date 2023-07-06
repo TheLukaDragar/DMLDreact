@@ -1,7 +1,7 @@
 //opmort ethers and make a wallet and save it 
 const ethers = require('ethers');
 const fs = require('fs');
-const fetch = require('node-fetch');
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
 // const wallet = ethers.Wallet.createRandom();
 

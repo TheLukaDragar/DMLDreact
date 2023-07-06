@@ -52,7 +52,8 @@ export async function setupAndLoadUser(loadFunction: AsyncThunk<{ mnemonicPhrase
   console.log("user wallet: ", wallet);
   console.log("user id: ", loginResult.profile.id);
   console.log("user token: ", component.store.getState().secure.userData.token);
-  console.log("user: ", loginResult);
+  console.log("user: ", JSON.stringify(loginResult , null, 2));
+  
 
   console.log("login passed");
 
