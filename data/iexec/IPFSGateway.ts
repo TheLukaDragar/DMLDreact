@@ -1,5 +1,7 @@
 
 import { Buffer } from 'buffer';
+import '@ethersproject/shims';
+
 import { utils } from 'ethers';
 import aesJs from 'aes-js';
 import * as FileSystem from 'expo-file-system';

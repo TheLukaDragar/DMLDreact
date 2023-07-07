@@ -46,7 +46,7 @@ export default function Step_1_choose_role() {
 
     
         {renderRole(UserType.COURIER)}
-        {renderRole(UserType.VEHICLE_OWNER)}
+        {/* {renderRole(UserType.VEHICLE_OWNER)} */}
         {renderRole(UserType.CLIENT)}
     </View>
   );

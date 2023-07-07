@@ -726,10 +726,50 @@ export function isErrorWithMessage(
     typeof (error as any).message === 'string'
   )
 }
+
+
+export function getErrorMessage(err: any) {
+
+  try {
+    if (isFetchBaseQueryError(err)) {
+     // const errMsg = 'error' in err ? err.error : "JSON.stringify(err.data)"
+     let errMsg;
+     if ('error' in err) {
+       errMsg = err.error;
+     } else if ('data' in err && typeof err.data === 'object' && err.data !== null) {
+       if ('message' in err.data && typeof err.data.message === 'string') {
+         errMsg = err.status + " " + err.data.message;
+       } else {
+         errMsg = JSON.stringify(err.data);
+       }
+     } else {
+       errMsg = JSON.stringify(err);
+     }
+   
+      return errMsg;
+      
+      
+    } else if (isErrorWithMessage(err)) {
+      return err.message
+    } else {
+      return JSON.stringify(err)
+    }
+
+  }
+  catch (err) {
+    console.log("error with message , ", err);
+    return JSON.stringify(err)
+  }
+}
+
+
+
+
+
 // Export the reducer and middleware separately
 export const { reducer, middleware } = apiSlice
 // Export the endpoint for use in components
-export const { useGetAuthMsgQuery, useRegisterWalletMutation, useLoginWalletMutation, useGetMeQuery, useLazyGetAuthMsgQuery,useLazyGetMeQuery,useGetUserDetailsQuery, useCreateParcelByWalletMutation,useLazyGetDoesUserHavePermissionToBoxQuery,useLazyGetBoxPreciseLocationQuery
+export const { useGetAuthMsgQuery, useRegisterWalletMutation, useLoginWalletMutation, useGetMeQuery, useLazyGetAuthMsgQuery,useLazyGetMeQuery,useGetUserDetailsQuery,useLazyGetUserDetailsQuery, useCreateParcelByWalletMutation,useLazyGetDoesUserHavePermissionToBoxQuery,useLazyGetBoxPreciseLocationQuery
   , useGetBoxesQuery, useGetBoxQuery, useLazyGetBoxQuery, useLazyGetBoxesQuery, useConnectBoxMutation, useSetBoxPreciseLocationMutation, useGetBoxPreciseLocationQuery, useCreateApproximateLocationMutation, useUpdateApproximateLocationMutation,useGetBoxAccessKeyQuery,useLazyGetBoxAccessKeyQuery
   ,useDepositParcelMutation,useLazyGetParcelByIdQuery,useGetParcelByIdQuery,useWithdrawParcelMutation,useRateTransactionMutation,useUpdateParcelByIdMutation
 } = apiSlice

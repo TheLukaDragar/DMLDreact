@@ -14,7 +14,7 @@ import { isErrorWithMessage, isFetchBaseQueryError, useLazyGetAuthMsgQuery, useR
 
 
 
-export default function Step_4_client_setup() {
+export default function Step_4_courier_setup() {
 
   const router = useRouter();
 
@@ -23,9 +23,11 @@ export default function Step_4_client_setup() {
 
   const [email, setEmail] = React.useState('');
   const [username, setUsername] = React.useState('');
+  const [courerId, setCourierId] = React.useState('');
 
   const [emailError, setEmailError] = React.useState('');
   const [usernameError, setUsernameError] = React.useState('');
+  const [courierIdError, setCourierIdError] = React.useState('');
   const [ErrorMessage, setError] = React.useState("");
 
 
@@ -39,9 +41,10 @@ export default function Step_4_client_setup() {
 
   const handleSubmit = async () => {
     try {
-      if (validateEmail(email) && validateUsername(username)) {
+      if (validateEmail(email) && validateUsername(username) && validateCourierId(courerId)) {
         console.log('Email:', email);
         console.log('Username:', username);
+        console.log('CourierId:', courerId);
 
         const msg = await getMessageToSign().unwrap();
         console.log(msg);
@@ -79,6 +82,10 @@ export default function Step_4_client_setup() {
         if (!validateUsername(username)) {
           setUsernameError('Username should not contain any special characters or spaces');
         }
+        if (!validateCourierId(courerId)) {
+          setCourierIdError('Please enter a valid courier ID');
+        }
+
       }
     } catch (err) {
       if (isFetchBaseQueryError(err)) {
@@ -100,6 +107,12 @@ export default function Step_4_client_setup() {
     const regex = /^[a-zA-Z0-9]+$/;
     return regex.test(username) && username.length <= 20 || username.length == 0;
   };
+  const validateCourierId = (courierId: string) => {
+    //todo make something up
+    const regex = /^[0-9]+$/;
+    return regex.test(courierId) && courierId.length <= 20 || courierId.length == 0;
+  };
+
 
 
   useEffect(() => {
@@ -130,6 +143,29 @@ export default function Step_4_client_setup() {
         enter a few details to get started
 
       </Text>
+
+      {courierIdError ? <Text style={{ color: 'red' }}>{courierIdError}</Text> : null}
+
+
+      <TextInput
+        label="Courier ID (required)"
+        value={courerId}
+        onChangeText={setCourierId}
+        onBlur={() => {
+          if (email && !validateEmail(email)) {
+            setEmailError('Please enter a valid courier ID');
+          } else {
+            setEmailError('');
+          }
+        }}
+        mode="outlined"
+        keyboardType="number-pad"
+        autoCapitalize="none"
+        error={Boolean(courierIdError)}
+        style={{ marginBottom: 16, width: 300 }}
+
+      />
+
 
       {usernameError ? <Text style={{ color: 'red' }}>{usernameError}</Text> : null}
 
@@ -180,6 +216,7 @@ export default function Step_4_client_setup() {
 
       <Button mode="contained" onPress={handleSubmit} style={{ marginTop: 80, alignSelf: 'center' }} contentStyle={{ flexDirection: 'row-reverse', width: 300, padding: 10 }}
         loading={isRegistering}
+        
       >
         Submit
       </Button>

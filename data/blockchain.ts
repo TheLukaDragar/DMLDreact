@@ -20,12 +20,40 @@ import {
 import Token from './iexec/token';
 
 
+//fix for expo
+export class CustomJsonRpcProvider extends ethers.providers.JsonRpcProvider {
+  async fetchFunc(path: string, json: string) {
+    try {
+      const response = await fetch(
+        this.connection.url,
+        {
+          method: 'POST',
+          body: json,
+          headers: {
+            ...this.connection.headers, //by default ethers sets host header and bellecour api rejects it
+            'Content-Type': 'application/json'
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Bad response from server');
+      }
+
+      return await response.json();
+    } catch (error) {
+      throw error;
+    }
+  }
+}
+
+
 
 const RPCUrl = Constants?.expoConfig?.extra?.RPCUrl;
 const reputationSCAddress = Constants?.expoConfig?.extra?.reputationSCAddress;
 const parcelNFTSCAddress = Constants?.expoConfig?.extra?.parcelNFTSCAddress;
 const DLMDApp = Constants?.expoConfig?.extra?.DLMDApp;
-const provider = new ethers.providers.JsonRpcProvider(RPCUrl);
+const provider = new CustomJsonRpcProvider(RPCUrl);
 //const smsURL = "https://sms.scone-prod.v8-bellecour.iex.ec";
 const smsURL = "https://sms.scone-debug.v8-bellecour.iex.ec";
 const marketplaceURL = "https://api.market.v8-bellecour.iex.ec";
@@ -1314,6 +1342,8 @@ export const getReputation = createAsyncThunk(
   'blockchain/getReputation',
   async (address: string, thunkAPI) => {
     try {
+
+      console.log("calling getReputation with args: " + "address: " + address);
       // Get the current state
       // Get the current state
       const state = thunkAPI.getState() as RootState;
@@ -1345,6 +1375,48 @@ export const getReputation = createAsyncThunk(
     }
   }
 );
+
+//GET balance
+export const getBalance = createAsyncThunk(
+  'blockchain/getBalance',
+  async (address: string, thunkAPI) => {
+    try {
+
+      console.log("calling getBalance with args: " + "address: " + address);
+      // Get the current state
+      // Get the current state
+      const state = thunkAPI.getState() as RootState;
+
+      // Get the wallet from the state
+      const privateKey = state.blockchain.privateKey;
+
+      // Check if the wallet exists
+      if (!privateKey) {
+        throw new Error("Wallet not found");
+      }
+
+      //call  addScore
+      const wallet = new ethers.Wallet(privateKey, provider);
+
+      const tokencontract = new ethers.Contract(hub_addres, TokenABI, wallet);
+
+      const res = await tokencontract.balanceOf(address);
+      const balance = ethers.utils.formatUnits(res, 'wei'); // Converts a BigNumber to a decimal string.
+
+      console.log("balance: " + balance);
+
+      return parseFloat(balance)
+    }
+    catch (error) {
+      return handleError(error, thunkAPI);
+      
+    }
+  }
+);
+
+
+
+
 
 //getOwnerOfNft
 export const getOwnerOfNft = createAsyncThunk(
@@ -1987,7 +2059,8 @@ const blockchainSlice = createSlice({
   name: 'blockchain',
   initialState: {
     connected: false,
-    balance: null,
+    balance: null as number | null,
+    reputation: null as number | null,
     privateKey: null,
   },
   reducers: {
@@ -1998,9 +2071,28 @@ const blockchainSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // builder.addCase(getBalance.fulfilled, (state, action) => {
-    //     state.balance = action.payload;
-    // });
+    builder.addCase(getBalance.fulfilled, (state, action) => {
+      console.log("getBalance.fulfilled: " + action.payload);
+        state.balance = action.payload;
+    });
+    builder.addCase(getBalance.rejected, (state, action) => {
+      console.log("getBalance.rejected: " + action.payload);
+      state.balance = -1;
+    }
+    );
+    builder.addCase(getReputation.fulfilled, (state, action) => {
+      console.log("getReputation.fulfilled: " + action.payload);
+      state.reputation = action.payload;
+
+    }
+    );
+    builder.addCase(getReputation.rejected, (state, action) => {
+      console.log("getReputation.rejected: " + action.payload);
+      state.reputation = -1;
+    }
+    );
+
+
   },
 });
 

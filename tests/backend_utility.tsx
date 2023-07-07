@@ -12,6 +12,8 @@ import { useAppDispatch, useAppSelector } from '../data/hooks';
 import { AsyncThunk } from '@reduxjs/toolkit';
 import { Dispatch, AnyAction } from 'redux';
 import { Provider } from 'react-redux';
+import '@ethersproject/shims';
+
 import { ethers } from 'ethers';
 import { authenticate, connectDeviceById, demoDevice, getChallenge, setDemoMode } from '../ble/bleSlice';
 import React, { ComponentType } from 'react'

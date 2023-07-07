@@ -4,11 +4,12 @@ import { useRouter } from 'expo-router';
 import { Button, Snackbar } from 'react-native-paper';
 import { Text, View } from '../../components/Themed';
 import { useAppDispatch, useAppSelector } from '../../data/hooks';
-
+import '@ethersproject/shims';
 import { ethers } from 'ethers';
 import React, { useEffect } from 'react';
 import { isErrorWithMessage, isFetchBaseQueryError, useLazyGetAuthMsgQuery, useLoginWalletMutation } from '../../data/api';
-import { loadDemoClientWallet, loadDemoCourierWallet } from '../../data/secure';
+import { loadDemoClientWallet, loadDemoCourierWallet, setUserType } from '../../data/secure';
+import { UserType } from '../../constants/Auth';
 
 
 
@@ -79,8 +80,10 @@ export default function TabTwoScreen() {
   async function demo_client_login() {
     try {
 
-
+      await dispatch(setUserType(UserType.CLIENT)).unwrap()
       const secure_data = await dispatch(loadDemoClientWallet()).unwrap()
+      
+
 
       const msg = await getMessageToSign().unwrap();
 
@@ -117,6 +120,7 @@ export default function TabTwoScreen() {
   async function demo_courier_login() {
     try {
 
+      await dispatch(setUserType(UserType.COURIER)).unwrap()
 
       const secure_data = await dispatch(loadDemoCourierWallet()).unwrap()
 

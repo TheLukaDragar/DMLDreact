@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import Toast from 'react-native-root-toast';
 import PinInput from '../../components/PinInput';
 import { UserType } from '../../constants/Auth';
-import { createWallet } from '../../data/secure';
+import { createWallet, setUserType } from '../../data/secure';
 
 
 
@@ -36,6 +36,7 @@ export default function step_2_create_wallet() {
   useFocusEffect(
     React.useCallback(() => {
       const role = params.role as UserType;
+      console.log("role is " + role)
       console.log("secure updated in step 1");
       if (role !== UserType.CLIENT && role !== UserType.COURIER  ) {
         Toast.show("Role not supported yet");
@@ -61,7 +62,10 @@ export default function step_2_create_wallet() {
         if (role == UserType.CLIENT) {
           router.replace('auth/step_4_client_setup');
 
+        }else if (role == UserType.COURIER) {
+          router.replace('auth/step_4_courier_setup');
         }
+
         
         else {
           Toast.show("Role not supported yet");
@@ -140,8 +144,10 @@ export default function step_2_create_wallet() {
 
 
               setLoading(true);
-              setTimeout(() => {
-                dispatch(createWallet(pinn));
+              setTimeout(async () => {
+                await dispatch(createWallet(pinn)).unwrap();
+                await dispatch(setUserType(params.role as UserType)).unwrap();
+                
               }, 100);
             }
 

@@ -10,6 +10,7 @@ import "@ethersproject/shims";
 
 import { ethers } from 'ethers';
 import { setPrivateKey } from './blockchain';
+import { UserType } from '../constants/Auth';
 
 
 //from gimly
@@ -23,6 +24,7 @@ export type KeyChainData = {
 
 export type UserData = {
     token: string | null
+    userType: UserType | null
 }
 
 
@@ -38,7 +40,9 @@ const secureSlice = createSlice({
             did: ''
         } as KeyChainData,
         userData: {
-            token: ''
+            token: '',
+            userType: null
+
         } as UserData,
         loading: true,
         is_wallet_setup: false,
@@ -130,6 +134,13 @@ const secureSlice = createSlice({
             state.is_user_logged_in = true;
         }
         );
+        //set user type
+        builder.addCase(setUserType.fulfilled, (state, action) => {
+            console.log('setUserType.fulfilled', action.payload);
+            state.userData.userType = action.payload;
+        }
+        );
+        
 
         //full sign out
         builder.addCase(full_signout.fulfilled, (state, action) => {
@@ -142,7 +153,9 @@ const secureSlice = createSlice({
                 did: null
             } as KeyChainData;
             state.userData = {
-                token: null
+                token: null,
+                userType: null
+
             } as UserData;
             state.is_wallet_setup = false;
             state.is_user_logged_in = false;
@@ -168,7 +181,9 @@ export const getSecure = createAsyncThunk(
         } as KeyChainData;
 
         let userData = {
-            token: null
+            token: null,
+            userType: null
+
 
         } as UserData;
 
@@ -194,6 +209,7 @@ export const getSecure = createAsyncThunk(
             keyChainData.did = await SecureStore.getItemAsync('did');
 
             userData.token = await SecureStore.getItemAsync('token');
+            userData.userType = await SecureStore.getItemAsync('userType') ===  UserType.CLIENT ? UserType.CLIENT : UserType.COURIER;
 
             console.log('getSecure', userData);
 
@@ -224,6 +240,7 @@ export const getSecure = createAsyncThunk(
             await SecureStore.deleteItemAsync('pin');
             await SecureStore.deleteItemAsync('did');
             await SecureStore.deleteItemAsync('token');
+            await SecureStore.deleteItemAsync('userType');
 
             return {
                 keyChainData,
@@ -316,6 +333,10 @@ export const loadDemoClientWallet = createAsyncThunk(
             console.log('loadDemoClientWallet', "mnemonic saved");
             await SecureStore.setItemAsync('pin', "1111");
 
+            //set user type
+            await SecureStore.setItemAsync('userType', UserType.CLIENT);
+
+
             console.log('loadDemoClientWallet', "saved wallet");
             return {
                 mnemonicPhrase: mnemonic,
@@ -354,6 +375,10 @@ export const loadDemoCourierWallet = createAsyncThunk(
             await SecureStore.setItemAsync('pin', "1111");
 
             console.log('loadDemoCourierWallet', "saved wallet");
+
+            //SET USER TYPE
+            await SecureStore.setItemAsync('userType', UserType.COURIER);
+
             return {
                 mnemonicPhrase: mnemonic,
                 keyChainData: { //only used for updating the state
@@ -400,6 +425,17 @@ export const setToken = createAsyncThunk(
         return token;
     }
 );
+
+//set UserType in secure store
+export const setUserType = createAsyncThunk(
+    'secure/setUserType',
+    async (userType: UserType, thunkAPI) => {
+        await SecureStore.setItemAsync('userType', userType);
+        
+        return userType;
+    }
+);
+
 
 
 

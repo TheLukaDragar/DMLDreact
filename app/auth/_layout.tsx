@@ -65,6 +65,15 @@ export default function Layout() {
 
 
         />
+        <Stack.Screen name="step_4_courier_setup"
+            options={{
+                title: "Courier Setup",
+                animation: "slide_from_right"
+
+            }}
+
+
+        />
        
     </Stack>
 }
