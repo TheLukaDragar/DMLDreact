@@ -10,7 +10,7 @@ import { isErrorWithMessage, isFetchBaseQueryError,useLazyGetBoxesQuery} from '.
 
 
 
-export default function Keybot() {
+export default function Home() {
 
   const router = useRouter();
 

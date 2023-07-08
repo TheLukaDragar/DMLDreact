@@ -8,4 +8,17 @@ export const UserTypesDescriptions = {
     [UserType.COURIER]: 'A courier is responsible for delivering goods.',
    // [UserType.VEHICLE_OWNER]: 'A vehicle owner provides a vehicle for transportation.',
 };
+export enum UserType2 {
+    ADMIN = -1,
+    PARCEL_DELIVERY = 1,
+    PARCEL_RECEIVER = 2,
+    RENTER = 3,
+}
 
+export enum BoxPermissionLevel {
+    NONE = 0,
+    OPEN = 1,
+    MANAGE = 2,
+    OWNER = 3
+}
+  

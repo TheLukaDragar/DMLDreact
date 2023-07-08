@@ -29,7 +29,11 @@
         "NSBluetoothAlwaysUsageDescription": "Allow $(PRODUCT_NAME) to connect to bluetooth devices",
         "NSBluetoothPeripheralUsageDescription": "Allow $(PRODUCT_NAME) to connect to bluetooth devices"
       },
-      "jsEngine": "jsc"
+      "jsEngine": "jsc",
+      "config": {
+        "googleMapsApiKey": "AIzaSyD4hVREK_akwOfftfk3gqVQfjti-qcreYg"
+      }
+      
     },
     "android": {
       "adaptiveIcon": {
@@ -41,7 +45,13 @@
         "android.permission.BLUETOOTH",
         "android.permission.BLUETOOTH_ADMIN",
         "android.permission.BLUETOOTH_CONNECT"
-      ]
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyD4hVREK_akwOfftfk3gqVQfjti-qcreYg"
+        }
+
+      }
     },
     "web": {
       "favicon": "./assets/images/favicon.png"

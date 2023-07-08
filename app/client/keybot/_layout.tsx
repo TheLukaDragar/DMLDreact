@@ -1,0 +1,37 @@
+import { Stack } from "expo-router";
+export default function Layout() {
+    return <Stack
+        screenOptions={
+            {
+                headerShown: false,
+                animation: "none"
+
+
+            }
+
+
+        }
+        screenListeners={{
+        }}>
+
+        <Stack.Screen name="index"
+        options={
+            {
+                animation: "none",
+            }
+            
+        }
+
+        />
+        <Stack.Screen name="[id]"
+        options={
+            {
+                animation: "slide_from_bottom",
+            }
+        }
+        />
+      
+
+       
+    </Stack>
+}

@@ -25,13 +25,17 @@ export interface User {
   birthDate: null;
   crypto: Array<CryptoUserData>;
   details: any[];
-  firstName: null;
+  firstName: null | string;
   id: number;
-  lastName: null;
+  lastName: null | string;
   reputation: null;
   status: number;
   tableName: string;
   userType: null;
+}
+export interface UserName {
+  firstName: null | string;
+  lastName: null | string;
 }
 interface CryptoUserData {
   id: number;
@@ -87,9 +91,9 @@ export interface BoxItem {
   reputation: null;
   description: null;
   user_id: null;
-  permission: null;
+  permission: BoxPermissionLevel
 }
-interface Box {
+export interface Box {
   id: number;
   _createTime: string;
   _createUser: number;
@@ -98,15 +102,24 @@ interface Box {
   status: number;
   did: string;
   macAddress: string;
-  licensePlate: null;
-  approximateLocation_id: null;
-  approximateLocation: null;
-  preciseLocation_id: null;
-  preciseLocation: null;
-  description: null;
-  imageUrl: null;
-  reputationThreshold: null;
-  reputation: null;
+  licensePlate:  string;
+  approximateLocation_id:  number;
+  approximateLocation: ApproximateLocation;
+  preciseLocation_id:  number;
+  preciseLocation: PreciseLocation;
+  description:  string;
+  imageUrl:  string;
+  reputationThreshold:  number;
+  reputation: number;
+}
+
+ export interface BoxQueryFilterDto {
+  did?: string;
+  macAddress?: string;
+  owner_id?: number;
+  forUser?: number;
+  availableForDeposit?: boolean;
+  location?: PreciseLocation;
 }
 
 interface ApproximateLocation {
@@ -317,6 +330,45 @@ export const apiSlice = createApi({
 
       providesTags: ['User'],
     }),
+
+    updateMe: builder.mutation<User, UserName>({
+      query: (body) => ({
+        url: '/users/update',
+        method: 'PUT',
+        body,
+      }),
+      transformResponse: (response: User) => response,
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log(' /users/me started');
+        try {
+          const { data,meta } = await queryFulfilled;
+          console.log('updated data', data);
+          //console.log(meta)
+        } catch (error) { }
+      },
+      transformErrorResponse: (response: any) => {
+        console.log('error /users/me', response);
+        return response
+      },
+      invalidatesTags: ['User'],
+    }),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     getUserDetails: builder.query<User, void>({
       query: () => ({
         url: '/users/details',
@@ -339,10 +391,11 @@ export const apiSlice = createApi({
    
     }),
     //box endpoints
-    getBoxes: builder.query<GetBoxesResponse, void>({
-      query: () => ({
+    getBoxes: builder.query<GetBoxesResponse, Partial<BoxQueryFilterDto> | void>({
+      query: (queryParam = {}) => ({
         url: '/box',
         method: 'GET',
+        params: queryParam as Record<string, any> | undefined,
       }),
       transformResponse: (response: GetBoxesResponse) => response,
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
@@ -354,7 +407,7 @@ export const apiSlice = createApi({
       },
       transformErrorResponse: (response: any) => {
         console.log('error /box', response);
-        return response
+        return response;
       },
       providesTags: ['Boxes'],
     }),
@@ -431,6 +484,7 @@ export const apiSlice = createApi({
     //    without refreshing the entire box.
 
     getBoxPreciseLocation: builder.query<any, number>({
+    
       query: (id) => ({
         url: `/location/box/${id}/precise`,
         method: 'GET',
@@ -705,6 +759,7 @@ export const apiSlice = createApi({
 
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { createAsyncThunk } from '@reduxjs/toolkit';
+import { BoxPermissionLevel } from '../constants/Auth';
 /**
  * Type predicate to narrow an unknown error to `FetchBaseQueryError`
  */
@@ -771,5 +826,5 @@ export const { reducer, middleware } = apiSlice
 // Export the endpoint for use in components
 export const { useGetAuthMsgQuery, useRegisterWalletMutation, useLoginWalletMutation, useGetMeQuery, useLazyGetAuthMsgQuery,useLazyGetMeQuery,useGetUserDetailsQuery,useLazyGetUserDetailsQuery, useCreateParcelByWalletMutation,useLazyGetDoesUserHavePermissionToBoxQuery,useLazyGetBoxPreciseLocationQuery
   , useGetBoxesQuery, useGetBoxQuery, useLazyGetBoxQuery, useLazyGetBoxesQuery, useConnectBoxMutation, useSetBoxPreciseLocationMutation, useGetBoxPreciseLocationQuery, useCreateApproximateLocationMutation, useUpdateApproximateLocationMutation,useGetBoxAccessKeyQuery,useLazyGetBoxAccessKeyQuery
-  ,useDepositParcelMutation,useLazyGetParcelByIdQuery,useGetParcelByIdQuery,useWithdrawParcelMutation,useRateTransactionMutation,useUpdateParcelByIdMutation
+  ,useDepositParcelMutation,useLazyGetParcelByIdQuery,useGetParcelByIdQuery,useWithdrawParcelMutation,useRateTransactionMutation,useUpdateParcelByIdMutation,useUpdateMeMutation
 } = apiSlice

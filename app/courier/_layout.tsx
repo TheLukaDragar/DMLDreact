@@ -61,8 +61,8 @@ export default function TabLayout() {
         name="index"
         // TODO: Type
         options={{
-          title: "Parcels",
-          tabBarIcon: ({ color  }) => <TabBarIcon2 name="truck-delivery" color={color} />,
+          title: "Home",
+          tabBarIcon: ({ color  }) => <TabBarIcon name="home" color={color} />,
           headerRight: () => (
             <Link href="/modal" asChild>
               <Pressable>
@@ -79,17 +79,6 @@ export default function TabLayout() {
           ),
         }}
       />
-      
-      <Tabs.Screen
-        name="keybot"
-        options={{
-          title: "My Box",
-          tabBarIcon: ({ color }) => <TabBarIcon2 name="car-wireless" color={color} />,
-        }}
-      />
-
-
-
       
     </Tabs>
   );
