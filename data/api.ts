@@ -2,6 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { REHYDRATE } from 'redux-persist';
 import { setToken } from './secure';
 import { RootState } from './store';
+
 export interface User {
   _createTime: string;
   _createUser: null;
@@ -31,7 +32,7 @@ export interface User {
   reputation: null;
   status: number;
   tableName: string;
-  userType: null;
+  userType: UserType2 | null;
 }
 export interface UserName {
   firstName: null | string;
@@ -759,7 +760,7 @@ export const apiSlice = createApi({
 
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { BoxPermissionLevel } from '../constants/Auth';
+import { BoxPermissionLevel, UserType2 } from '../constants/Auth';
 /**
  * Type predicate to narrow an unknown error to `FetchBaseQueryError`
  */

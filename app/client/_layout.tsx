@@ -60,7 +60,11 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         // TODO: Type
+        
         options={{
+
+          
+          
           title: "Parcels",
           tabBarIcon: ({ color  }) => <TabBarIcon2 name="truck-delivery" color={color} />,
           headerRight: () => (
@@ -77,6 +81,7 @@ export default function TabLayout() {
               </Pressable>
             </Link>
           ),
+          
         }}
       />
       

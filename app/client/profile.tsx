@@ -120,7 +120,11 @@ export default function Profile() {
   const funcionExport = () => {
     console.log("export");
 
+  
+
     Clipboard.setStringAsync(secure.keyChainData?.privateKey || '');
+
+    setStatusText("Your private key has been copied");
     
   };
 
@@ -293,11 +297,15 @@ console.log(data)
                     hideModal();
                   }
                 }
+                
 
               
               
-              } mode='contained'>
-                {match ? "Export" : "Cancel"}
+              } mode='contained'
+              icon={match ? "content-copy" : "cancel"}
+              
+              >
+                {match ? "Copy Private Key" : "Cancel"}
               </Button>
             </Card.Actions>
           </Card>

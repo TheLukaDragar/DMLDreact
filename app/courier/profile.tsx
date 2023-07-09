@@ -7,8 +7,8 @@ import { useAppDispatch, useAppSelector } from '../../data/hooks';
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
-import { User, UserName, getErrorMessage, useGetMeQuery, useUpdateMeMutation } from '../../data/api';
 import { Linking } from 'react-native';
+import { User, UserName, getErrorMessage, useGetMeQuery, useUpdateMeMutation } from '../../data/api';
 
 import '@ethersproject/shims';
 import * as Clipboard from 'expo-clipboard';
@@ -17,7 +17,6 @@ import { CustomJsonRpcProvider, getBalance, getReputation } from '../../data/blo
 import { ethers } from 'ethers';
 import Constants from 'expo-constants';
 import PinInput from '../../components/PinInput';
-import Toast from 'react-native-root-toast';
 
 
 const RPCUrl = Constants?.expoConfig?.extra?.RPCUrl;
@@ -100,7 +99,7 @@ export default function Profile() {
   //useUpdateMeMutation
 
   const [updateMe, { isLoading: isUpdating }] = useUpdateMeMutation();
- 
+
   const [walletConnected, setWalletConnected] = React.useState("connecting");
 
 
@@ -121,10 +120,10 @@ export default function Profile() {
     console.log("export");
 
     Clipboard.setStringAsync(secure.keyChainData?.privateKey || '');
-    
+
   };
 
-console.log(data)
+  console.log(data)
 
 
 
@@ -153,7 +152,7 @@ console.log(data)
   }, [wallet, dispatch]);
 
 
-  
+
 
   useEffect(() => {
     fetchBlockchainData();
@@ -186,7 +185,7 @@ console.log(data)
   const handleFirstNameEndEditing = async () => {
     try {
       if (data && firstName !== data.firstName) {
-        const newUser = {...data} as UserName & User;
+        const newUser = { ...data } as UserName & User;
         newUser.firstName = firstName;
         if (newUser.lastName === null) {
           newUser.lastName = 'efef'; //TODO allow on api side to be null and more editing options
@@ -203,7 +202,7 @@ console.log(data)
   const handleLastNameEndEditing = async () => {
     try {
       if (data && lastName !== data.lastName) {
-        const newUser = {...data} as UserName & User;
+        const newUser = { ...data } as UserName & User;
         newUser.lastName = lastName;
         if (newUser.firstName === null) {
           newUser.firstName = 'ef';
@@ -244,10 +243,10 @@ console.log(data)
             style={{ paddingTop: 40, paddingBottom: 20 }}>
 
             <Card.Title
-            title={match ? "Confirmed" : "Confirm PIN"}
-            subtitle={statusText}
-            left={(props) => <Avatar.Icon {...props} icon={match ? "lock-open" : "lock"} />}
-          />
+              title={match ? "Confirssssmed" : "Confirm PIN"}
+              subtitle={statusText}
+              left={(props) => <Avatar.Icon {...props} icon={match ? "lock-open" : "lock"} />}
+            />
             <PinInput
               length={4} onChange={(pin) => {
                 console.log("Entered pin: ", pin);
@@ -257,7 +256,7 @@ console.log(data)
                   setMatch(true);
                   setStatusText("Key will be exported to clipboard");
 
-                  
+
                 } else {
                   console.log("no match");
                   setMatch(false);
@@ -273,7 +272,7 @@ console.log(data)
                   setMatch(true);
                   setStatusText("Key will be exported to clipboard");
 
-                
+
                 } else {
                   console.log("no match");
                   setMatch(false);
@@ -287,15 +286,15 @@ console.log(data)
                 () => {
                   if (match) {
                     funcionExport();
-                    
+
                   }
                   else {
                     hideModal();
                   }
                 }
 
-              
-              
+
+
               } mode='contained'>
                 {match ? "Export" : "Cancel"}
               </Button>
@@ -308,44 +307,44 @@ console.log(data)
         <Card.Content>
 
           <Avatar.Text size={64} label={data.authUser.username.charAt(0).toUpperCase()} />
-      
+
           <Title>
-            {data.authUser.username} 
-          
+            {data.authUser.username}
+
           </Title>
-  
+
           <Caption>Email: {data.authUser.email || 'not provided'}</Caption>
 
           {isEditingFirstName ? (
-      <TextInput
-        value={firstName}
-        onChangeText={setFirstName}
-        style={{ height: 40, borderColor: 'gray', borderWidth: 1 }}
-        onEndEditing={handleFirstNameEndEditing}
-        autoFocus
-      />
-    ) : (
-      <Caption>
-        First Name: {data.firstName || 'Not provided'}
-        <MaterialCommunityIcons name="pencil" onPress={handleFirstNameEditPress} />
-      </Caption>
-    )}
+            <TextInput
+              value={firstName}
+              onChangeText={setFirstName}
+              style={{ height: 40, borderColor: 'gray', borderWidth: 1 }}
+              onEndEditing={handleFirstNameEndEditing}
+              autoFocus
+            />
+          ) : (
+            <Caption>
+              First Name: {data.firstName || 'Not provided'}
+              <MaterialCommunityIcons name="pencil" onPress={handleFirstNameEditPress} />
+            </Caption>
+          )}
 
-    {isEditingLastName ? (
-      <TextInput
-        value={lastName}
-        onChangeText={setLastName}
-        style={{ height: 40, borderColor: 'gray', borderWidth: 1 }}
-        onEndEditing={handleLastNameEndEditing}
-      
-        autoFocus
-      />
-    ) : (
-      <Caption>
-        Last Name: {data.lastName || 'Not provided'}
-        <MaterialCommunityIcons name="pencil" onPress={handleLastNameEditPress} />
-      </Caption>
-    )}
+          {isEditingLastName ? (
+            <TextInput
+              value={lastName}
+              onChangeText={setLastName}
+              style={{ height: 40, borderColor: 'gray', borderWidth: 1 }}
+              onEndEditing={handleLastNameEndEditing}
+
+              autoFocus
+            />
+          ) : (
+            <Caption>
+              Last Name: {data.lastName || 'Not provided'}
+              <MaterialCommunityIcons name="pencil" onPress={handleLastNameEditPress} />
+            </Caption>
+          )}
 
 
           <Divider style={styles.divider} />
@@ -383,7 +382,7 @@ console.log(data)
           </Card.Content>
           <Card.Actions>
             <Button mode="contained" buttonColor='#fcd15a' textColor='#000000' disabled={!walletConnected}
-              onPress={() =>  Linking.openURL(explorerUrl+"/address/"+wallet!.address 
+              onPress={() => Linking.openURL(explorerUrl + "/address/" + wallet!.address
 
 
 

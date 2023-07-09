@@ -72,7 +72,8 @@
         {
           "asyncRoutes": {
             "default": "development",
-            "android": false
+            "android": false,
+            "ios": false
           }
           
         }

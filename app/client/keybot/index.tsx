@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
-import { Avatar, Button, Card, Paragraph, Title, useTheme } from 'react-native-paper';
+import { ActivityIndicator, Avatar, Button, Card, Paragraph, Title, useTheme } from 'react-native-paper';
 import { Text, View } from '../../../components/Themed';
 import { useAppDispatch, useAppSelector } from '../../../data/hooks';
 
@@ -20,6 +20,7 @@ import PagerView from 'react-native-pager-view';
 import { authenticate, connectDeviceById, disconnectDevice, getChallenge, subscribeToEvents } from '../../../ble/bleSlice';
 import ScreenIndicators from '../../../components/ScreenIndicators';
 import { BoxPermissionLevel } from '../../../constants/Auth';
+import BLEDeviceList from '../../../components/BleDeviceList';
 
 
 
@@ -39,6 +40,7 @@ export default function KeyBot() {
   });
 
   const [selectedBox, setSelectedBox] = useState<BoxItem | undefined>(undefined);
+  const [scanning, setScanning] = useState(false);
 
   const [location, setLocation] = React.useState<LocationObject | null>(null);
   const [ErrorMessage, setError] = React.useState("");
@@ -284,12 +286,19 @@ export default function KeyBot() {
               </View>
             ))}
             <View style={styles.page}>
-              <Card style={styles.addCard} onPress={() => console.log('Add new box')}>
+              <Card style={styles.addCard} onPress={() => { if(scanning) setScanning(false); else setScanning(true); }}>
                 <Card.Content style={styles.addCardContent}>
-                  <MaterialCommunityIcons name="plus-circle" size={60} color={theme.colors.primary} />
+
+
+                {scanning ? <ActivityIndicator size={60} color={theme.colors.primary} /> : 
+                  <MaterialCommunityIcons name={scanning ? "bluetooth" : "plus-circle"}
+                   size={60} color={theme.colors.primary} />
+                }
+
+                
                   <Title
 
-                  >Connect new box to your account</Title>
+                  > {scanning ? "Scanning for nearby devices..." : "Connect new box to your account"}</Title>
                 </Card.Content>
               </Card>
             </View>
@@ -301,22 +310,30 @@ export default function KeyBot() {
 
 
 
-        {selectedBox && (
+        {selectedBox ? (
+  <View style={styles.buttonContainer}>
+    <Button icon="bluetooth" style={{ padding: 10 }} mode="contained" onPress={() => { 
+      console.log('Connecting to Box ' + selectedBox.id); 
+      BleConnect(selectedBox) 
+    }}>
+      {ble.deviceConnectionState.status}
+    </Button>
 
-          <View style={styles.buttonContainer}>
-            <Button icon="bluetooth" style={{ padding: 10 }} mode="contained" onPress={() => { console.log('Connecting to Box ' + selectedBox.id); BleConnect(selectedBox) }
-
-
-            }>
-              {ble.deviceConnectionState.status}
-            </Button>
-
-            <Button mode="contained" onPress={() => BleDisconnect()} style={{ margin: 20, }}
-            >
-              disconnect
-            </Button>
-          </View>
-        )}
+    <Button mode="contained" onPress={() => BleDisconnect()} style={{ margin: 20 }}>
+      disconnect
+    </Button>
+  </View>
+) : (
+  <>
+    <View style={styles.buttonContainer}>
+    <BLEDeviceList   shouldScan={scanning}
+    
+    onDevicePress={(device) => { 
+      console.log("device pressed", device);
+    }} />
+    </View>
+  </>
+)}
 
 
 
@@ -350,6 +367,7 @@ const styles = StyleSheet.create({
   card: {
     flex: 0.9,
     width: '90%',
+    height: '100%',
 
   },
   addCard: {
@@ -363,6 +381,7 @@ const styles = StyleSheet.create({
 
     justifyContent: 'center',
     alignItems: 'center',
+    height: '100%',
 
 
   },
