@@ -18,9 +18,9 @@ import '@ethersproject/shims';
 import { LocationObject } from 'expo-location';
 import PagerView from 'react-native-pager-view';
 import { authenticate, connectDeviceById, disconnectDevice, getChallenge, subscribeToEvents } from '../../../ble/bleSlice';
+import BLEDeviceList from '../../../components/BleDeviceList';
 import ScreenIndicators from '../../../components/ScreenIndicators';
 import { BoxPermissionLevel } from '../../../constants/Auth';
-import BLEDeviceList from '../../../components/BleDeviceList';
 
 
 
@@ -35,7 +35,9 @@ export default function KeyBot() {
   const ble = useAppSelector((state) => state.ble);
 
   const { data: user } = useGetMeQuery(undefined);
-  const { data: Boxes, error, isLoading, isFetching, isError } = useGetBoxesQuery({
+  const { data: Boxes, error, isLoading, isFetching, isError, refetch
+
+  } = useGetBoxesQuery({
     owner_id: user?.id,
   });
 
@@ -48,6 +50,8 @@ export default function KeyBot() {
   const [getBoxAccessKey] = useLazyGetBoxAccessKeyQuery();
   //const [getBoxDetails] = useLazyGetBoxQuery();
   const [getBoxPreciseLocation] = useLazyGetBoxPreciseLocationQuery();
+  const [pageIndex, setPageIndex] = useState(0);
+
 
 
 
@@ -57,6 +61,8 @@ export default function KeyBot() {
 
 
   useEffect(() => {
+
+    //refetch();
 
     (async () => {
 
@@ -211,7 +217,7 @@ export default function KeyBot() {
 
 
 
-  console.log(Boxes)
+  console.log("error", error, "isLoading", isLoading, "isFetching", isFetching, "isError", isError, "data", Boxes);
 
 
 
@@ -253,7 +259,9 @@ export default function KeyBot() {
     return (
       <View style={styles.container}>
         <View style={styles.pagerContainer}>
-          <PagerView style={styles.pagerView} initialPage={0} onPageSelected={(e) => setSelectedBox(Boxes.items[e.nativeEvent.position])}>
+          <PagerView style={styles.pagerView} initialPage={pageIndex} onPageSelected={(e) => {
+            setPageIndex(e.nativeEvent.position);
+          }}>
             {Boxes.items.map((item, index) => (
               <View key={index} style={styles.page}>
                 <Card style={styles.card} onPress={
@@ -286,16 +294,17 @@ export default function KeyBot() {
               </View>
             ))}
             <View style={styles.page}>
-              <Card style={styles.addCard} onPress={() => { if(scanning) setScanning(false); else setScanning(true); }}>
+              <Card style={styles.addCard} onPress={() => { if (scanning) setScanning(false); else setScanning(true); }}>
                 <Card.Content style={styles.addCardContent}>
 
 
-                {scanning ? <ActivityIndicator size={60} color={theme.colors.primary} /> : 
-                  <MaterialCommunityIcons name={scanning ? "bluetooth" : "plus-circle"}
-                   size={60} color={theme.colors.primary} />
-                }
+                  {scanning ? <ActivityIndicator size={60} style={{ marginBottom: 5 }} color={theme.colors.primary} /> :
+                    <MaterialCommunityIcons name={scanning ? "bluetooth" : "plus-circle"}
+                      size={60} color={theme.colors.primary} style={{ marginBottom: 5 }}
+                    />
+                  }
 
-                
+
                   <Title
 
                   > {scanning ? "Scanning for nearby devices..." : "Connect new box to your account"}</Title>
@@ -304,36 +313,34 @@ export default function KeyBot() {
             </View>
 
           </PagerView>
-          <ScreenIndicators count={Boxes.total + 1} activeIndex={selectedBox ? Boxes.items.indexOf(selectedBox) : Boxes.total} />
+          <ScreenIndicators count={Boxes.total + 1} activeIndex={pageIndex} />
 
         </View>
 
 
 
-        {selectedBox ? (
-  <View style={styles.buttonContainer}>
-    <Button icon="bluetooth" style={{ padding: 10 }} mode="contained" onPress={() => { 
-      console.log('Connecting to Box ' + selectedBox.id); 
-      BleConnect(selectedBox) 
-    }}>
-      {ble.deviceConnectionState.status}
-    </Button>
+        {pageIndex < Boxes.total ? (
+          <View style={styles.buttonContainer}>
+            <Button icon="bluetooth" style={{ padding: 10 }} mode="contained" onPress={() => {
+              console.log('Connecting to Box ' + Boxes.items[pageIndex].id);
+              BleConnect(Boxes.items[pageIndex]);
+            }}>
+              {ble.deviceConnectionState.status}
+            </Button>
 
-    <Button mode="contained" onPress={() => BleDisconnect()} style={{ margin: 20 }}>
-      disconnect
-    </Button>
-  </View>
-) : (
-  <>
-    <View style={styles.buttonContainer}>
-    <BLEDeviceList   shouldScan={scanning}
-    
-    onDevicePress={(device) => { 
-      console.log("device pressed", device);
-    }} />
-    </View>
-  </>
-)}
+            <Button mode="contained" onPress={() => BleDisconnect()} style={{ margin: 20 }}>
+              disconnect
+            </Button>
+          </View>
+        ) : (
+          <View style={styles.buttonContainer}>
+            <BLEDeviceList shouldScan={scanning} onlineBoxes={Boxes.items}
+              onDevicePress={(device) => {
+                console.log("device pressed", device);
+              }}
+            />
+          </View>
+        )}
 
 
 

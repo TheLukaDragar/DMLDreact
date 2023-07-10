@@ -214,6 +214,7 @@ const baseQuery = fetchBaseQuery({
   baseUrl: API_URL,
   prepareHeaders: (headers: Headers, { getState }) => {
     const authToken = (getState() as RootState).secure.userData.token
+    console.log('authToken', authToken);
     if (authToken) {
       console.log('authToken', authToken);
       headers.set('Authorization', `Bearer ${authToken}`)
@@ -439,6 +440,8 @@ export const apiSlice = createApi({
         try {
           const { data } = await queryFulfilled;
           console.log('data', JSON.stringify(data));
+         
+
         } catch (error) {
         }
       },
@@ -446,6 +449,7 @@ export const apiSlice = createApi({
         console.log('error /box/connect', response);
         return response
       },
+      invalidatesTags: ['Boxes'],
     }),
 
     ///location/box/:boxId/precise

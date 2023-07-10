@@ -469,12 +469,23 @@ const bleSlice = createSlice({
             const { device } = action.payload;
             const existingDevices = state.deviceScan.devices.filter(existingDevice => device.id !== existingDevice?.id);
             const updatedDevices = [device, ...existingDevices];
+            console.log('updatedDevices', updatedDevices);
+
+            if(!state.use_demo_device){
             const sorted = updatedDevices.sort((a, b) => {
                 a.rssi = a.rssi || -100;
                 b.rssi = b.rssi || -100;
                 return a.rssi > b.rssi ? -1 : b.rssi > a.rssi ? 1 : 0;
             });
             state.deviceScan.devices = sorted;
+            }else{
+                state.deviceScan.devices = updatedDevices;
+            }
+            
+
+
+
+           
         },
         clearScannedDevices(state, action) {
             state.deviceScan = { devices: [], status: NetworkState.PENDING, error: '' };
