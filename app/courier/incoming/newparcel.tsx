@@ -23,7 +23,7 @@ export default function NewParcel() {
   const router = useRouter();
 
   const params = useLocalSearchParams();
-  console.log("params: " + JSON.stringify(params, null, 2));
+  //console.log("params: " + JSON.stringify(params, null, 2));
 
   // id: item.id,
   // sender: item.sender,
@@ -210,19 +210,6 @@ export default function NewParcel() {
     errorStep: number | null;
   };
 
-
-  const Stepper: React.FC<StepperProps> = ({ steps, activeStep, errorStep }) => {
-    return (
-      <View>
-        {steps.map((step, index) => (
-          <View key={index}>
-            <Paragraph style={{ color: errorStep === index ? 'red' : 'black' }}>{step}</Paragraph>
-            <ProgressBar progress={activeStep > index || (activeStep === index && errorStep !== index) ? 1 : 0} color={errorStep === index ? 'red' : 'blue'} />
-          </View>
-        ))}
-      </View>
-    );
-  };
 
 
 

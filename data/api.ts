@@ -130,6 +130,9 @@ export interface ParcelQueryFilterDto {
   recipient_id?: number;
   courier_id?: number;
   box_id?: number;
+  limit?: number;
+  orderBy?: string;
+  desc?: boolean;
 }
 
 interface ApproximateLocation {
@@ -236,7 +239,7 @@ const baseQuery = fetchBaseQuery({
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery,
-  tagTypes: ['User', 'AuthMsg', 'Box', 'Boxes'],
+  tagTypes: ['User', 'AuthMsg', 'Box', 'Boxes','Parcels'],
   //this is used to persist the data from the api in storage (redux-persist)
   extractRehydrationInfo(action, { reducerPath }) {
     if (action.type === REHYDRATE) {
@@ -622,11 +625,13 @@ export const apiSlice = createApi({
       transformErrorResponse: (response: any) => {
         console.log('error /parcel/create/by-wallet', response);
         return response
-      }
+      },
+      invalidatesTags: ['Parcels']
+
 
     }),
 
-    getParcels : builder.query<ParcelData[], Partial<ParcelData> | void>({
+    getParcels : builder.query<ParcelData[], Partial<ParcelQueryFilterDto> | void>({
       query: (queryParam) => ({
         url: '/parcel/',
         method: 'GET',
@@ -646,7 +651,9 @@ export const apiSlice = createApi({
       },
       transformResponse: (response: any) => {
         return response.data as ParcelData[]
-      }
+      },
+      providesTags:["Parcels"]
+    
     }),
 
 
@@ -673,8 +680,12 @@ export const apiSlice = createApi({
         console.log('error /parcel/update/', error);
         // handle the error and return a custom error response
         return { error: 'An error occurred while updating the parcel by wallet.' };
-      }
+      },
+      invalidatesTags: ['Parcels'] 
+      
+
     }),
+
 
 
     //deposit parcel  @Post('/:id/deposit')
