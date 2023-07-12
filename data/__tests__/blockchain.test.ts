@@ -4,11 +4,11 @@
 import "whatwg-fetch";
 
 import { configureStore } from '@reduxjs/toolkit';
-import { AnyAction } from 'redux';
-import blockchainSlice, { ApproveTransfer, ApproveTransferResponse, CreateDatasetResponse, Metadata, MintBox, MintBoxResponse, UpdateBox, UpdateBoxResponse, UploadMetadataToIPFSResponse, approveTransfer, callCreateDataset, callPushToSMS, callSellDataset, getBoxDatasets, isWhitelisted, mintBox, setPrivateKey, updateBox, uploadMetadataToIPFS } from '../blockchain';
-import { approveTransferAndCheck, checkWhitelistedStatus, createDatasetAndCheck, downloadMetadataFromIPFS_, getOwnerOfNft_, make_newDatasetAndCheck, mintBoxAndCheck, monitorTaskProgress_, pushToSMSAndCheck, pushWeb2Secret_, runApp_, sellDataset, setPrivateKeyAndCheckIt, updateBoxAndCheck, uploadMetadataAndCheck } from "./blockchain_utility";
 import { ethers } from "ethers";
 import Constants from "expo-constants";
+import { AnyAction } from 'redux';
+import blockchainSlice, { ApproveTransfer, CreateDatasetResponse, Metadata, MintBox, MintBoxResponse, UpdateBox, UploadMetadataToIPFSResponse, getBoxDatasets } from '../blockchain';
+import { approveTransferAndCheck, checkWhitelistedStatus, createDatasetAndCheck, downloadMetadataFromIPFS_, getOwnerOfNft_, make_newDatasetAndCheck, mintBoxAndCheck, monitorTaskProgress_, pushToSMSAndCheck, pushWeb2Secret_, runApp_, sellDataset, setPrivateKeyAndCheckIt, updateBoxAndCheck, uploadMetadataAndCheck } from "./blockchain_utility";
 
 jest.mock('expo-constants', () => require('../../tests/mockExpoConstants'));
 
@@ -49,7 +49,7 @@ describe('blockchainSlice', () => {
         });
     });
 
-   
+
 
     it('sets the private key correctly in the store', async () => {
         await setPrivateKeyAndCheckIt(privateKey_Client, store);
@@ -69,8 +69,8 @@ describe('blockchainSlice', () => {
     });
 
 
-     //push web2 secret to sms
-     it('push web2 secret to sms', async () => {
+    //push web2 secret to sms
+    it('push web2 secret to sms', async () => {
 
         await checkWhitelistedStatus(privateKey_Courier, true, store);
 
@@ -92,7 +92,7 @@ describe('blockchainSlice', () => {
                 latitude: 0,
                 longitude: 0,
                 inaccuracy: 0,
-                
+
             },
             parcel_id: 0,
             user_id: 0,
@@ -243,7 +243,7 @@ describe('blockchainSlice', () => {
                 latitude: 0,
                 longitude: 0,
                 inaccuracy: 0,
-                
+
             },
             parcel_id: 0,
             user_id: 0,
@@ -298,7 +298,7 @@ describe('blockchainSlice', () => {
 
         await checkWhitelistedStatus(privateKey_Courier, true, store);
 
-        let {dealId:d, volume, txHash,tasks}= await runApp_(mintBox_Result.tokenId,datasets[0], store);
+        let { dealId: d, volume, txHash, tasks } = await runApp_(mintBox_Result.tokenId, datasets[0], store);
         dealId = d;
         expect(dealId).toBeDefined();
         expect(volume).toBeDefined();
@@ -337,10 +337,12 @@ describe('blockchainSlice', () => {
         });
 
         //get result
-        let res = completedTasks.map((task: { results: {
-            storage: string;
-            location: string;
-        }; }) => task.results);
+        let res = completedTasks.map((task: {
+            results: {
+                storage: string;
+                location: string;
+            };
+        }) => task.results);
 
         console.log("result: ", res);
 
@@ -357,7 +359,7 @@ describe('blockchainSlice', () => {
 
         results = res;
 
-    
+
         console.log("all tasks completed successfully");
     }, 1000000);
 
@@ -373,14 +375,14 @@ describe('blockchainSlice', () => {
 
         expect(decrypted_metadata).toBeDefined();
         expect(decrypted_metadata).not.toBeNull();
-        
+
         //expect object to equal to metadata
         expect(decrypted_metadata).toEqual(metadata);
 
     }, 1000000);
 
 
-   
+
 
 
 
@@ -390,7 +392,7 @@ describe('blockchainSlice', () => {
 
     //reqest decrypted data orderRequestExecutionAndCheck
     // it('request decrypted data', async () => {
-            
+
     //         await checkWhitelistedStatus(privateKey_Courier, true, store);
 
     //         //orderRequestExecutionAndCheck
@@ -405,7 +407,6 @@ describe('blockchainSlice', () => {
 
     // }, 1000000);
 
-    
 
 
 
@@ -414,7 +415,8 @@ describe('blockchainSlice', () => {
 
 
 
-    
+
+
 
 
 

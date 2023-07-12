@@ -119,7 +119,11 @@ export default function Profile() {
   const funcionExport = () => {
     console.log("export");
 
+
+
     Clipboard.setStringAsync(secure.keyChainData?.privateKey || '');
+
+    setStatusText("Your private key has been copied");
 
   };
 
@@ -159,58 +163,40 @@ export default function Profile() {
   }, [fetchBlockchainData]);
 
 
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('');
-  const [isEditingFirstName, setIsEditingFirstName] = useState(false);
-  const [isEditingLastName, setIsEditingLastName] = useState(false);
+  const [name, setName] = useState('');
+  const [isEditingName, setIsEditingName] = useState(false);
 
 
 
-  const handleFirstNameEditPress = () => {
-    setIsEditingFirstName(true);
-  };
-
-  const handleLastNameEditPress = () => {
-    setIsEditingLastName(true);
+  const handleNameEditPress = () => {
+    setIsEditingName(true);
   };
 
   const handleContainerPress = () => {
-    if (isEditingFirstName) {
-      setIsEditingFirstName(false);
-    }
-    if (isEditingLastName) {
-      setIsEditingLastName(false);
-    }
-  };
-  const handleFirstNameEndEditing = async () => {
-    try {
-      if (data && firstName !== data.firstName) {
-        const newUser = { ...data } as UserName & User;
-        newUser.firstName = firstName;
-        if (newUser.lastName === null) {
-          newUser.lastName = 'efef'; //TODO allow on api side to be null and more editing options
-        }
-
-        await updateMe(newUser).unwrap();
-      }
-      setIsEditingFirstName(false);
-    } catch (err) {
-      console.error(err);
+    if (isEditingName) {
+      setIsEditingName(false);
     }
   };
 
-  const handleLastNameEndEditing = async () => {
-    try {
-      if (data && lastName !== data.lastName) {
-        const newUser = { ...data } as UserName & User;
-        newUser.lastName = lastName;
-        if (newUser.firstName === null) {
-          newUser.firstName = 'ef';
-        }
+  const validateName = (name: string) => {
+    const re = /^[a-z ,.'-]+$/i;
+    return re.test(name);
+  };
 
+  const handleNameEndEditing = async () => {
+    try {
+      if (data && name !== `${data.firstName} ${data.lastName}`) {
+        if (!validateName(name)) {
+          alert('Invalid name, please enter a correct name.');
+          return;
+        }
+        const newUser = { ...data } as UserName & User;
+        const nameParts = name.split(' ');
+        newUser.firstName = nameParts[0];
+        newUser.lastName = nameParts.slice(1).join(' ');
         await updateMe(newUser).unwrap();
       }
-      setIsEditingLastName(false);
+      setIsEditingName(false);
     } catch (err) {
       console.error(err);
     }
@@ -243,7 +229,7 @@ export default function Profile() {
             style={{ paddingTop: 40, paddingBottom: 20 }}>
 
             <Card.Title
-              title={match ? "Confirssssmed" : "Confirm PIN"}
+              title={match ? "Confirmed" : "Confirm PIN"}
               subtitle={statusText}
               left={(props) => <Avatar.Icon {...props} icon={match ? "lock-open" : "lock"} />}
             />
@@ -295,8 +281,12 @@ export default function Profile() {
 
 
 
-              } mode='contained'>
-                {match ? "Export" : "Cancel"}
+
+              } mode='contained'
+                icon={match ? "content-copy" : "cancel"}
+
+              >
+                {match ? "Copy Private Key" : "Cancel"}
               </Button>
             </Card.Actions>
           </Card>
@@ -315,34 +305,18 @@ export default function Profile() {
 
           <Caption>Email: {data.authUser.email || 'not provided'}</Caption>
 
-          {isEditingFirstName ? (
+          {isEditingName ? (
             <TextInput
-              value={firstName}
-              onChangeText={setFirstName}
+              value={name}
+              onChangeText={setName}
               style={{ height: 40, borderColor: 'gray', borderWidth: 1 }}
-              onEndEditing={handleFirstNameEndEditing}
+              onEndEditing={handleNameEndEditing}
               autoFocus
             />
           ) : (
             <Caption>
-              First Name: {data.firstName || 'Not provided'}
-              <MaterialCommunityIcons name="pencil" onPress={handleFirstNameEditPress} />
-            </Caption>
-          )}
-
-          {isEditingLastName ? (
-            <TextInput
-              value={lastName}
-              onChangeText={setLastName}
-              style={{ height: 40, borderColor: 'gray', borderWidth: 1 }}
-              onEndEditing={handleLastNameEndEditing}
-
-              autoFocus
-            />
-          ) : (
-            <Caption>
-              Last Name: {data.lastName || 'Not provided'}
-              <MaterialCommunityIcons name="pencil" onPress={handleLastNameEditPress} />
+              Name: {`${data.firstName} ${data.lastName}` || 'Not provided'}
+              <MaterialCommunityIcons name="pencil" onPress={handleNameEditPress} />
             </Caption>
           )}
 

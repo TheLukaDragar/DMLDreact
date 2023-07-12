@@ -66,7 +66,7 @@ export default function TabLayout() {
           
           
           title: "Parcels",
-          tabBarIcon: ({ color  }) => <TabBarIcon2 name="truck-delivery" color={color} />,
+          tabBarIcon: ({ color  }) => <TabBarIcon2 name="truck-fast" color={color} />,
           headerRight: () => (
             <Link href="/modal" asChild>
               <Pressable>

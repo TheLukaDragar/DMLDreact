@@ -7,17 +7,15 @@ import 'whatwg-fetch';
 import '@testing-library/jest-dom';
 import "whatwg-fetch";
 
+import { ethers } from 'ethers';
+import Constants from 'expo-constants';
+import { AnyAction } from 'redux';
 import { demoDevice } from '../ble/bleSlice';
 import { approveTransferAndCheck, checkWhitelistedStatus, createDatasetAndCheck, downloadMetadataFromIPFS_, getOwnerOfNft_, getReputation_, make_newDatasetAndCheck, mintBoxAndCheck, monitorTaskProgress_, pushToSMSAndCheck, pushWeb2Secret_, runApp_, sellDataset, updateBoxAndCheck, uploadMetadataAndCheck } from '../data/__tests__/blockchain_utility';
 import { BoxItem, GetBoxesResponse, ParcelData, PreciseLocation, RateTransactionDto, RatingType } from '../data/api';
-import { ApproveTransfer, CreateDatasetResponse, Metadata, MintBox, MintBoxResponse, UpdateBox, UploadMetadataToIPFSResponse, getBoxDatasets, getReputation, setPrivateKey } from '../data/blockchain';
+import { ApproveTransfer, CreateDatasetResponse, Metadata, MintBox, MintBoxResponse, UpdateBox, UploadMetadataToIPFSResponse, getBoxDatasets } from '../data/blockchain';
 import { loadDemoClientWallet, loadDemoCourierWallet } from '../data/secure';
-import { store } from '../data/store';
 import { setupAndLoadUser, testClientGetsBoxes, testConnectToDeviceAndGetAccessKey, testCreateParcelByWallet, testDepositParcel, testFindBoxByDID, testGetBox, testGetBoxPreciseLocation, testGetParcelById, testRateTransaction, testUpdateBoxLocation, testUpdateParcel, testWithdrawParcel } from './backend_utility';
-import { AnyAction } from 'redux';
-import { ethers } from 'ethers';
-import Constants from 'expo-constants';
-import { forEach } from 'jszip';
 
 
 jest.mock('@react-native-async-storage/async-storage', () =>

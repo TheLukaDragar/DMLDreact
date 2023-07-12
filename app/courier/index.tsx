@@ -6,18 +6,27 @@ import { Text, View } from '../../components/Themed';
 import { useAppDispatch, useAppSelector } from '../../data/hooks';
 
 import React, { useEffect } from 'react';
-import { isErrorWithMessage, isFetchBaseQueryError,useLazyGetBoxesQuery} from '../../data/api';
+import { isErrorWithMessage, isFetchBaseQueryError,useGetMeQuery,useGetParcelsQuery,useLazyGetBoxesQuery} from '../../data/api';
 
 
 
-export default function Home() {
+export default function Parcels() {
 
   const router = useRouter();
 
   const secure = useAppSelector((state) => state.secure);
   const dispatch = useAppDispatch();
 
-  const [getBoxes,{ isLoading: isLoadingGetBoxes }] = useLazyGetBoxesQuery();
+  const { data:courier} = useGetMeQuery(undefined, {});
+
+  const { data, error, isLoading, isFetching, isError } = useGetParcelsQuery(
+    {
+      courier_id: courier ? String(courier.id) : undefined,
+    }, {
+    refetchOnMountOrArgChange: true,
+    skip: false,
+  });
+  
   const [result, setResult] = React.useState("result");
 
   const [ErrorMessage, setError] = React.useState("");
@@ -38,31 +47,7 @@ export default function Home() {
 
   }, [])
 
-  async function call_GetBoxes() {
-    try {
-      ///const msg = await getMessageToSign().unwrap();
 
-      //call connect box api
-
-    
-      const response = await getBoxes().unwrap();
-
-    console.log("call_GetBoxes",response);
-
-    setResult(JSON.stringify(response));
-
-
-    } catch (err) {
-      if (isFetchBaseQueryError(err)) {
-        const errMsg = 'error' in err ? err.error : JSON.stringify(err.data)
-        console.log("fetch error", err);
-        setError(errMsg);
-      } else if (isErrorWithMessage(err)) {
-        console.log("error with message , ", err);
-        setError(err.message);
-      }
-    }
-  }
 
 
 
@@ -78,16 +63,7 @@ export default function Home() {
         </Text>
 
 
-      <Button
-        onPress={() => call_GetBoxes()}
-        loading={isLoadingGetBoxes}
-        mode="contained"
-        contentStyle={{ padding: 20, width: 300 }}
-        style={{ marginTop: 20 }}>
-
-        Fetch My Boxes
-      </Button>
-
+     
 
       <Snackbar
         visible={ErrorMessage != ""}

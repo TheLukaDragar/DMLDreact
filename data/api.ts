@@ -87,6 +87,7 @@ export interface BoxItem {
   licensePlate: null;
   approximateLocation_id: null;
   preciseLocation_id: null;
+  preciseLocation: PreciseLocation;
   imageUrl: null;
   reputationThreshold: null;
   reputation: null;
@@ -103,24 +104,32 @@ export interface Box {
   status: number;
   did: string;
   macAddress: string;
-  licensePlate:  string;
-  approximateLocation_id:  number;
+  licensePlate: string;
+  approximateLocation_id: number;
   approximateLocation: ApproximateLocation;
-  preciseLocation_id:  number;
+  preciseLocation_id: number;
   preciseLocation: PreciseLocation;
-  description:  string;
-  imageUrl:  string;
-  reputationThreshold:  number;
+  description: string;
+  imageUrl: string;
+  reputationThreshold: number;
   reputation: number;
 }
 
- export interface BoxQueryFilterDto {
+export interface BoxQueryFilterDto {
   did?: string;
   macAddress?: string;
   owner_id?: number;
   forUser?: number;
   availableForDeposit?: boolean;
   location?: PreciseLocation;
+}
+export interface ParcelQueryFilterDto {
+  trackingNumber?: string;
+  nftId?: string;
+  transactionHash?: string;
+  recipient_id?: number;
+  courier_id?: number;
+  box_id?: number;
 }
 
 interface ApproximateLocation {
@@ -134,28 +143,28 @@ export interface PreciseLocation {
   longitude: number;
   inaccuracy: number;
 }
-interface setBoxPreciseLocation{
+interface setBoxPreciseLocation {
   boxId: number;
   preciseLocation: PreciseLocation;
 }
-export interface getBoxAccessKeyParams{
+export interface getBoxAccessKeyParams {
   boxId: number;
   preciseLocation: PreciseLocation;
   challenge: string;
 }
-export interface getBoxAccessKeyResponse{
+export interface getBoxAccessKeyResponse {
   boxId: number;
   accessKey: string;
 }
-export interface CreateParcelByUsers{
-    nftId: number;
-    trackingNumber: string;
-    transactionHash: string;
-    recipient_id: number;
-    courier_id: number;
-    box_id: number;
-    location : PreciseLocation;
-  
+export interface CreateParcelByUsers {
+  nftId: number;
+  trackingNumber: string;
+  transactionHash: string;
+  recipient_id: number;
+  courier_id: number;
+  box_id: number;
+  location: PreciseLocation;
+
 }
 export interface CreateParcelByWallet {
   nftId: string;
@@ -262,8 +271,8 @@ export const apiSlice = createApi({
       }),
       transformResponse: (response: AuthResponse) => response,
       transformErrorResponse: (response: any) => {
-          console.log('/auth/register/wallet', response);
-          return response
+        console.log('/auth/register/wallet', response);
+        return response
       },
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         console.log('onQueryStarted', arg, dispatch);
@@ -290,7 +299,7 @@ export const apiSlice = createApi({
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         console.info('onQueryStarted /auth/login/wallet', arg);
         try {
-          const { data,meta } = await queryFulfilled;
+          const { data, meta } = await queryFulfilled;
           dispatch(setToken(data.authToken.data))
           //mannually update the user cache with the new data
           dispatch(apiSlice.util.updateQueryData('getMe', undefined, (draft) => {
@@ -320,7 +329,7 @@ export const apiSlice = createApi({
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         console.log(' /users/me started');
         try {
-          const { data,meta } = await queryFulfilled;
+          const { data, meta } = await queryFulfilled;
           //console.log('data', data);
           //console.log(meta)
         } catch (error) { }
@@ -343,7 +352,7 @@ export const apiSlice = createApi({
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         console.log(' /users/me started');
         try {
-          const { data,meta } = await queryFulfilled;
+          const { data, meta } = await queryFulfilled;
           console.log('updated data', data);
           //console.log(meta)
         } catch (error) { }
@@ -357,20 +366,6 @@ export const apiSlice = createApi({
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     getUserDetails: builder.query<User, void>({
       query: () => ({
         url: '/users/details',
@@ -380,7 +375,7 @@ export const apiSlice = createApi({
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         console.log(' /users/details started');
         try {
-          const { data,meta } = await queryFulfilled;
+          const { data, meta } = await queryFulfilled;
           console.log('data', data);
           console.log(meta)
         } catch (error) { }
@@ -390,7 +385,7 @@ export const apiSlice = createApi({
         return response
       },
 
-   
+
     }),
     //box endpoints
     getBoxes: builder.query<GetBoxesResponse, Partial<BoxQueryFilterDto> | void>({
@@ -404,8 +399,8 @@ export const apiSlice = createApi({
         console.info('onQueryStarted /box')
         try {
           const { data } = await queryFulfilled;
-          console.log('getBoxes data', data);
-        } catch (error) {}
+          //console.log('getBoxes data', JSON.stringify(data));
+        } catch (error) { }
       },
       transformErrorResponse: (response: any) => {
         console.log('error /box', response);
@@ -440,7 +435,7 @@ export const apiSlice = createApi({
         try {
           const { data } = await queryFulfilled;
           console.log('data', JSON.stringify(data));
-         
+
 
         } catch (error) {
         }
@@ -489,7 +484,7 @@ export const apiSlice = createApi({
     //    without refreshing the entire box.
 
     getBoxPreciseLocation: builder.query<any, number>({
-    
+
       query: (id) => ({
         url: `/location/box/${id}/precise`,
         method: 'GET',
@@ -510,26 +505,26 @@ export const apiSlice = createApi({
     }),
 
     getBoxAccessKey: builder.query<getBoxAccessKeyResponse, getBoxAccessKeyParams>({
-      query: ({boxId, challenge, preciseLocation}) => ({
+      query: ({ boxId, challenge, preciseLocation }) => ({
 
 
         //https://4gkntp89fl.execute-api.eu-central-1.amazonaws.com/box/1/access-key?id=1&longitude=11&latitude=1&inaccuracy=1
-      url: `/box/${boxId}/access-key?challenge=${challenge}&location%5Blatitude%5D=${preciseLocation.latitude}&location%5Blongitude%5D=${preciseLocation.longitude}&location%5Binaccuracy%5D=${preciseLocation.inaccuracy}`,
-          method: 'GET',
+        url: `/box/${boxId}/access-key?challenge=${challenge}&location%5Blatitude%5D=${preciseLocation.latitude}&location%5Blongitude%5D=${preciseLocation.longitude}&location%5Binaccuracy%5D=${preciseLocation.inaccuracy}`,
+        method: 'GET',
       }),
       transformResponse: (response: any) => response,
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-          console.log('getBoxAccessKey', arg, dispatch);
-          try {
-              const { data } = await queryFulfilled;
-              console.log('getBoxAccessKey fulfilled', JSON.stringify(data));
-          } catch (error) {
-            console.log('getBoxAccessKey error', error);
-          }
+        console.log('getBoxAccessKey', arg, dispatch);
+        try {
+          const { data } = await queryFulfilled;
+          console.log('getBoxAccessKey fulfilled', JSON.stringify(data));
+        } catch (error) {
+          console.log('getBoxAccessKey error', error);
+        }
       },
       transformErrorResponse: (response: any) => {
-          console.log('error getBoxAccessKey', response);
-          return response
+        console.log('error getBoxAccessKey', response);
+        return response
       }
     }),
 
@@ -563,8 +558,8 @@ export const apiSlice = createApi({
 
 
     //parcel 
-    
-  
+
+
 
 
 
@@ -572,7 +567,8 @@ export const apiSlice = createApi({
       query: (body) => ({
         url: '/location/create',
         method: 'POST',
-        body,}),
+        body,
+      }),
 
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         console.log('onQueryStarted /location/create', arg, dispatch);
@@ -593,7 +589,8 @@ export const apiSlice = createApi({
       query: (body) => ({
         url: '/location/update',
         method: 'POST',
-        body,}),
+        body,
+      }),
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         console.log('onQueryStarted /location/update', arg, dispatch);
         try {
@@ -612,7 +609,8 @@ export const apiSlice = createApi({
       query: (body) => ({
         url: '/parcel/create/by-wallet',
         method: 'POST',
-        body,}),
+        body,
+      }),
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         console.log('onQueryStarted /parcel/create/by-wallet', arg, dispatch);
         try {
@@ -627,6 +625,32 @@ export const apiSlice = createApi({
       }
 
     }),
+
+    getParcels : builder.query<ParcelData[], Partial<ParcelData> | void>({
+      query: (queryParam) => ({
+        url: '/parcel/',
+        method: 'GET',
+        params:  queryParam as Record<string, any> | undefined,
+      }),
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('onQueryStarted /parcel/', arg, dispatch);
+        try {
+          const { data } = await queryFulfilled;
+          console.log('/parcel/ fulfiled', JSON.stringify(data));
+        } catch (error) {
+        }
+      },
+      transformErrorResponse: (response: any) => {
+        console.log('error /parcel/', response);
+        return response
+      },
+      transformResponse: (response: any) => {
+        return response.data as ParcelData[]
+      }
+    }),
+
+
+
 
     //TODO INVALIDATE CACHE ...
     updateParcelById: builder.mutation<ParcelData, ParcelData>({
@@ -650,8 +674,8 @@ export const apiSlice = createApi({
         // handle the error and return a custom error response
         return { error: 'An error occurred while updating the parcel by wallet.' };
       }
-  }),
-  
+    }),
+
 
     //deposit parcel  @Post('/:id/deposit')
     depositParcel: builder.mutation<any, number>({
@@ -707,11 +731,11 @@ export const apiSlice = createApi({
         try {
           const { data } = await queryFulfilled;
           console.log('getParcelById fulfilled', JSON.stringify(data));
-        } catch (error) { 
+        } catch (error) {
           console.log('getParcelById error', error);
 
           //get to object
-          
+
 
 
 
@@ -729,7 +753,8 @@ export const apiSlice = createApi({
       query: (body) => ({
         url: '/reputation/rate-transaction'
         , method: 'POST',
-        body,}),
+        body,
+      }),
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         console.log('onQueryStarted /rate-transaction', arg, dispatch);
         try {
@@ -752,8 +777,8 @@ export const apiSlice = createApi({
 
 
 
-      
-        
+
+
 
 
 
@@ -763,7 +788,6 @@ export const apiSlice = createApi({
 })
 
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import { createAsyncThunk } from '@reduxjs/toolkit';
 import { BoxPermissionLevel, UserType2 } from '../constants/Auth';
 /**
  * Type predicate to narrow an unknown error to `FetchBaseQueryError`
@@ -792,23 +816,23 @@ export function getErrorMessage(err: any) {
 
   try {
     if (isFetchBaseQueryError(err)) {
-     // const errMsg = 'error' in err ? err.error : "JSON.stringify(err.data)"
-     let errMsg;
-     if ('error' in err) {
-       errMsg = err.error;
-     } else if ('data' in err && typeof err.data === 'object' && err.data !== null) {
-       if ('message' in err.data && typeof err.data.message === 'string') {
-         errMsg = err.status + " " + err.data.message;
-       } else {
-         errMsg = JSON.stringify(err.data);
-       }
-     } else {
-       errMsg = JSON.stringify(err);
-     }
-   
+      // const errMsg = 'error' in err ? err.error : "JSON.stringify(err.data)"
+      let errMsg;
+      if ('error' in err) {
+        errMsg = err.error;
+      } else if ('data' in err && typeof err.data === 'object' && err.data !== null) {
+        if ('message' in err.data && typeof err.data.message === 'string') {
+          errMsg = err.status + " " + err.data.message;
+        } else {
+          errMsg = JSON.stringify(err.data);
+        }
+      } else {
+        errMsg = JSON.stringify(err);
+      }
+
       return errMsg;
-      
-      
+
+
     } else if (isErrorWithMessage(err)) {
       return err.message
     } else {
@@ -829,7 +853,7 @@ export function getErrorMessage(err: any) {
 // Export the reducer and middleware separately
 export const { reducer, middleware } = apiSlice
 // Export the endpoint for use in components
-export const { useGetAuthMsgQuery, useRegisterWalletMutation, useLoginWalletMutation, useGetMeQuery, useLazyGetAuthMsgQuery,useLazyGetMeQuery,useGetUserDetailsQuery,useLazyGetUserDetailsQuery, useCreateParcelByWalletMutation,useLazyGetDoesUserHavePermissionToBoxQuery,useLazyGetBoxPreciseLocationQuery
-  , useGetBoxesQuery, useGetBoxQuery, useLazyGetBoxQuery, useLazyGetBoxesQuery, useConnectBoxMutation, useSetBoxPreciseLocationMutation, useGetBoxPreciseLocationQuery, useCreateApproximateLocationMutation, useUpdateApproximateLocationMutation,useGetBoxAccessKeyQuery,useLazyGetBoxAccessKeyQuery
-  ,useDepositParcelMutation,useLazyGetParcelByIdQuery,useGetParcelByIdQuery,useWithdrawParcelMutation,useRateTransactionMutation,useUpdateParcelByIdMutation,useUpdateMeMutation
+export const { useGetAuthMsgQuery, useRegisterWalletMutation, useLoginWalletMutation, useGetMeQuery, useLazyGetAuthMsgQuery, useLazyGetMeQuery, useGetUserDetailsQuery, useLazyGetUserDetailsQuery, useCreateParcelByWalletMutation, useLazyGetDoesUserHavePermissionToBoxQuery, useLazyGetBoxPreciseLocationQuery
+  , useGetBoxesQuery, useGetBoxQuery, useLazyGetBoxQuery, useLazyGetBoxesQuery, useConnectBoxMutation, useSetBoxPreciseLocationMutation, useGetBoxPreciseLocationQuery, useCreateApproximateLocationMutation, useUpdateApproximateLocationMutation, useGetBoxAccessKeyQuery, useLazyGetBoxAccessKeyQuery
+  , useDepositParcelMutation, useLazyGetParcelByIdQuery, useGetParcelByIdQuery, useWithdrawParcelMutation, useRateTransactionMutation, useUpdateParcelByIdMutation, useUpdateMeMutation,useGetParcelsQuery
 } = apiSlice

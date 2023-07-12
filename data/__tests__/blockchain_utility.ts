@@ -1,5 +1,5 @@
-import { ApproveTransfer, ApproveTransferResponse, CreateDatasetResponse, Metadata, MintBox, MintBoxResponse, UpdateBox, UpdateBoxResponse, UploadMetadataToIPFSResponse, approveTransfer, callCreateDataset, callPushToSMS, callSellDataset, downloadMetadataFromIPFS, getBoxDatasets, getOwnerOfNft, getReputation, isWhitelisted, mintBox, monitorTaskProgress, pushWeb2Secret, runApp, setPrivateKey, updateBox, uploadMetadataToIPFS } from '../blockchain';
 import { AnyAction } from 'redux';
+import { ApproveTransfer, ApproveTransferResponse, CreateDatasetResponse, Metadata, MintBox, MintBoxResponse, UpdateBox, UpdateBoxResponse, UploadMetadataToIPFSResponse, approveTransfer, callCreateDataset, callPushToSMS, callSellDataset, downloadMetadataFromIPFS, getOwnerOfNft, getReputation, isWhitelisted, mintBox, monitorTaskProgress, pushWeb2Secret, runApp, setPrivateKey, updateBox, uploadMetadataToIPFS } from '../blockchain';
 
 export async function uploadMetadataAndCheck(metadata: Metadata, store: any) {
     const result = await store.dispatch(uploadMetadataToIPFS(metadata) as unknown as AnyAction).unwrap();
@@ -33,7 +33,7 @@ export async function createDatasetAndCheck(ipfsResult: UploadMetadataToIPFSResp
     return createDataset_Result;
 }
 
-export async function make_newDatasetAndCheck(metadata: Metadata, store: any) : Promise<string> {
+export async function make_newDatasetAndCheck(metadata: Metadata, store: any): Promise<string> {
     //ipfs
     const ipfs: UploadMetadataToIPFSResponse = await uploadMetadataAndCheck(metadata, store);
     //dataset
@@ -124,12 +124,12 @@ export async function approveTransferAndCheck(args: ApproveTransfer, store: any)
 
 //updateBox
 export async function updateBoxAndCheck(args: UpdateBox, store: any): Promise<UpdateBoxResponse> {
-        //call callSellDataset
-        let res = await store.dispatch(updateBox(args) as unknown as AnyAction).unwrap();
-        expect(res).not.toBeUndefined();
-        expect(res).not.toBeNull();
-        expect(res).not.toBe("");
-        return res;
+    //call callSellDataset
+    let res = await store.dispatch(updateBox(args) as unknown as AnyAction).unwrap();
+    expect(res).not.toBeUndefined();
+    expect(res).not.toBeNull();
+    expect(res).not.toBe("");
+    return res;
 
 }
 
@@ -177,7 +177,7 @@ export async function pushWeb2Secret_(secretName: string, store: any): Promise<s
 
 }
 
-export async function runApp_(tokenId:string,dataset: string, store: any): Promise<{dealId: string, volume: number,txHash: string,tasks: string[]}> {
+export async function runApp_(tokenId: string, dataset: string, store: any): Promise<{ dealId: string, volume: number, txHash: string, tasks: string[] }> {
     //call callSellDataset
     const res = await store.dispatch(runApp({
         tokenId: tokenId,
@@ -192,8 +192,8 @@ export async function runApp_(tokenId:string,dataset: string, store: any): Promi
 export async function monitorTaskProgress_(tasks: string[], store: any): Promise<any> {
     //call callSellDataset
     while (true) {
-        const {tasksCompleted,tasksFailed ,tasksTimeout,tasksData} = await store.dispatch(
-          monitorTaskProgress({  tasks: tasks, }) as unknown as AnyAction
+        const { tasksCompleted, tasksFailed, tasksTimeout, tasksData } = await store.dispatch(
+            monitorTaskProgress({ tasks: tasks, }) as unknown as AnyAction
         ).unwrap();
 
         if (tasksCompleted === tasks.length || tasksFailed > 0 || tasksTimeout > 0) {
@@ -203,7 +203,7 @@ export async function monitorTaskProgress_(tasks: string[], store: any): Promise
         }
         console.log(`Tasks completed: ${tasksCompleted}/${tasks.length}`);
         console.log(`Tasks data: ${JSON.stringify(tasksData)}`);
-       
+
         await new Promise(resolve => setTimeout(resolve, 5000));
     }
 

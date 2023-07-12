@@ -35,6 +35,41 @@ export default function TabLayout() {
       }}
     >
 
+
+<Tabs.Screen
+        name="incoming"
+
+        options={{
+          headerShown: false,
+          title: "Incoming Parcels",
+          tabBarIcon: ({ color }) => <TabBarIcon2 name="truck-delivery" color={color} />
+        }}
+         
+      />
+
+<Tabs.Screen
+        name="index"
+        // TODO: Type
+        options={{
+          title: "Parcels",
+          tabBarIcon: ({ color  }) => <TabBarIcon2 name="package-variant-closed" color={color} />,
+          headerRight: () => (
+            <Link href="/modal" asChild>
+              <Pressable>
+                {({ pressed }) => (
+                  <FontAwesome
+                    name="info-circle"
+                    size={25}
+                    color={Colors[colorScheme==="dark" ? "dark" : "light"].text}
+                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                  />
+                )}
+              </Pressable>
+            </Link>
+          ),
+        }}
+      />
+
       <Tabs.Screen
         name="profile"
 
@@ -57,28 +92,7 @@ export default function TabLayout() {
         }}
       />
 
-      <Tabs.Screen
-        name="index"
-        // TODO: Type
-        options={{
-          title: "Home",
-          tabBarIcon: ({ color  }) => <TabBarIcon name="home" color={color} />,
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable>
-                {({ pressed }) => (
-                  <FontAwesome
-                    name="info-circle"
-                    size={25}
-                    color={Colors[colorScheme==="dark" ? "dark" : "light"].text}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
-          ),
-        }}
-      />
+      
       
     </Tabs>
   );
