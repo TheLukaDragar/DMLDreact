@@ -172,13 +172,17 @@ export default function Parcels() {
 
           <Button
             onPress={() => {
-              router.push("/courier/parcel/" + item.id);
+              router.push({
+                pathname: "/parcel/" + item.id,
+                
+              }
+              )
             }}
           >Details</Button>
 
           <Button
             onPress={() => {
-              router.push("/courier/parcel/" + item.id);
+              router.push("/deposit/" + item.id);
             }}
           >Deposit</Button>
 
