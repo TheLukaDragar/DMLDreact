@@ -12,7 +12,7 @@ import '@ethersproject/shims';
 import * as Location from 'expo-location';
 import Toast from 'react-native-root-toast';
 import StepCard from '../../../components/StepCard';
-import { CreateDatasetResponse, Metadata, MintBox, MintBoxResponse, UploadMetadataToIPFSResponse, callCreateDataset, callPushToSMS, callSellDataset, mintBox, uploadMetadataToIPFS } from '../../../data/blockchain';
+import { CreateDatasetResponse, Metadata, MintBox, MintBoxResponse, UploadMetadataToIPFSResponse, callCreateDataset, callPushToSMS, callSellDataset, getReputation, mintBox, uploadMetadataToIPFS } from '../../../data/blockchain';
 
 
 
@@ -40,6 +40,11 @@ export default function NewParcel() {
   const { data: boxes, error, isLoading, isFetching, isError, refetch
 
   } = useGetBoxesQuery({
+    
+    // orderBy:"id", //todo
+    // desc: true,
+   
+    
 
   }
     , {
@@ -79,6 +84,8 @@ export default function NewParcel() {
   const [isParcelProcessing, setIsParcelProcessing] = useState(false);
   const [isParcelCreated, setIsParcelCreated] = useState(false);
 
+  const [receiverReputation, setReceiverReputation] = useState(-1);
+
 
   const steps = [
     "Creating parcel",
@@ -102,7 +109,7 @@ export default function NewParcel() {
    
 
   };
-  async function createParcel(box: BoxItem, courier: User, receiverAddress: string, preciseLocation: PreciseLocation) {
+  async function createParcel(box: BoxItem, courier: User, receiverAddress: string, preciseLocation: PreciseLocation,trackingNumber:string) {
     try {
       setActiveStep(0); // Start from the first step
 
@@ -115,7 +122,11 @@ export default function NewParcel() {
         courier_addr: courier.crypto[0].wallet,
         box_did: box.did,
         location: preciseLocation,
+        trackingNumber: trackingNumber,
       };
+
+      console.log(JSON.stringify(new_parcel,  null,2
+        ))
 
       const parcel: ParcelData = await createParcelByWallet(new_parcel).unwrap();
 
@@ -181,6 +192,7 @@ export default function NewParcel() {
         ...parcel,
         nftId: mintBox_Result.tokenId,
         transactionHash: mintBox_Result.txHash,
+       
 
 
       }
@@ -198,22 +210,6 @@ export default function NewParcel() {
       handleError(activeStep, error); // If there's an error, handle it
     }
   }
-
-
-
-
-
-
-  type StepperProps = {
-    steps: string[];
-    activeStep: number;
-    errorStep: number | null;
-  };
-
-
-
-
-
 
 
 
@@ -248,7 +244,23 @@ export default function NewParcel() {
     })();
   }, []);
 
-
+  useEffect(() => {
+    if(params.receiver_address) { // Check if receiver address is defined
+      dispatch(getReputation(String(params.receiver_address)))
+      .unwrap()
+      .then((reputationResult) => {
+        console.log("Reputation result: ", reputationResult);
+        setReceiverReputation(reputationResult);
+      })
+      .catch((error) => {
+        console.error("Error retrieving receiver's reputation: ", error);
+        setReceiverReputation(-2)
+        
+      }
+     
+      );
+    }
+  }, [dispatch, params.receiver_address]); 
 
   function distance(loc1: PreciseLocation, loc2: PreciseLocation) {
     const R = 6371e3; // metres
@@ -335,10 +347,10 @@ export default function NewParcel() {
 
   //boxes?.items.sort((boxA, boxB) => distance(boxA.loc, boxB.preciseLocation));
 
-  if(boxes && boxes.items.length > 0){
-    //sort by reputation
-    boxes.items.sort((boxA, boxB) => (boxB.reputation || 0) - (boxA.reputation || 0));
-  }
+  // if(boxes && boxes.items.length > 0){
+  //   //sort by reputation
+  //   boxes.items.sort((boxA, boxB) => (boxB.reputation || 0) - (boxA.reputation || 0));
+  // }
 
 
 
@@ -357,6 +369,11 @@ export default function NewParcel() {
           </View>
           <Title style={styles.details}>Sender: <Caption style={styles.details}>{params.sender}</Caption></Title>
           <Title style={styles.details}>Receiver: <Caption style={styles.details}>{params.receiver}</Caption></Title>
+          <Title style={styles.details}>Receiver reputation: <Caption style={styles.details}>{
+            receiverReputation == -1 ? "pending" : receiverReputation == -2 ? "not found" : receiverReputation
+
+
+          }</Caption></Title>
           <Title style={styles.details}>Address: <Caption style={styles.details}>{params.address}</Caption></Title>
           <Title style={styles.details}>Address: <Caption style={styles.details}>{params.receiver_address}</Caption></Title>
 
@@ -460,7 +477,7 @@ export default function NewParcel() {
             return;
           }
 
-          await createParcel(selectedBox, courier, String(params.receiver_address), location);
+          await createParcel(selectedBox, courier, String(params.receiver_address), location,String(params.trackingNumber));
         }}>
         {isParcelProcessing ? steps[activeStep] : isParcelCreated ? 'Parcel created' : 'Deliver'}
       </Button>

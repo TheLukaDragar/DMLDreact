@@ -31,6 +31,7 @@ export default function Incoming() {
   const mockData = [
     {
       id: '1345346363464634634',
+      trackingNumber: '1345346363464634634',
       title: 'Package 1',
       sender: 'Sender 1',
       receiver: 'Receiver 1',
@@ -45,6 +46,7 @@ export default function Incoming() {
     },
     {
       id: '1345346363464654434',
+      trackingNumber: '1345346363464654434',
       title: 'Package 2',
       sender: 'Sender 2',
       receiver: 'Receiver 2',
@@ -68,6 +70,7 @@ export default function Incoming() {
         </View>
         <Title style={styles.details}>Sender: <Caption style={styles.details}>{item.sender}</Caption></Title>
         <Title style={styles.details}>Receiver: <Caption style={styles.details}>{item.receiver}</Caption></Title>
+        <Title style={styles.details}>Tracking Number: <Caption style={styles.details}>{item.trackingNumber}</Caption></Title>
         <Title style={styles.details}>Address: <Caption style={styles.details}>{item.address}</Caption></Title>
         <Title style={styles.details}>Address: <Caption style={styles.details}>{item.receiver_address}</Caption></Title>
 
@@ -86,6 +89,7 @@ export default function Incoming() {
               receiver_address: item.receiver_address,
               address: item.address,
               location: JSON.stringify(item.location),
+              trackingNumber: item.trackingNumber,
             },
           })}>
           Deliver

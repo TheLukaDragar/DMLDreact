@@ -122,6 +122,9 @@ export interface BoxQueryFilterDto {
   forUser?: number;
   availableForDeposit?: boolean;
   location?: PreciseLocation;
+  limit?: number;
+  orderBy?: string;
+  desc?: boolean;
 }
 export interface ParcelQueryFilterDto {
   trackingNumber?: string;
@@ -177,6 +180,7 @@ export interface CreateParcelByWallet {
   recipient_addr: string;
   courier_addr: string;
   box_did: string;
+  trackingNumber?: string;
 }
 
 export interface ParcelData {
@@ -402,7 +406,7 @@ export const apiSlice = createApi({
         console.info('onQueryStarted /box')
         try {
           const { data } = await queryFulfilled;
-          //console.log('getBoxes data', JSON.stringify(data));
+          console.log('getBoxes data', JSON.stringify(data));
         } catch (error) { }
       },
       transformErrorResponse: (response: any) => {
@@ -486,7 +490,7 @@ export const apiSlice = createApi({
     //   You should only call this endpoint when refreshing precise location for a box
     //    without refreshing the entire box.
 
-    getBoxPreciseLocation: builder.query<any, number>({
+    getBoxPreciseLocation: builder.query<PreciseLocation, number>({
 
       query: (id) => ({
         url: `/location/box/${id}/precise`,
