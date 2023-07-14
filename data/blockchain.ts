@@ -1051,7 +1051,7 @@ export const mintBox = createAsyncThunk(
       const contract = new ethers.Contract(parcelNFTSCAddress, parcelNFTSC_ABI, wallet);
       //mint(_reciever,_uuid,parcel_id,_dataset)
       //random address
-
+      console.log("wallet.address: " + wallet.address);
       console.log("calling mintParcel with args: " + mintBox.reciever_address + " " + mintBox.parcel_id + " " + mintBox.dataset);
       // console.log("reciever_address type: " + typeof mintParcel.reciever_address);
       // console.log("uuid type: " + typeof mintParcel.uuid);
@@ -1445,6 +1445,57 @@ export const getOwnerOfNft = createAsyncThunk(
       console.log("owner: " + owner);
 
       return owner;
+
+    }
+    catch (error) {
+      return handleError(error, thunkAPI);
+    }
+  }
+);
+//getNftDetails
+export const getNftDetails = createAsyncThunk(
+  'blockchain/getNftDetails',
+  async (tokenId: string, thunkAPI) : Promise<{ parcelId: string, sender: string, receiver: string }> => {
+    try {
+      // Get the current state
+      const state = thunkAPI.getState() as RootState;
+
+      // Get the wallet from the state
+      const privateKey = state.blockchain.privateKey;
+
+      // Check if the wallet exists
+      if (!privateKey) {
+        throw new Error("Wallet not found");
+      }
+
+      //call  addScore
+      const wallet = new ethers.Wallet(privateKey, provider);
+
+      const contract = new ethers.Contract(parcelNFTSCAddress, parcelNFTSC_ABI, wallet);
+
+      console.log("calling getOwnerOfNft with args: " + "tokenId: " + tokenId);
+      const {
+        parcelId ,
+        sender,
+        receiver
+      } = await contract.boxes(tokenId) as { parcelId: string, sender: string, receiver: string };
+
+
+      
+
+      console.log("details: " + JSON.stringify({
+        parcelId ,
+        sender,
+        receiver
+      }));
+
+     
+
+      return {
+        parcelId ,
+        sender,
+        receiver
+      };
 
     }
     catch (error) {

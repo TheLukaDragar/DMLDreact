@@ -3,11 +3,11 @@ import * as Location from 'expo-location';
 import { LocationObject } from 'expo-location';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Dimensions, Image, StyleSheet } from 'react-native';
+import { Image, StyleSheet } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
-import { Divider, IconButton, Provider, Switch, TextInput, useTheme } from 'react-native-paper';
+import { IconButton, Paragraph, Provider, Switch, TextInput, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, View, getTheme } from '../../../components/Themed';
+import { Text, View } from '../../../components/Themed';
 import { getErrorMessage, useLazyGetBoxQuery } from '../../../data/api';
 import { uploadToFirebase } from "../../../firebaseConfig";
 
@@ -115,8 +115,9 @@ export default function KeyBotDetails() {
         <View style={styles.imageContainer}>
           <Image source={{ uri: imageUri || 'https://source.unsplash.com/random' }} style={styles.image} />
           <IconButton
-            style={{...styles.overlayText,
-              backgroundColor: theme.colors.background,  
+            style={{
+              ...styles.overlayText,
+              backgroundColor: theme.colors.background,
             }}
             icon="image-edit-outline"
             // iconColor={theme.colors.primary}
@@ -127,9 +128,9 @@ export default function KeyBotDetails() {
 
         </View>
 
-        <Divider style={styles.divider} />
 
-        <Text style={styles.address}>Address: {address == "" ? "Loading..." : address}</Text>
+
+
 
         <MapView
           style={styles.map}
@@ -148,10 +149,15 @@ export default function KeyBotDetails() {
           }} />
         </MapView>
 
+        <Paragraph style={styles.address}>Address: {address == "" ? "Loading..." : address}</Paragraph>
+
+
         <View style={styles.inputContainer}>
           <TextInput
             label="License Plate"
             value={licensePlate || ""}
+            
+            mode='outlined'
 
             onChangeText={handleLicensePlateChange}
             style={styles.licensePlateInput}
@@ -175,7 +181,7 @@ const styles = StyleSheet.create({
   imageContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    height: Dimensions.get('window').height * 0.25,
+    flex: 0.35,
 
     overflow: 'hidden',
   },
@@ -189,15 +195,22 @@ const styles = StyleSheet.create({
     right: 0,
   },
   map: {
-    flex: 0.7,
+    flex: 0.3,
+
+
 
   },
   inputContainer: {
-    padding: 20,
+    flex: 0.25,
+    paddingHorizontal: 10,
+   
   },
   licensePlateInput: {
-    marginBottom: 20,
-    fontWeight: 'bold',
+  
+  
+
+
+    
   },
   switchContainer: {
     flexDirection: 'row',
@@ -206,14 +219,12 @@ const styles = StyleSheet.create({
   switchLabel: {
     marginRight: 10,
   },
-  divider: {
-    marginVertical: 10,
-  },
+
   address: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    fontStyle: 'italic',
-    color: 'gray',
+    flex: 0.1,
+    paddingHorizontal: 10,
+
+
     fontWeight: 'bold',
   },
 });

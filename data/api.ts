@@ -93,7 +93,8 @@ export interface BoxItem {
   reputation: null;
   description: null;
   user_id: null;
-  permission: BoxPermissionLevel
+  permission: BoxPermissionLevel,
+  boxStatus?: BoxStatus
 }
 export interface Box {
   id: number;
@@ -113,6 +114,7 @@ export interface Box {
   imageUrl: string;
   reputationThreshold: number;
   reputation: number;
+  boxStatus?: BoxStatus;
 }
 
 export interface BoxQueryFilterDto {
@@ -184,6 +186,8 @@ export interface CreateParcelByWallet {
 }
 
 export interface ParcelData {
+  _createTime: Date;
+
   id: number;
   trackingNumber: string;
   nftId: string;
@@ -403,7 +407,7 @@ export const apiSlice = createApi({
       }),
       transformResponse: (response: GetBoxesResponse) => response,
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-        console.info('onQueryStarted /box')
+        console.info('onQueryStarted /box', arg,dispatch);
         try {
           const { data } = await queryFulfilled;
           console.log('getBoxes data', JSON.stringify(data));
@@ -803,7 +807,7 @@ export const apiSlice = createApi({
 })
 
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import { BoxPermissionLevel, UserType2 } from '../constants/Auth';
+import { BoxPermissionLevel, BoxStatus, UserType2 } from '../constants/Auth';
 /**
  * Type predicate to narrow an unknown error to `FetchBaseQueryError`
  */

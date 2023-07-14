@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
-import { ActivityIndicator, Avatar, Button, Card, Paragraph, Title, useTheme } from 'react-native-paper';
+import { ActivityIndicator, Avatar, Button, Caption, Card, Paragraph, Title, useTheme } from 'react-native-paper';
 import { Text, View } from '../../../components/Themed';
 import { useAppDispatch, useAppSelector } from '../../../data/hooks';
 
@@ -20,7 +20,7 @@ import PagerView from 'react-native-pager-view';
 import { authenticate, connectDeviceById, disconnectDevice, getChallenge, subscribeToEvents } from '../../../ble/bleSlice';
 import BLEDeviceList from '../../../components/BleDeviceList';
 import ScreenIndicators from '../../../components/ScreenIndicators';
-import { BoxPermissionLevel } from '../../../constants/Auth';
+import { BoxPermissionLevel, BoxStatus } from '../../../constants/Auth';
 
 
 
@@ -276,18 +276,69 @@ export default function KeyBot() {
 
 
                   <Card.Content>
-                    <Avatar.Icon size={60} icon="cube" />
-                    <Title>{item.did}</Title>
+                    <View style={styles.titleRow}>
+                      <Avatar.Icon size={60} icon="cube"
+                        style={{
+
+                          backgroundColor: item.boxStatus == null
+                            ? theme.colors.error
+                            : item.boxStatus == BoxStatus.READY || item.boxStatus == BoxStatus.NOT_READY
+                              ? theme.colors.primary
+                              : 'grey'
+                        }}
+                      />
+
+                      <Title style={styles.cardTitle}> {item.did}</Title>
+
+                    </View>
+
+
+
+
                     <Paragraph>Reputation: {item.reputation}</Paragraph>
                     <Paragraph>Reputation threshold: {item.reputationThreshold ? item.reputationThreshold : "not set"}</Paragraph>
                     <Paragraph>Permission: {getPermissionText(item.permission)}</Paragraph>
                     <Paragraph>License plate: {item.licensePlate ? item.licensePlate : "not set"}</Paragraph>
                     <Paragraph>Location: {item.preciseLocation_id}</Paragraph>
-                    {item.description && <Paragraph>Description: {item.description}</Paragraph>}
+
+
+
 
 
 
                   </Card.Content>
+
+                  <Card.Actions>
+
+
+
+                    <Caption
+
+                    >{
+                        item.boxStatus == null
+                          ? "missing dilivery info"
+                          : item.boxStatus == BoxStatus.READY
+
+                            ? "Ready for dilivery"
+                            : item.boxStatus == BoxStatus.NOT_READY
+                              ? "Not ready for dilivery"
+                              : "Unknown"
+
+                      }
+
+                    </Caption>
+
+                   
+
+
+
+
+
+
+
+
+                  </Card.Actions>
+
 
 
                 </Card>
@@ -313,7 +364,12 @@ export default function KeyBot() {
             </View>
 
           </PagerView>
-          <ScreenIndicators count={Boxes.total + 1} activeIndex={pageIndex} />
+          <View style={styles.screenContainers}>
+
+            <ScreenIndicators count={Boxes.total + 1} activeIndex={pageIndex} />
+
+          </View>
+
 
         </View>
 
@@ -367,21 +423,24 @@ const styles = StyleSheet.create({
   },
   page: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+
+
+
+
 
   },
   card: {
-    flex: 0.9,
-    width: '90%',
+    margin: 10,
+    flex: 1,
     height: '100%',
+
+
 
   },
   addCard: {
-    flex: 0.9,
-    width: '90%',
-    justifyContent: 'center',
-    alignItems: 'center',
+    margin: 10,
+    flex: 1,
+    height: '100%',
 
   },
   addCardContent: {
@@ -393,22 +452,39 @@ const styles = StyleSheet.create({
 
   },
   pagerContainer: {
-    flex: 0.5,
-    justifyContent: 'center',
-    alignItems: 'center',
+    flex: 1,
+
     width: '100%',
   },
   pagerView: {
-    flex: 1,
-    width: '100%',
+    flex: 6,
+
+
   },
   buttonContainer: {
-    flex: 0.5,
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   map: {
     width: '100%',
     height: '100%',
+  },
+  screenContainers: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+  },
+  cardTitle: {
+    fontSize: 20,
+    marginLeft: 10, // To provide some spacing between the icon and the title
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center', // This aligns the icon and the title vertically
+    backgroundColor: 'transparent',
+    marginBottom: 10,
   },
 });

@@ -154,7 +154,7 @@ export default function Parcels() {
 
           </View>
 
-          <Title style={styles.details}>Tracking Number: <Caption style={styles.details}>{box?.box.licensePlate}</Caption></Title>
+          <Title style={styles.details}>Tracking Number: <Caption style={styles.details}>{item.trackingNumber}</Caption></Title>
 
           <Divider style={styles.divider} />
 

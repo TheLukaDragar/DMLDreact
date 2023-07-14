@@ -21,4 +21,10 @@ export enum BoxPermissionLevel {
     MANAGE = 2,
     OWNER = 3
 }
+export enum BoxStatus {
+
+    NOT_READY = 0,
+    READY = 1,
+}
+
   

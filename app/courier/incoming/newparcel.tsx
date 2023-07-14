@@ -43,6 +43,7 @@ export default function NewParcel() {
     
     // orderBy:"id", //todo
     // desc: true,
+    availableForDeposit: true,
    
     
 
@@ -102,6 +103,7 @@ export default function NewParcel() {
   };
 
   const handleError = (step: number, error: any) => {
+    console.log("Error at step " + step + ": " + JSON.stringify(error, null, 2));
     setErrorStep(step);
     setSnackBarText(getErrorMessage(error));
     setIsSnackbarVisible(true);

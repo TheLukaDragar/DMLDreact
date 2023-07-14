@@ -150,6 +150,7 @@ export default function Profile() {
         console.log("wallet not conected");
         setWalletConnected("not connected");
       });
+      console.log("wallet.address", wallet.address);
     } catch (error) {
       console.error("Error fetching blockchain data", error);
     }
