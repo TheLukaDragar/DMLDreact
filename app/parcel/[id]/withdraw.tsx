@@ -1,13 +1,11 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Button } from 'react-native-paper';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
-import { SafeAreaView, Text, View, getTheme } from '../../components/Themed';
-import { INTRO_SCREEN_01 } from '../../constants/Intro';
-import ScreenIndicators from '../../components/ScreenIndicators';
+import { SafeAreaView, Text, View, getTheme } from '../../../components/Themed';
+import { INTRO_SCREEN_01 } from '../../../constants/Intro';
+import ScreenIndicators from '../../../components/ScreenIndicators';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Box, useGetParcelByIdQuery, useLazyGetBoxQuery } from '../../data/api';
-import { useEffect, useState } from 'react';
-
+import { Box, useGetParcelByIdQuery, useLazyGetBoxQuery } from '../../../data/api';
 
 export default function ConnectToTheBox() {
 
@@ -18,24 +16,7 @@ export default function ConnectToTheBox() {
   console.log(params);
 
   //useLazyGetParcelByIdQuery
-  const { data:parcel, error, isLoading } = useGetParcelByIdQuery(parseInt(String(params.id)));
-  const [getBox, { data: boxData }] = useLazyGetBoxQuery();
-  const [boxDetails, setBoxDetails] = useState<Box | undefined>(undefined);
-
-
-  useEffect(() => {
-    if (parcel) {
-      const fetchBoxDetails = async () => {
-       
-       
-          let boxResponse = await getBox(parseInt(parcel.box_id)).unwrap();
-          
-        
-        setBoxDetails(boxResponse);
-      }
-      fetchBoxDetails();
-    }
-  }, [parcel, getBox]);
+  const { data, error, isLoading } = useGetParcelByIdQuery(parseInt(String(params.id)));
 
 
 
@@ -50,7 +31,7 @@ export default function ConnectToTheBox() {
         entering={FadeInUp.duration(1000).springify()}
         style={{ alignItems: "center", flex: 1, justifyContent: "center" }}
       >
-          <Text> TODO: withdraw image here </Text>
+          <Text> TODO: depostit image here </Text>
         
 
       </Animated.View>

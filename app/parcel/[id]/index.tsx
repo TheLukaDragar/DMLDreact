@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Avatar, Button, Caption, Card, Divider, Title } from 'react-native-paper';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { View } from '../../components/Themed';
-import { Box, useGetParcelByIdQuery, useLazyGetBoxQuery } from '../../data/api';
+import { View } from '../../../components/Themed';
+import { Box, useGetParcelByIdQuery, useLazyGetBoxQuery } from '../../../data/api';
 
 import Constants from 'expo-constants';
 import { Dimensions, Image, Linking, StyleSheet } from 'react-native';
@@ -49,10 +49,10 @@ export default function ConnectToTheBox() {
   return (
     <View style={{
       flex: 1,
-      paddingTop: insets.top,
-      paddingBottom: insets.bottom,
-      paddingLeft: insets.left,
-      paddingRight: insets.right,
+      // paddingTop: insets.top,
+      // paddingBottom: insets.bottom,
+      // paddingLeft: insets.left,
+      // paddingRight: insets.right,
     }}>
       <Animated.View entering={FadeInUp.duration(1000).springify()} style={{ flex: 1 }}>
 
@@ -118,8 +118,8 @@ export default function ConnectToTheBox() {
           <Button
             mode="contained"
             onPress={() => router.push({
-              pathname: "/parcel/deposit",
-              params: { id: params.id },
+              pathname: "/parcel/" + params.id + "/withdraw",
+              
             })}
           >
             Deposit
