@@ -61,7 +61,7 @@ export default function KeyBotDetails() {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 1,
+      quality: 0,
     });
 
     if (!pickerResult.canceled) {

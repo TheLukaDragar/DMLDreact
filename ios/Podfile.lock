@@ -6,12 +6,17 @@ PODS:
     - ExpoModulesCore
   - EXApplication (5.3.0):
     - ExpoModulesCore
+  - EXCamera (13.4.2):
+    - ExpoModulesCore
   - EXConstants (14.4.2):
     - ExpoModulesCore
   - EXFileSystem (15.4.2):
     - ExpoModulesCore
   - EXFont (11.4.0):
     - ExpoModulesCore
+  - EXImageLoader (4.3.0):
+    - ExpoModulesCore
+    - React-Core
   - EXJSONUtils (0.7.0)
   - EXLocation (16.0.0):
     - ExpoModulesCore
@@ -81,6 +86,8 @@ PODS:
   - ExpoDevice (5.4.0):
     - ExpoModulesCore
   - ExpoHead (0.0.11):
+    - ExpoModulesCore
+  - ExpoImagePicker (14.3.1):
     - ExpoModulesCore
   - ExpoKeepAwake (12.3.0):
     - ExpoModulesCore
@@ -437,6 +444,8 @@ PODS:
     - RCTTypeSafety
     - React-Core
     - ReactCommon/turbomodule/core
+  - react-native-slider (4.4.2):
+    - React-Core
   - React-NativeModulesApple (0.72.1):
     - React-callinvoker
     - React-Core
@@ -586,9 +595,11 @@ DEPENDENCIES:
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - EASClient (from `../node_modules/expo-eas-client/ios`)
   - EXApplication (from `../node_modules/expo-application/ios`)
+  - EXCamera (from `../node_modules/expo-camera/ios`)
   - EXConstants (from `../node_modules/expo-constants/ios`)
   - EXFileSystem (from `../node_modules/expo-file-system/ios`)
   - EXFont (from `../node_modules/expo-font/ios`)
+  - EXImageLoader (from `../node_modules/expo-image-loader/ios`)
   - EXJSONUtils (from `../node_modules/expo-json-utils/ios`)
   - EXLocation (from `../node_modules/expo-location/ios`)
   - EXManifests (from `../node_modules/expo-manifests/ios`)
@@ -601,6 +612,7 @@ DEPENDENCIES:
   - ExpoClipboard (from `../node_modules/expo-clipboard/ios`)
   - ExpoDevice (from `../node_modules/expo-device/ios`)
   - ExpoHead (from `../node_modules/expo-head/ios`)
+  - ExpoImagePicker (from `../node_modules/expo-image-picker/ios`)
   - ExpoKeepAwake (from `../node_modules/expo-keep-awake/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
   - ExpoSecureStore (from `../node_modules/expo-secure-store/ios`)
@@ -636,6 +648,7 @@ DEPENDENCIES:
   - react-native-maps (from `../node_modules/react-native-maps`)
   - react-native-pager-view (from `../node_modules/react-native-pager-view`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
+  - "react-native-slider (from `../node_modules/@react-native-community/slider`)"
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
   - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
@@ -678,12 +691,16 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-eas-client/ios"
   EXApplication:
     :path: "../node_modules/expo-application/ios"
+  EXCamera:
+    :path: "../node_modules/expo-camera/ios"
   EXConstants:
     :path: "../node_modules/expo-constants/ios"
   EXFileSystem:
     :path: "../node_modules/expo-file-system/ios"
   EXFont:
     :path: "../node_modules/expo-font/ios"
+  EXImageLoader:
+    :path: "../node_modules/expo-image-loader/ios"
   EXJSONUtils:
     :path: "../node_modules/expo-json-utils/ios"
   EXLocation:
@@ -708,6 +725,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-device/ios"
   ExpoHead:
     :path: "../node_modules/expo-head/ios"
+  ExpoImagePicker:
+    :path: "../node_modules/expo-image-picker/ios"
   ExpoKeepAwake:
     :path: "../node_modules/expo-keep-awake/ios"
   ExpoModulesCore:
@@ -777,6 +796,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-pager-view"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
+  react-native-slider:
+    :path: "../node_modules/@react-native-community/slider"
   React-NativeModulesApple:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios"
   React-perflogger:
@@ -835,9 +856,11 @@ SPEC CHECKSUMS:
   DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
   EASClient: 49f8ea858204eb4844d9fb386e5fb7920aee2e30
   EXApplication: 02655a251434d564bb0e73291f5a490c74b5b76f
+  EXCamera: 0fbfa338a3776af2722d626a3437abe33f708aad
   EXConstants: ce5bbea779da8031ac818c36bea41b10e14d04e1
   EXFileSystem: d7f59869885cfeab3ac771e2a8d0f5ed98cd3fdb
   EXFont: 738c44c390953ebcbab075a4848bfbef025fd9ee
+  EXImageLoader: 34b214f9387e98f3c73989f15d8d5b399c9ab3f7
   EXJSONUtils: 09273cf1b6a6bedc5bdae06121011123815c7f32
   EXLocation: 231f4a3683fabfed254c9498b226f7f40a40f9d8
   EXManifests: 083496dbda4035c42608ae76970f463b4611b767
@@ -850,6 +873,7 @@ SPEC CHECKSUMS:
   ExpoClipboard: ddd3ecf4af93c003667dab75a0f2ed3ae4f73d85
   ExpoDevice: 1c1b0c9cad96c292c1de73948649cfd654b2b3c0
   ExpoHead: 8da645502363b53eeb99d99276a0adbe0ec8cff0
+  ExpoImagePicker: 530faafc88bffd0fb96c785327d91755edfdb220
   ExpoKeepAwake: be4cbd52d9b177cde0fd66daa1913afa3161fc1d
   ExpoModulesCore: cfc52053496bae101b7ce6cd20a0ebaefbf977c0
   ExpoSecureStore: 57db3b6da8b59046e2057e95bf7738a8027b47c3
@@ -888,6 +912,7 @@ SPEC CHECKSUMS:
   react-native-maps: 667f9b975549c6fa9b1631bf859440f68ebd3b8f
   react-native-pager-view: 0ccb8bf60e2ebd38b1f3669fa3650ecce81db2df
   react-native-safe-area-context: 36cc67648134e89465663b8172336a19eeda493d
+  react-native-slider: 33b8d190b59d4f67a541061bb91775d53d617d9d
   React-NativeModulesApple: a95134487a26bbfd83326f8d7af335739cb17421
   React-perflogger: 3d501f34c8d4b10cb75f348e43591765788525ad
   React-RCTActionSheet: f5335572c979198c0c3daff67b07bd1ad8370c1d

@@ -1,5 +1,4 @@
 {
-  
   "expo": {
     "name": "DMLDreact",
     "slug": "DMLDreact",
@@ -13,7 +12,6 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-  
     "jsEngine": "hermes",
     "updates": {
       "fallbackToCacheTimeout": 0,
@@ -27,13 +25,15 @@
       "bundleIdentifier": "com.lukadragar.DLMDreact",
       "infoPlist": {
         "NSBluetoothAlwaysUsageDescription": "Allow $(PRODUCT_NAME) to connect to bluetooth devices",
-        "NSBluetoothPeripheralUsageDescription": "Allow $(PRODUCT_NAME) to connect to bluetooth devices"
+        "NSBluetoothPeripheralUsageDescription": "Allow $(PRODUCT_NAME) to connect to bluetooth devices",
+        "NSCameraUsageDescription" : "Allow $(PRODUCT_NAME) to access your camera",
+        "NSPhotoLibraryUsageDescription": "The app accesses your photos to let you share them."
+        
       },
       "jsEngine": "jsc",
       "config": {
         "googleMapsApiKey": "AIzaSyD4hVREK_akwOfftfk3gqVQfjti-qcreYg" //https://github.com/react-native-maps/react-native-maps/blob/master/docs/installation.md M1 ISSUE SOLVE
       }
-      
     },
     "android": {
       "adaptiveIcon": {
@@ -50,7 +50,6 @@
         "googleMaps": {
           "apiKey": "AIzaSyD4hVREK_akwOfftfk3gqVQfjti-qcreYg"
         }
-
       }
     },
     "web": {
@@ -67,7 +66,8 @@
           ],
           "bluetoothAlwaysPermission": "Allow $(PRODUCT_NAME) to connect to bluetooth devices"
         }
-      ], [
+      ],
+      [
         "expo-router",
         {
           "asyncRoutes": {
@@ -75,13 +75,18 @@
             "android": false,
             "ios": false
           }
-          
         }
       ],
       [
         "expo-image-picker",
         {
           "photosPermission": "The app accesses your photos to let you share them."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera."
         }
       ]
     ],
