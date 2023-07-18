@@ -197,7 +197,7 @@ export default function NewParcel() {
        
 
 
-      }
+      } 
       console.log("new_parcel2: " + JSON.stringify(new_parcel2, null, 2));
 
       const updateNFTIDResponse = await updateParcelById(new_parcel2).unwrap();

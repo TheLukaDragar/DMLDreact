@@ -1,5 +1,5 @@
 import { Card, Caption, IconButton, Avatar, Title, useTheme } from 'react-native-paper';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View } from './Themed';
 import { StyleSheet } from 'react-native';
 
@@ -12,6 +12,14 @@ const StepCard: React.FC<StepCardProps> = ({ title, status }) => {
   let icon;
 
   const theme = useTheme();
+
+  useEffect(() => {
+    if (status === 'error') {
+      
+    }
+  }
+  , [status, title]);
+  
 
 
   if (status === 'completed') {
@@ -45,7 +53,7 @@ const StepCard: React.FC<StepCardProps> = ({ title, status }) => {
 const styles = StyleSheet.create({
     card: {
        
-        
+       
         borderRadius: 0,
       },
       cardTitle: {

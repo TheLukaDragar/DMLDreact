@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { BleManager, Device } from 'react-native-ble-plx';
 import { RootState } from '../data/store';
-import { bleSliceInterface, connectDeviceByIdParams, linkDeviceByIdParams,manualMotorControlParams,ManualMotorControlCommand,KeyBotState,testbuttonParams, NetworkState, toBLEDeviceVM,authenticateDeviceParams, SensorState, MidSensorState, keybotCommandParams, ConnectionState} from './bleSlice.contracts';
+import { bleSliceInterface, connectDeviceByIdParams, linkDeviceByIdParams,manualMotorControlParams,ManualMotorControlCommand,KeyBotState,testbuttonParams, NetworkState, toBLEDeviceVM,authenticateDeviceParams, SensorState, MidSensorState, keybotCommandParams, ConnectionState, KeyBotCommand} from './bleSlice.contracts';
 import { Buffer } from 'buffer'
 import CryptoES from 'crypto-es';
 import Constants from 'expo-constants';
@@ -363,8 +363,54 @@ export const manualMotorControl = createAsyncThunk('ble/manualMotorControl', asy
 
 //keybot command
 export const keyBotCommand = createAsyncThunk('ble/keyBotCommand', async (params: keybotCommandParams, thunkAPI) => {
+
+    const state = thunkAPI.getState() as RootState;
+    const connectedDevice  = state.ble.connectedDevice;
+    const isDemoDevice = state.ble.use_demo_device;
+
+    if (connectedDevice === null) {
+        throw new Error('No connected device');
+    }
+    
     //00002a3d-0000-1000-8000-00805f9b34f3
     const command = params.command;
+
+    if (isDemoDevice) {
+        console.log("keyBotCommand: " + command);
+        if(command == KeyBotCommand.KEYBOT_PRESS_LEFT){
+            thunkAPI.dispatch(updateKeyBotState({ status: KeyBotState.KEYBOT_PRESSING_LEFT }));
+            //run the timer
+            setTimeout(() => {
+                thunkAPI.dispatch(updateKeyBotState({ status: KeyBotState.KEYBOT_RETURNING_TO_CENTER_FROM_LEFT }));
+            } , 2000);
+            setTimeout(() => {
+                thunkAPI.dispatch(updateKeyBotState({ status: KeyBotState.KEYBOT_STATE_IDLE }));
+                
+            }
+            , 4000);
+
+        }
+        else if(command == KeyBotCommand.KEYBOT_PRESS_RIGHT){
+            thunkAPI.dispatch(updateKeyBotState({ status: KeyBotState.KEYBOT_PRESSING_RIGHT }));
+            //run the timer
+            setTimeout(() => {
+                thunkAPI.dispatch(updateKeyBotState({ status: KeyBotState.KEYBOT_RETURNING_TO_CENTER_FROM_RIGHT }));
+
+            }
+            , 2000);
+            setTimeout(() => {
+                thunkAPI.dispatch(updateKeyBotState({ status: KeyBotState.KEYBOT_STATE_IDLE }));
+                
+            }
+            , 4000);
+
+        }
+
+
+            
+        return;
+
+    }
     //to base64
     const commandBase64 = Buffer.from(command).toString('base64');
     bleManager.writeCharacteristicWithResponseForDevice(device.id, '00001815-0000-1000-8000-00805f9b34fb', '00002a3d-0000-1000-8000-00805f9b34f3', commandBase64).then((characteristic) => {

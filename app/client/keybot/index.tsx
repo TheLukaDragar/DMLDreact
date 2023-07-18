@@ -217,7 +217,7 @@ export default function KeyBot() {
 
 
 
-  console.log("error", error, "isLoading", isLoading, "isFetching", isFetching, "isError", isError, "data", Boxes);
+  //console.log("error", error, "isLoading", isLoading, "isFetching", isFetching, "isError", isError, "data", Boxes);
 
 
 
@@ -262,7 +262,7 @@ export default function KeyBot() {
           <PagerView style={styles.pagerView} initialPage={pageIndex} onPageSelected={(e) => {
             setPageIndex(e.nativeEvent.position);
           }}>
-            {Boxes.items.map((item, index) => (
+            {Boxes.items.map((item: BoxItem, index: number) => (
               <View key={index} style={styles.page}>
                 <Card style={styles.card} onPress={
                   () => {
@@ -282,7 +282,7 @@ export default function KeyBot() {
 
                           backgroundColor: item.boxStatus == null
                             ? theme.colors.error
-                            : item.boxStatus == BoxStatus.READY || item.boxStatus == BoxStatus.NOT_READY
+                            : item.boxStatus === BoxStatus.READY || item.boxStatus === BoxStatus.NOT_READY
                               ? theme.colors.primary
                               : 'grey'
                         }}

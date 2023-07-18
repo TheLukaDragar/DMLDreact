@@ -117,7 +117,7 @@ export default function RootLayout(): ReactNode {
 
                     <Stack.Screen name="parcel/[id]/deposit"
                       options={{
-                        title: "Pa3r3rcel",
+                        title: "Deposit Parcel",
 
 
                         headerShown: true,

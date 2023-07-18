@@ -1187,12 +1187,13 @@ export interface UpdateBox {
 
 }
 export interface UpdateBoxResponse {
-  tx_data: string
+  tx_data: string, txHash: string;
+
 }
 //user approves the other user to transfer the NFT to himself
 export const updateBox = createAsyncThunk(
   'blockchain/updateBox',
-  async (updateBox: UpdateBox, thunkAPI) => {
+  async (updateBox: UpdateBox, thunkAPI) : Promise<UpdateBoxResponse> => {
     try {
       // Get the current state
       const state = thunkAPI.getState() as RootState;
@@ -1234,8 +1235,11 @@ export const updateBox = createAsyncThunk(
 
 
       console.log("txReceipt: " + JSON.stringify(txReceipt));
+      const tx_hash = txReceipt.transactionHash;
 
-      return { tx_data: JSON.stringify(txReceipt) } as UpdateBoxResponse;
+      return { tx_data: JSON.stringify(txReceipt) , txHash: tx_hash
+      
+      } as UpdateBoxResponse;
 
     }
     catch (error) {

@@ -121,7 +121,7 @@ export default function ConnectToTheBox() {
                     <Title style={styles.details}>MetaData Datasets: <Caption style={styles.details}>{datasets.length}</Caption></Title>
 
                     <Card.Actions>
-                      
+
 
                       <Button
                         onPress={() => {
@@ -142,6 +142,14 @@ export default function ConnectToTheBox() {
                     <Title style={styles.details}>Address: <Caption style={styles.details}>{parcel.location_id}</Caption></Title>
                   </Card.Content>
                   <Card.Actions>
+                    <Button
+                      mode="contained"
+                      
+                      onPress={() => {
+                        router.replace("/parcel/" + boxDetails.id + "/deposit");
+                      }}
+                    >Deposit
+                    </Button>
                   </Card.Actions>
                 </Card>
               </View>
