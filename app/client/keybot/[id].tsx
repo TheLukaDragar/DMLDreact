@@ -6,12 +6,12 @@ import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { Image, StyleSheet } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
-import { Button, IconButton, Paragraph, TextInput, useTheme } from 'react-native-paper';
+import { Button, IconButton, TextInput, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Switch from 'react-native-switch-toggles';
 import { Text, View } from '../../../components/Themed';
 import { BoxStatus } from '../../../constants/Auth';
-import { Box, UpdateBoxDto, getErrorMessage, useLazyGetBoxQuery, useUpdateBoxMutation } from '../../../data/api';
+import { Box, PreciseLocation, UpdateBoxDto, getErrorMessage, useLazyGetBoxQuery, useSetBoxPreciseLocationMutation, useUpdateBoxMutation } from '../../../data/api';
 import { uploadToFirebase } from "../../../firebaseConfig";
 
 
@@ -26,6 +26,7 @@ export default function KeyBotDetails() {
   const [getBoxDetails, { isLoading, data: initalBoxDetails, isFetching, isSuccess }] = useLazyGetBoxQuery();
 
   const [updateBox, { isLoading: isUpdating }] = useUpdateBoxMutation();
+  const [setBoxPreciseLocation, { isLoading: isSettingLocation }] = useSetBoxPreciseLocationMutation();
 
 
   const [BoxDetails, setBoxDetails] = useState<Box | undefined>(undefined);
@@ -47,6 +48,8 @@ export default function KeyBotDetails() {
   const [isEnabled, setIsEnabled] = React.useState(false);
 
   const isFirstRender = useRef(true);
+  const mapRef = React.useRef<MapView>(null);
+
 
 
 
@@ -61,7 +64,7 @@ export default function KeyBotDetails() {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 0,
+      quality: 0.7,
     });
 
     if (!pickerResult.canceled) {
@@ -100,7 +103,7 @@ export default function KeyBotDetails() {
         const response = await getBoxDetails(parseInt(String(id))).unwrap();
 
         setBoxDetails(response);
-     
+
         setIsEnabled(response.boxStatus === BoxStatus.READY);
 
         console.log("set license plate", response.licensePlate);
@@ -167,7 +170,7 @@ export default function KeyBotDetails() {
   }
 
   const haveBoxDetailsChanged = (newDetails: Box, initialDetails: Box): boolean => {
-    const relevantKeys: (keyof Box)[] = ['licensePlate', 'imageUrl', 'reputationThreshold', 'boxStatus']; // Add any other keys that are relevant
+    const relevantKeys: (keyof Box)[] = ['licensePlate', 'imageUrl', 'reputationThreshold', 'boxStatus', 'preciseLocation']; // Add any other keys that are relevant
 
     const changed = relevantKeys.some((key: keyof Box) => {
       if (typeof newDetails[key] === 'object' && newDetails[key] !== null) {
@@ -184,7 +187,7 @@ export default function KeyBotDetails() {
     console.log("handleBoxStatusChange", value);
     //check that all fields are filled like location, license plate, image, reputation threshold 
 
-    if(value === true){
+    if (value === true) {
       setIsEnabled(false);
     }
     // if (BoxDetails) {
@@ -231,6 +234,29 @@ export default function KeyBotDetails() {
   const updateBoxDetailsAndNavigate = async () => {
     try {
       if (BoxDetails) {
+
+        //check for location change
+        if (
+          (!initalBoxDetails?.preciseLocation && BoxDetails?.preciseLocation) ||
+          (initalBoxDetails?.preciseLocation &&
+            (initalBoxDetails.preciseLocation.latitude !==
+              BoxDetails?.preciseLocation?.latitude ||
+              initalBoxDetails.preciseLocation.longitude !==
+              BoxDetails?.preciseLocation?.longitude))
+        ) {
+          console.log("location changed");
+          const newLocation: PreciseLocation = { latitude: BoxDetails?.preciseLocation.latitude, longitude: BoxDetails?.preciseLocation.longitude, inaccuracy: BoxDetails?.preciseLocation.inaccuracy };
+
+          const updated_location = await setBoxPreciseLocation({
+            boxId: BoxDetails?.id,
+            preciseLocation: newLocation,
+          }).unwrap();
+          console.log("updated_location", updated_location);
+        }
+
+
+
+
         let updatedBoxDetails: UpdateBoxDto = { ...BoxDetails };
         const updatedBox = await updateBox(updatedBoxDetails).unwrap();
         console.log("updatedBox", updatedBox);
@@ -261,10 +287,10 @@ export default function KeyBotDetails() {
       } else {
         console.log("seting switch to x");
         setBoxDetails({ ...BoxDetails, boxStatus: isEnabled ? BoxStatus.READY : BoxStatus.NOT_READY });
-       
+
       }
 
-      
+
     }
 
   }, [isEnabled]);
@@ -305,14 +331,31 @@ export default function KeyBotDetails() {
       {BoxDetails?.preciseLocation?.latitude && BoxDetails?.preciseLocation?.longitude ? (
         <MapView
           style={styles.map}
+          ref={mapRef}
           initialRegion={{
             latitude: BoxDetails?.preciseLocation?.latitude,
             longitude: BoxDetails?.preciseLocation?.longitude,
             latitudeDelta: 0.0922,
-            longitudeDelta: 0.0421,
+            longitudeDelta: 0.0421
           }}
+          camera={
+            {
+              center: {
+                latitude: BoxDetails?.preciseLocation?.latitude,
+                longitude: BoxDetails?.preciseLocation?.longitude,
+              },
+              zoom: 18,
+              pitch: 0,
+              heading: 0,
+              altitude: 0,
+
+            }
+
+
+          }
           userLocationAnnotationTitle="Box Location"
           followsUserLocation={true}
+          showsUserLocation={true}
         >
           <Marker
             coordinate={{
@@ -322,17 +365,56 @@ export default function KeyBotDetails() {
           />
         </MapView>
       ) : (
-        <Text style={styles.map}>Location not set</Text>
+        <Text style={{
+          ...styles.map, textAlign: 'center'
+
+        }}>
+          No location set, please set box location.
+        </Text>
       )}
 
 
-      <Paragraph style={styles.address}>Address: {address == "" ? "Loading..." : address}</Paragraph>
+      {/* <Paragraph style={styles.address}>Address: {address == "" ? "Loading..." : address}</Paragraph> */}
+      <View style={styles.updateLocationContainer}>
+        <Button style={styles.updateLocationButton}
+          mode="contained"
+          loading={isUpdating}
+          onPress={() => {
+            if (location && location.coords && location?.coords.latitude && location?.coords.longitude && location?.coords.accuracy && BoxDetails) {
+              setBoxDetails({
+                ...BoxDetails, preciseLocation: {
+                  latitude: location?.coords.latitude,
+                  longitude: location?.coords.longitude,
+                  inaccuracy: location?.coords.accuracy,
+                }
+              });
 
+              if (mapRef.current) {
+                mapRef.current.animateCamera({
+                  center: {
+                    latitude: location?.coords.latitude,
+                    longitude: location?.coords.longitude,
+                  },
+                  zoom: 18,
+                });
+              }
+            }
+          }
+          }
+
+
+
+        >
+          {BoxDetails?.preciseLocation?.latitude && BoxDetails?.preciseLocation?.longitude ? "Update Location" : "Set Location"}
+        </Button>
+      </View>
 
       <View style={styles.inputContainer}>
+
+
         <TextInput
           label="License Plate"
-          value={BoxDetails?.licensePlate || ""}
+          value={BoxDetails?.licensePlate}
           mode='outlined'
           placeholder='XX1234567'
           onChangeText={handleLicensePlateChange}
@@ -360,7 +442,8 @@ export default function KeyBotDetails() {
         <View style={styles.switchContainer}>
           <Text style={styles.switchLabel}>Status:</Text>
           <Switch
-            size={50}
+
+            size={60}
             value={isEnabled}
             onChange={(value) => {
               console.log("switch value", value);
@@ -368,10 +451,11 @@ export default function KeyBotDetails() {
             }
             }
 
-              
+
             activeTrackColor={theme.colors.primary}
-            renderOffIndicator={() => <Text style={{ fontSize: 16, color: theme.colors.secondary }}>OFF</Text>}
-            renderOnIndicator={() => <Text style={{ fontSize: 16, color: theme.colors.secondary }}>ON</Text>}
+            renderOffIndicator={() => <Text style={{ fontSize: 14, color: theme.colors.secondary }}>Not Ready</Text>}
+            renderOnIndicator={() => <Text style={{ fontSize: 14, color: theme.colors.onPrimary }}>Ready
+            </Text>}
           />
         </View>
       </View>
@@ -395,6 +479,8 @@ export default function KeyBotDetails() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    justifyContent: 'space-between',
+
 
   },
   imageContainer: {
@@ -414,7 +500,7 @@ const styles = StyleSheet.create({
     right: 0,
   },
   map: {
-    flex: 0.3,
+    flex: 0.25,
 
 
 
@@ -432,8 +518,10 @@ const styles = StyleSheet.create({
 
   },
   switchContainer: {
+
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   switchLabel: {
     marginRight: 10,
@@ -450,11 +538,26 @@ const styles = StyleSheet.create({
     color: 'red',
   },
   saveButtons: {
-    flex: 0.1,
+    flex: 0.15,
     flexDirection: 'row',
     justifyContent: 'space-evenly',
     alignItems: 'center',
   },
+  updateLocationContainer: {
+
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  updateLocationButton: {
+    marginVertical: 10,
+    width: '50%',
+    marginRight: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+
+
+  },
+
 
 
 });

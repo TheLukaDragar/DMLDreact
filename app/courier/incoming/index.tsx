@@ -32,14 +32,15 @@ export default function Incoming() {
     {
       id: '1345346363464634634',
       trackingNumber: '1345346363464634634',
-      title: 'Package 1',
-      sender: 'Sender 1',
-      receiver: 'Receiver 1',
+      title: 'Parcel 1',
+      sender: 'John Doe',
+      receiver: 'Jane Smith',
       receiver_address: '0xD52C27CC2c7D3fb5BA4440ffa825c12EA5658D60',
-      address: 'Address 1',
+      address: 'Letališka cesta 32j, 1000 Ljubljana',
       location: {
-        latitude: 45.767,
-        longitude: 4.833,
+        //46.061435133663394, 14.571106622081325
+        latitude: 46.061435133663394,
+        longitude: 14.571106622081325,
         inaccuracy: 10,
       }
 
@@ -47,7 +48,7 @@ export default function Incoming() {
     {
       id: '1345346363464654434',
       trackingNumber: '1345346363464654434',
-      title: 'Package 2',
+      title: 'Parcel 2',
       sender: 'Sender 2',
       receiver: 'Receiver 2',
       address: 'Address 2',
@@ -68,11 +69,13 @@ export default function Incoming() {
           <Avatar.Icon icon="package-variant-closed" size={46} />
           <Title style={styles.cardTitle}>{item.title}</Title>
         </View>
-        <Title style={styles.details}>Sender: <Caption style={styles.details}>{item.sender}</Caption></Title>
-        <Title style={styles.details}>Receiver: <Caption style={styles.details}>{item.receiver}</Caption></Title>
         <Title style={styles.details}>Tracking Number: <Caption style={styles.details}>{item.trackingNumber}</Caption></Title>
         <Title style={styles.details}>Address: <Caption style={styles.details}>{item.address}</Caption></Title>
-        <Title style={styles.details}>Address: <Caption style={styles.details}>{item.receiver_address}</Caption></Title>
+
+        <Title style={styles.details}>Sender: <Caption style={styles.details}>{item.sender}</Caption></Title>
+        <Title style={styles.details}>Receiver: <Caption style={styles.details}>{item.receiver}</Caption></Title>
+    
+        <Title style={styles.details}>Receiver Address: <Caption style={styles.details}>{item.receiver_address}</Caption></Title>
 
       </Card.Content>
       <Card.Actions>

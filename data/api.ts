@@ -123,6 +123,7 @@ export interface BoxQueryFilterDto {
   owner_id?: number;
   forUser?: number;
   availableForDeposit?: boolean;
+  boxStatus?: BoxStatus;
   location?: PreciseLocation;
   limit?: number;
   orderBy?: string;
@@ -258,7 +259,7 @@ const baseQuery = fetchBaseQuery({
     const authToken = (getState() as RootState).secure.userData.token
     //console.log('authToken', authToken);
     if (authToken) {
-      console.log('authToken', authToken);
+      //console.log('authToken', authToken);
       headers.set('Authorization', `Bearer ${authToken}`)
     }
     headers.set('Content-Type', 'application/json')
@@ -452,7 +453,7 @@ export const apiSlice = createApi({
         console.log('getBox', arg, dispatch);
         try {
           const { data } = await queryFulfilled;
-          console.log('data', data);
+          console.log('getBox data', data);
         } catch (error) { }
       },
       providesTags: (result, error, id) => [{ type: 'Box', id }],
@@ -529,7 +530,7 @@ export const apiSlice = createApi({
         const { boxId, preciseLocation } = body;
         return {
           url: `/location/box/${boxId}/precise`,
-          method: 'POST',
+          method: 'PATCH',
           body: preciseLocation,
         };
       },

@@ -10,7 +10,7 @@ import React, { useEffect } from 'react';
 import Toast from 'react-native-root-toast';
 import { Box, ParcelData, PreciseLocation, useGetMeQuery, useGetParcelsQuery, useLazyGetBoxQuery } from '../../data/api';
 
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Callout, Marker } from 'react-native-maps';
 
 export default function Parcels() {
 
@@ -21,6 +21,8 @@ export default function Parcels() {
   const theme = useTheme();
 
   const { data: courier } = useGetMeQuery(undefined, {});
+  const mapRef = React.useRef<MapView>(null);
+
 
   const { data: parcels, error, isLoading, isFetching, isError } = useGetParcelsQuery(
     {
@@ -39,6 +41,7 @@ export default function Parcels() {
 
   const [ErrorMessage, setError] = React.useState("");
   const [location, setLocation] = React.useState<PreciseLocation | null>(null);
+  const [selectedParcel, setSelectedParcel] = React.useState<ParcelData | null>(null);
 
   interface BoxData {
     parcel_id: number;
@@ -85,6 +88,7 @@ export default function Parcels() {
       }
 
       let location = await Location.getCurrentPositionAsync({});
+      console.log("location: ", location);
       setLocation({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
@@ -94,6 +98,8 @@ export default function Parcels() {
 
     })();
   }, []);
+
+
 
   function distance(loc1: PreciseLocation, loc2: PreciseLocation) {
     const R = 6371e3; // metres
@@ -144,7 +150,48 @@ export default function Parcels() {
 
 
     return (
-      <Card key={item.id} style={styles.card}
+      <Card key={item.id} style={styles.card} onPress={() => {
+        //go to map position
+        if (mapRef.current) {
+
+          //check if already in view
+
+          if (selectedParcel?.id === item.id) {
+            //already in view go to user location
+            console.log("already in view", selectedParcel?.id, item.id);
+            mapRef.current.animateCamera({
+              center: {
+                latitude: location?.latitude || 0,
+                longitude: location?.longitude || 0,
+              },
+              zoom: 15,
+            }
+            );
+            
+
+
+            setSelectedParcel(null);
+
+
+          } else {
+            console.log("not in view");
+            mapRef.current.animateCamera({
+              center: {
+                latitude: box?.box.preciseLocation.latitude || 0,
+                longitude: box?.box.preciseLocation.longitude || 0,
+              },
+              zoom: 15,
+            }
+            );
+
+            setSelectedParcel(item);
+
+          }
+
+        }
+
+
+      }}
 
       >
         <Card.Content>
@@ -165,27 +212,29 @@ export default function Parcels() {
 
           </View>
           <Title style={styles.details}>License Plate: <Caption style={styles.details}>{box?.box.licensePlate}</Caption></Title>
-          <Title style={styles.details}>Address: <Caption style={styles.details}>{item.location_id}</Caption></Title>
+          {/* <Title style={styles.details}>Address: <Caption style={styles.details}>{item.location_id}</Caption></Title> */}
           <Title style={styles.details}>Distance: <Caption style={styles.details}>{distance_to_parcel}</Caption></Title>
 
         </Card.Content>
         <Card.Actions>
 
           <Button
+          icon="car"
+          mode="contained"
             onPress={() => {
               router.push({
-                pathname: "/parcel/" + item.id+"/details",
-                
+                pathname: "/parcel/" + item.id + "/details",
+
               }
               )
             }}
-          >Details</Button>
+          >Drop off</Button>
 
-          <Button
+          {/* <Button
             onPress={() => {
-              router.push("/parcel/" + item.id+"/deposit");
+              router.push("/parcel/" + item.id + "/deposit");
             }}
-          >Deposit</Button>
+          >D</Button> */}
 
 
         </Card.Actions>
@@ -211,32 +260,52 @@ export default function Parcels() {
           <>
             <MapView
               style={styles.map}
+              ref={mapRef}
               initialRegion={{
                 latitude: location?.latitude || 45.5017,
                 longitude: location?.longitude || -73.5673,
-                latitudeDelta: 0.0922,
-                longitudeDelta: 0.0421,
+                latitudeDelta: 0.0922 / 2,
+                longitudeDelta: 0.0421 / 2,
               }}
               userLocationAnnotationTitle="My Location"
               followsUserLocation={true}
               loadingEnabled={true}
-            // showsUserLocation={true} //wait for issue https://github.com/expo/expo/pull/23501 to be merged
+              showsUserLocation={true}
 
             >
-              <Marker coordinate={{
+              {/* <Marker coordinate={{
                 latitude: location?.latitude || 45.5017,
                 longitude: location?.longitude || -73.5673,
-              }} />
+              }} /> */}
               {boxDetails.map((box) =>
-                box.box.preciseLocation && box.box.preciseLocation !== null ? (
-                  <Marker
-                    key={box.parcel_id}
-                    coordinate={{
-                      latitude: box.box.preciseLocation.latitude || 0,
-                      longitude: box.box.preciseLocation.longitude || 0,
-                    }}
-                  />
-                ) : null
+                box.box.preciseLocation && box.box.preciseLocation !== null && box.box.preciseLocation.latitude !== null && box.box.preciseLocation.longitude !== null
+
+                  ? (
+                    <Marker
+                      key={box.parcel_id}
+                      coordinate={{
+                        latitude: box.box.preciseLocation.latitude || 0,
+                        longitude: box.box.preciseLocation.longitude || 0,
+                      }}
+                     
+                    >
+                      <Callout style={{
+                        backgroundColor:'white',
+                        
+                      }}
+                      >
+                        <View style={styles.markerText}>
+                          <Avatar.Icon icon="cube" size={32} />
+                          <Title style={styles.markerTitle}>{box?.box.did}</Title>
+
+                        </View>
+
+                      </Callout>
+
+                    </Marker>
+
+
+                  ) : null
               )}
             </MapView>
 
@@ -299,6 +368,19 @@ const styles = StyleSheet.create({
     alignItems: 'center', // This aligns the icon and the title vertically
     backgroundColor: 'transparent',
     marginBottom: 10,
+  },
+  markerText: {
+    flexDirection: 'row',
+    alignItems: 'center', // This aligns the icon and the title vertically
+    backgroundColor: 'transparent',
+  
+  },
+  markerTitle: {
+    fontSize: 15,
+    marginLeft: 5, // To provide some spacing between the icon and the title
+    color:'black'
+
+   
   },
   details: {
     fontSize: 14,

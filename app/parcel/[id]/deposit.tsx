@@ -3,7 +3,7 @@ import * as Location from 'expo-location';
 import { LocationObject } from 'expo-location';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { FlatList, StyleSheet,Linking } from 'react-native';
+import { FlatList, Linking, StyleSheet } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import { ActivityIndicator, Avatar, Button, Caption, Paragraph, Subheading, Title, useTheme } from 'react-native-paper';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
@@ -14,7 +14,7 @@ import { KeyBotCommand, KeyBotState } from '../../../ble/bleSlice.contracts';
 import ScreenIndicators from '../../../components/ScreenIndicators';
 import StepCard from '../../../components/StepCard';
 import { View } from '../../../components/Themed';
-import { Box, ParcelData, ParcelStatus, PreciseLocation, getErrorMessage, isErrorWithMessage, useDepositParcelMutation, useGetParcelByIdQuery, useLazyGetBoxAccessKeyQuery, useLazyGetBoxPreciseLocationQuery, useLazyGetBoxQuery, useUpdateParcelByIdMutation } from '../../../data/api';
+import { Box, ParcelData, PreciseLocation, getErrorMessage, isErrorWithMessage, useDepositParcelMutation, useGetParcelByIdQuery, useLazyGetBoxAccessKeyQuery, useLazyGetBoxPreciseLocationQuery, useLazyGetBoxQuery, useUpdateParcelByIdMutation } from '../../../data/api';
 import { ApproveTransfer, ApproveTransferResponse, CreateDatasetResponse, Metadata, UploadMetadataToIPFSResponse, approveTransfer, callCreateDataset, callPushToSMS, callSellDataset, updateBox, uploadMetadataToIPFS } from '../../../data/blockchain';
 import { useAppDispatch, useAppSelector } from '../../../data/hooks';
 
@@ -29,8 +29,8 @@ export default function ConnectToTheBox() {
   const [page, setPage] = useState(0);
   const { data: parcel, error, isLoading } = useGetParcelByIdQuery(parseInt(String(params.id)));
   const [getBox, { data: boxData }] = useLazyGetBoxQuery();
-  const [updateParcelById, {  }] = useUpdateParcelByIdMutation();
-  const [depositParcel, {  }] = useDepositParcelMutation();
+  const [updateParcelById, { }] = useUpdateParcelByIdMutation();
+  const [depositParcel, { }] = useDepositParcelMutation();
 
   const [boxDetails, setBoxDetails] = useState<Box | undefined>(undefined);
 
@@ -388,7 +388,19 @@ export default function ConnectToTheBox() {
                     <Avatar.Icon size={48} icon="cube" style={{ backgroundColor: "grey" }}
 
                     />
-                    <Title>Connect to the Box</Title>
+                    <Title style={{
+                      textAlign: "center", marginBottom: 10, //bold
+                      fontWeight: "bold"
+
+                    }}
+
+                    >Connect to the Box</Title>
+                    <Title style={{
+                      textAlign: "center", marginHorizontal: 30, marginBottom: 10, //bold
+                    }}>
+                      To unlock the vehicle, you need to connect to the box first.
+
+                    </Title>
 
                     <Button icon="bluetooth" mode="contained" contentStyle={{ padding: 10 }}
 
@@ -417,9 +429,10 @@ export default function ConnectToTheBox() {
                       ? "yellow" : theme.colors.primary
                 }}
               />
-              <Title>Unlock the Car</Title>
+              <Title
+              >Unlock the Vehicle</Title>
               <Paragraph>{ble.keyBotState.status === KeyBotState.KEYBOT_PRESSING_LEFT || ble.keyBotState.status === KeyBotState.KEYBOT_PRESSING_RIGHT ?
-                "Unlocking the car..."
+                "Unlocking the vehicle..."
                 : "Press the unlock button"
 
 
@@ -443,22 +456,31 @@ export default function ConnectToTheBox() {
             </View>
             <View key="2" style={styles.page}>
               <Avatar.Icon size={48} icon="package-variant-closed" />
-              <Title style={{ textAlign: "center" }}>Place the Parcel in the Car</Title>
-              <Paragraph style={{ textAlign: "center" }}>
-                Open the car, ensure space, place the box securely, and close the car door or trunk.
+              <Title style={{
+                textAlign: "center", marginBottom: 10, //bold
+                fontWeight: "bold"
 
-              </Paragraph>
-              <Button mode="contained" onPress={() => {
-                console.log('Confirmed parcel placement in the car')
-
-                if (pagerRef && pagerRef.current
-                ) {
-                  pagerRef.current.setPage(page + 1);
-                }
-
+              }}>Place the Parcel in the Vehicle</Title>
+              <Title style={{
+                textAlign: "center", marginBottom: 20, marginHorizontal: 30
 
               }}>
-                Confirm
+                Open the vehicle, ensure space, place the box securely, and close the vehicle door or trunk.
+
+              </Title>
+              <Button mode="contained"
+                icon="check"
+                onPress={() => {
+                  console.log('Confirmed parcel placement in the car')
+
+                  if (pagerRef && pagerRef.current
+                  ) {
+                    pagerRef.current.setPage(page + 1);
+                  }
+
+
+                }}>
+                Done
               </Button>
             </View>
             <View key="3" style={styles.page}>
@@ -539,8 +561,9 @@ export default function ConnectToTheBox() {
 
               )}
 
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 10, marginTop: 20
-             }}>
+              <View style={{
+                flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 10, marginTop: 20
+              }}>
                 {isBlockchainDone ? (
                   <Button
                     mode="outlined"
@@ -555,12 +578,13 @@ export default function ConnectToTheBox() {
 
                 <Button
                   mode="contained"
+                  loading={isBlockchainProcessing}
                   onPress={() => {
                     if (isBlockchainProcessing) return;
 
                     if (isBlockchainDone) {
                       router.back();
-                    
+
                       return;
                     }
 
@@ -575,10 +599,14 @@ export default function ConnectToTheBox() {
                       } as PreciseLocation
                     );
                   }}
-                  style={{ flex: 1
-                  
+                  style={{
+                    flex: 1
+
                   }}>
-                  {isBlockchainProcessing ? 'Processing...' : isBlockchainDone ? 'Finish' : 'Approve'}
+
+                  {isBlockchainProcessing ?
+                    steps[activeStep]
+                    : isBlockchainDone ? 'Finish' : 'Approve'}
                 </Button>
               </View>
             </View>

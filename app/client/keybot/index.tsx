@@ -74,6 +74,7 @@ export default function KeyBot() {
       }
 
       let location = await Location.getCurrentPositionAsync({});
+      console.log("location", location);
       setLocation(location);
     })();
   }, [])
@@ -282,9 +283,11 @@ export default function KeyBot() {
 
                           backgroundColor: item.boxStatus == null
                             ? theme.colors.error
-                            : item.boxStatus === BoxStatus.READY || item.boxStatus === BoxStatus.NOT_READY
+                            : item.boxStatus === BoxStatus.READY
                               ? theme.colors.primary
-                              : 'grey'
+                              : item.boxStatus === BoxStatus.NOT_READY
+                                ? 'grey'
+                                : 'grey',
                         }}
                       />
 
@@ -328,7 +331,7 @@ export default function KeyBot() {
 
                     </Caption>
 
-                   
+
 
 
 

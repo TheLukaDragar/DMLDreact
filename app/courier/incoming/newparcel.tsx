@@ -13,6 +13,7 @@ import * as Location from 'expo-location';
 import Toast from 'react-native-root-toast';
 import StepCard from '../../../components/StepCard';
 import { CreateDatasetResponse, Metadata, MintBox, MintBoxResponse, UploadMetadataToIPFSResponse, callCreateDataset, callPushToSMS, callSellDataset, getReputation, mintBox, uploadMetadataToIPFS } from '../../../data/blockchain';
+import { BoxStatus } from '../../../constants/Auth';
 
 
 
@@ -44,6 +45,7 @@ export default function NewParcel() {
     // orderBy:"id", //todo
     // desc: true,
     availableForDeposit: true,
+    boxStatus: BoxStatus.READY,
    
     
 
@@ -85,7 +87,7 @@ export default function NewParcel() {
   const [isParcelProcessing, setIsParcelProcessing] = useState(false);
   const [isParcelCreated, setIsParcelCreated] = useState(false);
 
-  const [receiverReputation, setReceiverReputation] = useState(-1);
+ // const [receiverReputation, setReceiverReputation] = useState(-1);
 
 
   const steps = [
@@ -246,23 +248,23 @@ export default function NewParcel() {
     })();
   }, []);
 
-  useEffect(() => {
-    if(params.receiver_address) { // Check if receiver address is defined
-      dispatch(getReputation(String(params.receiver_address)))
-      .unwrap()
-      .then((reputationResult) => {
-        console.log("Reputation result: ", reputationResult);
-        setReceiverReputation(reputationResult);
-      })
-      .catch((error) => {
-        console.error("Error retrieving receiver's reputation: ", error);
-        setReceiverReputation(-2)
+  // useEffect(() => {
+  //   if(params.receiver_address) { // Check if receiver address is defined
+  //     dispatch(getReputation(String(params.receiver_address)))
+  //     .unwrap()
+  //     .then((reputationResult) => {
+  //       console.log("Reputation result: ", reputationResult);
+  //       setReceiverReputation(reputationResult);
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error retrieving receiver's reputation: ", error);
+  //       setReceiverReputation(-2)
         
-      }
+  //     }
      
-      );
-    }
-  }, [dispatch, params.receiver_address]); 
+  //     );
+  //   }
+  // }, [dispatch, params.receiver_address]); 
 
   function distance(loc1: PreciseLocation, loc2: PreciseLocation) {
     const R = 6371e3; // metres
@@ -303,6 +305,8 @@ export default function NewParcel() {
     const to_deliver_location = JSON.parse(params.location as string) as PreciseLocation;
     if( to_deliver_location && item.preciseLocation ){
       //round to km and 0 decimal places
+      console.log("to_deliver_location: " + JSON.stringify(to_deliver_location, null, 2));
+      console.log("item.preciseLocation: " + JSON.stringify(item.preciseLocation, null, 2));
       distance_to_parcel = Math.round(distance(to_deliver_location, item.preciseLocation) / 1000).toFixed(0) + " km";
 
 
@@ -331,7 +335,9 @@ export default function NewParcel() {
 
           <Paragraph>Reputation: {item.reputation}</Paragraph>
           <Paragraph>Reputation threshold: {item.reputationThreshold ? item.reputationThreshold : "not set"}</Paragraph>
-          <Paragraph>Location: {item.preciseLocation_id}</Paragraph>
+     
+          <Paragraph>License plate: {item.licensePlate}</Paragraph>
+          {/* <Paragraph>Location: {item.preciseLocation_id}</Paragraph> */}
         </Card.Content>
         <Card.Actions>
           <Caption style={styles.details}>
@@ -371,13 +377,13 @@ export default function NewParcel() {
           </View>
           <Title style={styles.details}>Sender: <Caption style={styles.details}>{params.sender}</Caption></Title>
           <Title style={styles.details}>Receiver: <Caption style={styles.details}>{params.receiver}</Caption></Title>
-          <Title style={styles.details}>Receiver reputation: <Caption style={styles.details}>{
+          {/* <Title style={styles.details}>Receiver reputation: <Caption style={styles.details}>{
             receiverReputation == -1 ? "pending" : receiverReputation == -2 ? "not found" : receiverReputation
 
 
-          }</Caption></Title>
+          }</Caption></Title> */}
           <Title style={styles.details}>Address: <Caption style={styles.details}>{params.address}</Caption></Title>
-          <Title style={styles.details}>Address: <Caption style={styles.details}>{params.receiver_address}</Caption></Title>
+          <Title style={styles.details}>Receiver Address:  <Caption style={styles.details}>{params.receiver_address}</Caption></Title>
 
 
         </Card.Content>
@@ -404,7 +410,7 @@ export default function NewParcel() {
            
          
           <Subheading style={styles.infoText}>
-            To: {boxes?.items.find(box => box.id === selectedItemId)?.did}
+            Deliver To: {boxes?.items.find(box => box.id === selectedItemId)?.did}
           </Subheading>
 
         </View>

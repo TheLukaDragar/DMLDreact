@@ -7,7 +7,7 @@ import { View } from '../../../components/Themed';
 import { Box, useGetParcelByIdQuery, useLazyGetBoxQuery } from '../../../data/api';
 
 import Constants from 'expo-constants';
-import { Image, Linking, StyleSheet } from 'react-native';
+import { Linking, StyleSheet } from 'react-native';
 import { getBoxDatasets, getNftDetails } from '../../../data/blockchain';
 import { useAppDispatch } from '../../../data/hooks';
 
@@ -104,7 +104,9 @@ export default function ConnectToTheBox() {
               {/* Card with details */}
               <View style={[styles.detailsContainer]}>
                 <Card style={styles.card}>
+
                   <Card.Content>
+
                     <View style={styles.titleRow}>
                       <Avatar.Icon icon="package-variant-closed" size={46} />
                       <Title style={styles.cardTitle}>{parcel.nftId}</Title>
@@ -133,31 +135,38 @@ export default function ConnectToTheBox() {
 
 
                     <Divider style={styles.divider} />
+                    <Card.Cover source={{ uri: boxDetails.imageUrl }}
 
+                    style={{ marginBottom: 10 }}
+
+                    />
                     <View style={styles.titleRow}>
                       <Avatar.Icon icon="cube" size={46} />
                       <Title style={styles.cardTitle}>{boxDetails.did}</Title>
                     </View>
+
                     <Title style={styles.details}>License Plate: <Caption style={styles.details}>{boxDetails.licensePlate}</Caption></Title>
-                    <Title style={styles.details}>Address: <Caption style={styles.details}>{parcel.location_id}</Caption></Title>
+                    {/* <Title style={styles.details}>Address: <Caption style={styles.details}>{parcel.location_id}</Caption></Title> */}
+
+
                   </Card.Content>
                   <Card.Actions>
+
                     <Button
                       mode="contained"
-                      
+                      icon="car"
+
                       onPress={() => {
                         router.replace("/parcel/" + boxDetails.id + "/deposit");
                       }}
-                    >Deposit
+                    >Access Vehicle
                     </Button>
+
                   </Card.Actions>
                 </Card>
               </View>
 
               {/* Image */}
-              <View style={[styles.imageContainer]}>
-                <Image source={{ uri: boxDetails.imageUrl || 'https://source.unsplash.com/random' }} style={styles.image} />
-              </View>
 
 
             </Animated.View>
