@@ -5,7 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { FlatList, Linking, StyleSheet } from 'react-native';
 import PagerView from 'react-native-pager-view';
-import { ActivityIndicator, Avatar, Button, Caption, Paragraph, Subheading, Title, useTheme } from 'react-native-paper';
+import { ActivityIndicator, Avatar, Button, Subheading, Title, useTheme } from 'react-native-paper';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import Toast from 'react-native-root-toast';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -45,6 +45,8 @@ export default function ConnectToTheBox() {
 
   const parcelNFTSCAddress = Constants?.expoConfig?.extra?.parcelNFTSCAddress;
   const explorerUrl = Constants?.expoConfig?.extra?.explorerUrl;
+  const flatListRef = React.useRef<FlatList>(null);
+
 
 
 
@@ -66,6 +68,13 @@ export default function ConnectToTheBox() {
   const pagerRef = useRef<PagerView>(null);
 
 
+  useEffect(() => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToIndex({ index: activeStep - 1, animated: true, viewPosition: 0, 
+       });
+      console.log("scrolling to index", activeStep - 1);
+    }
+  }, [activeStep]);
 
   const nextStep = () => {
     setActiveStep((prevStep) => prevStep + 1);
@@ -307,7 +316,8 @@ export default function ConnectToTheBox() {
 
       // Step 7: transfer NFT to receiver
 
-
+       
+      await new Promise(resolve => setTimeout(resolve, 500));
       //already done in the previous step
       nextStep();
 
@@ -381,23 +391,17 @@ export default function ConnectToTheBox() {
                 && ble.deviceConnectionState.status === 'ready'
 
                 ? (
-                  <><Avatar.Icon size={48} icon="cube" /><><Title>Connected</Title><Subheading>{ble.connectedDevice?.localName}</Subheading><Subheading>{ble.connectedDevice?.id}</Subheading></></>
+                  <><Avatar.Icon size={48} icon="cube" /><><Title style={styles.title} >Connected</Title><Subheading>{ble.connectedDevice?.localName}</Subheading><Subheading>{ble.connectedDevice?.id}</Subheading></></>
 
                 ) : (
                   <>
                     <Avatar.Icon size={48} icon="cube" style={{ backgroundColor: "grey" }}
 
                     />
-                    <Title style={{
-                      textAlign: "center", marginBottom: 10, //bold
-                      fontWeight: "bold"
-
-                    }}
+                    <Title style={styles.title}
 
                     >Connect to the Box</Title>
-                    <Title style={{
-                      textAlign: "center", marginHorizontal: 30, marginBottom: 10, //bold
-                    }}>
+                    <Title style={styles.subtitle}>
                       To unlock the vehicle, you need to connect to the box first.
 
                     </Title>
@@ -429,20 +433,22 @@ export default function ConnectToTheBox() {
                       ? "yellow" : theme.colors.primary
                 }}
               />
-              <Title
+              <Title style={styles.title}
               >Unlock the Vehicle</Title>
-              <Paragraph>{ble.keyBotState.status === KeyBotState.KEYBOT_PRESSING_LEFT || ble.keyBotState.status === KeyBotState.KEYBOT_PRESSING_RIGHT ?
+              <Title
+                style={styles.subtitle}
+              >{ble.keyBotState.status === KeyBotState.KEYBOT_PRESSING_LEFT || ble.keyBotState.status === KeyBotState.KEYBOT_PRESSING_RIGHT ?
                 "Unlocking the vehicle..."
                 : "Press the unlock button"
 
 
-              }</Paragraph>
+                }</Title>
 
 
               <Button
                 icon=""
                 mode="contained"
-                contentStyle={{ height: 50, width: 150 }}
+                contentStyle={{ height: 80, width: 200 }}
                 loading={ble.keyBotState.status === KeyBotState.KEYBOT_PRESSING_LEFT || ble.keyBotState.status === KeyBotState.KEYBOT_PRESSING_RIGHT}
                 disabled={ble.keyBotState.status === KeyBotState.KEYBOT_PRESSING_LEFT || ble.keyBotState.status === KeyBotState.KEYBOT_PRESSING_RIGHT}
                 onPress={() =>
@@ -456,20 +462,16 @@ export default function ConnectToTheBox() {
             </View>
             <View key="2" style={styles.page}>
               <Avatar.Icon size={48} icon="package-variant-closed" />
-              <Title style={{
-                textAlign: "center", marginBottom: 10, //bold
-                fontWeight: "bold"
-
-              }}>Place the Parcel in the Vehicle</Title>
-              <Title style={{
-                textAlign: "center", marginBottom: 20, marginHorizontal: 30
-
-              }}>
+              <Title style={styles.title}
+              >Place the Parcel in the Vehicle</Title>
+              <Title style={styles.subtitle}
+              >
                 Open the vehicle, ensure space, place the box securely, and close the vehicle door or trunk.
 
               </Title>
               <Button mode="contained"
                 icon="check"
+                contentStyle={{ height: 80, width: 200 }}
                 onPress={() => {
                   console.log('Confirmed parcel placement in the car')
 
@@ -493,19 +495,23 @@ export default function ConnectToTheBox() {
                       ? "yellow" : theme.colors.primary
                 }}
               />
-              <Title>Lock the Car</Title>
-              <Paragraph>{ble.keyBotState.status === KeyBotState.KEYBOT_PRESSING_LEFT || ble.keyBotState.status === KeyBotState.KEYBOT_PRESSING_RIGHT ?
+              <Title style={styles.title}
+
+              >Lock the Car</Title>
+              <Title
+                style={styles.subtitle}
+              >{ble.keyBotState.status === KeyBotState.KEYBOT_PRESSING_LEFT || ble.keyBotState.status === KeyBotState.KEYBOT_PRESSING_RIGHT ?
                 "Locking the car..."
                 : "Press the lock button"
 
 
-              }</Paragraph>
+                }</Title>
 
 
               <Button
                 icon=""
                 mode="contained"
-                contentStyle={{ height: 50, width: 150 }}
+                contentStyle={{ height: 80, width: 200 }}
                 loading={ble.keyBotState.status === KeyBotState.KEYBOT_PRESSING_LEFT || ble.keyBotState.status === KeyBotState.KEYBOT_PRESSING_RIGHT}
                 disabled={ble.keyBotState.status === KeyBotState.KEYBOT_PRESSING_LEFT || ble.keyBotState.status === KeyBotState.KEYBOT_PRESSING_RIGHT}
                 onPress={() =>
@@ -526,7 +532,8 @@ export default function ConnectToTheBox() {
                 }}
 
               />
-              <Title style={{ justifyContent: "center", alignItems: "center", textAlign: "center" }}>
+              <Title style={styles.title}
+              >
                 {isBlockchainProcessing
                   ? 'Processing transfer of NFT Ownership...'
                   : isBlockchainDone
@@ -534,81 +541,139 @@ export default function ConnectToTheBox() {
                     : 'Transfer of NFT Ownership and update MetaData'}
               </Title>
 
-              <Caption style={{ justifyContent: "center", alignItems: "center", textAlign: "center", margin: 20 }}>
+              <Subheading
+                style={styles.subtitle}
+              >
                 {isBlockchainProcessing
                   ? 'Your transfer is currently being processed. Please wait.'
                   : isBlockchainDone
                     ? 'The transfer has been successfully completed.'
                     : 'I have delivered the parcel to the car and I am ready to transfer the ownership of the NFT to the car owner.'}
-              </Caption>
+              </Subheading>
 
               {(isBlockchainProcessing || isBlockchainDone) ? (
 
 
+                <><View style={{
+                  flex: 5,
+                  width: "100%",
+                }}>
+                  <FlatList style={{ width: "100%" }}
+                    onScrollToIndexFailed={info => {
+                      console.log(info);
+                    }}
+                    getItemLayout={(data, index) => (
+                      { length: 100, offset: 100 * index, index }
+                    )}
 
-                <FlatList style={{ paddingTop: 10, width: "100%" }}
+                    ref={flatListRef}
+                    data={steps}
+                    renderItem={renderStepCard}
+                    keyExtractor={(item, index) => index.toString()} />
+
+                </View>
+                  <View style={{
+                    flex: 1,
+                    flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 10, marginTop: 20
+                  }}>
+                    {isBlockchainDone ? (
+                      <Button
+                        mode="outlined"
+                        onPress={() => {
+                          console.log('Confirmed parcel placement in the car');
+                          Linking.openURL(explorerUrl + "/tx/" + BlockchainTransaction);
+                        }}
+                        contentStyle={{ height: 80 }}
+                        style={{
+                          marginRight: 10
+                          , flex: 1
+                        }}>
+                        View on Blockchain
+                      </Button>
+                    ) : null}
+
+                    <Button
+                      mode="contained"
+                      loading={isBlockchainProcessing}
+                      onPress={() => {
+                        if (isBlockchainProcessing) return;
+
+                        if (isBlockchainDone) {
+                          router.back();
+
+                          return;
+                        }
 
 
-                  data={steps}
-                  renderItem={renderStepCard}
-                  keyExtractor={(item, index) => index.toString()} />
+                      }}
+
+                      contentStyle={{
+                        height: 80
+
+                      }}
+                      style={{
+                        flex: 1
+                      }}
+
+
+
+                    >
+
+
+                      {isBlockchainProcessing ?
+                        steps[activeStep]
+                        : isBlockchainDone ? 'Finish' : 'Approve'}
+                    </Button>
+                  </View></>
 
               ) : (
                 <>
 
+                  <Button
+                    mode="contained"
+                    loading={isBlockchainProcessing}
+                    onPress={() => {
+                      if (isBlockchainProcessing) return;
 
+                      if (isBlockchainDone) {
+                        router.back();
+
+                        return;
+                      }
+
+                      setIsBlockchainProcessing(true);
+                      blockchain(
+                        boxDetails,
+                        parcel,
+                        {
+                          latitude: location.coords.latitude,
+                          longitude: location.coords.longitude,
+                          inaccuracy: location.coords.accuracy,
+                        } as PreciseLocation
+                      );
+                    }}
+
+                    contentStyle={{
+                      height: 80, width: 200
+                    }}
+
+                    style={{
+
+
+
+
+
+                    }}
+                  >
+
+
+                    Approve
+                  </Button>
                 </>
 
               )}
 
-              <View style={{
-                flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 10, marginTop: 20
-              }}>
-                {isBlockchainDone ? (
-                  <Button
-                    mode="outlined"
-                    onPress={() => {
-                      console.log('Confirmed parcel placement in the car');
-                      Linking.openURL(explorerUrl + "/tx/" + BlockchainTransaction);
-                    }}
-                    style={{ flex: 1, marginRight: 10 }}>
-                    View on Blockchain
-                  </Button>
-                ) : null}
 
-                <Button
-                  mode="contained"
-                  loading={isBlockchainProcessing}
-                  onPress={() => {
-                    if (isBlockchainProcessing) return;
-
-                    if (isBlockchainDone) {
-                      router.back();
-
-                      return;
-                    }
-
-                    setIsBlockchainProcessing(true);
-                    blockchain(
-                      boxDetails,
-                      parcel,
-                      {
-                        latitude: location.coords.latitude,
-                        longitude: location.coords.longitude,
-                        inaccuracy: location.coords.accuracy,
-                      } as PreciseLocation
-                    );
-                  }}
-                  style={{
-                    flex: 1
-
-                  }}>
-
-                  {isBlockchainProcessing ?
-                    steps[activeStep]
-                    : isBlockchainDone ? 'Finish' : 'Approve'}
-                </Button>
-              </View>
             </View>
 
           </PagerView>
@@ -650,5 +715,13 @@ const styles = StyleSheet.create({
 
 
   },
+  title: {
+    textAlign: "center", marginBottom: 10, //bold
+    fontWeight: "bold"
+  },
+  subtitle: {
+    textAlign: "center", marginBottom: 20, marginHorizontal: 30
+  },
+
 
 });

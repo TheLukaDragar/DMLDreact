@@ -1,7 +1,7 @@
 import { FlatList, StyleSheet } from 'react-native';
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Avatar, Button, Caption, Card, Divider, Paragraph, ProgressBar, Snackbar, Subheading, Title, useTheme } from 'react-native-paper';
+import { Avatar, Button, Caption, Card, Paragraph, Snackbar, Subheading, Title, useTheme } from 'react-native-paper';
 import { View } from '../../../components/Themed';
 import { useAppDispatch, useAppSelector } from '../../../data/hooks';
 
@@ -12,8 +12,8 @@ import '@ethersproject/shims';
 import * as Location from 'expo-location';
 import Toast from 'react-native-root-toast';
 import StepCard from '../../../components/StepCard';
-import { CreateDatasetResponse, Metadata, MintBox, MintBoxResponse, UploadMetadataToIPFSResponse, callCreateDataset, callPushToSMS, callSellDataset, getReputation, mintBox, uploadMetadataToIPFS } from '../../../data/blockchain';
 import { BoxStatus } from '../../../constants/Auth';
+import { CreateDatasetResponse, Metadata, MintBox, MintBoxResponse, UploadMetadataToIPFSResponse, callCreateDataset, callPushToSMS, callSellDataset, mintBox, uploadMetadataToIPFS } from '../../../data/blockchain';
 
 
 
@@ -41,13 +41,13 @@ export default function NewParcel() {
   const { data: boxes, error, isLoading, isFetching, isError, refetch
 
   } = useGetBoxesQuery({
-    
+
     // orderBy:"id", //todo
     // desc: true,
     availableForDeposit: true,
     boxStatus: BoxStatus.READY,
-   
-    
+
+
 
   }
     , {
@@ -86,9 +86,17 @@ export default function NewParcel() {
   const [snackBarText, setSnackBarText] = useState("");
   const [isParcelProcessing, setIsParcelProcessing] = useState(false);
   const [isParcelCreated, setIsParcelCreated] = useState(false);
+  const flatListRef = React.useRef<FlatList>(null);
 
- // const [receiverReputation, setReceiverReputation] = useState(-1);
 
+  // const [receiverReputation, setReceiverReputation] = useState(-1);
+
+  useEffect(() => {
+    //SCROLL FLATLIST TO THE SELECTED ITEM
+    if (flatListRef.current) {
+      flatListRef.current.scrollToIndex({ index: activeStep - 1, animated: true, viewPosition: 0.5 });
+    }
+  }, [activeStep]);
 
   const steps = [
     "Creating parcel",
@@ -110,15 +118,15 @@ export default function NewParcel() {
     setSnackBarText(getErrorMessage(error));
     setIsSnackbarVisible(true);
     setIsParcelCreated(false);
-   
+
 
   };
-  async function createParcel(box: BoxItem, courier: User, receiverAddress: string, preciseLocation: PreciseLocation,trackingNumber:string) {
+  async function createParcel(box: BoxItem, courier: User, receiverAddress: string, preciseLocation: PreciseLocation, trackingNumber: string) {
     try {
       setActiveStep(0); // Start from the first step
 
       // Step 1: Create a new parcel
-      nextStep();
+      // nextStep();
       const new_parcel: CreateParcelByWallet = {
         nftId: "not set",
         transactionHash: "not set",
@@ -129,8 +137,8 @@ export default function NewParcel() {
         trackingNumber: trackingNumber,
       };
 
-      console.log(JSON.stringify(new_parcel,  null,2
-        ))
+      console.log(JSON.stringify(new_parcel, null, 2
+      ))
 
       const parcel: ParcelData = await createParcelByWallet(new_parcel).unwrap();
 
@@ -196,15 +204,16 @@ export default function NewParcel() {
         ...parcel,
         nftId: mintBox_Result.tokenId,
         transactionHash: mintBox_Result.txHash,
-       
 
 
-      } 
+
+      }
+
       console.log("new_parcel2: " + JSON.stringify(new_parcel2, null, 2));
 
       const updateNFTIDResponse = await updateParcelById(new_parcel2).unwrap();
 
-
+      nextStep();
       // If everything is successful, reset the errorStep and show a success message
       setErrorStep(null);
       setIsParcelCreated(true);
@@ -259,9 +268,9 @@ export default function NewParcel() {
   //     .catch((error) => {
   //       console.error("Error retrieving receiver's reputation: ", error);
   //       setReceiverReputation(-2)
-        
+
   //     }
-     
+
   //     );
   //   }
   // }, [dispatch, params.receiver_address]); 
@@ -281,7 +290,7 @@ export default function NewParcel() {
 
     const d = R * c; // in metres
 
-    
+
 
     return d;
   }
@@ -303,7 +312,7 @@ export default function NewParcel() {
     const canDeliver = true;
     let distance_to_parcel = "pending"
     const to_deliver_location = JSON.parse(params.location as string) as PreciseLocation;
-    if( to_deliver_location && item.preciseLocation ){
+    if (to_deliver_location && item.preciseLocation) {
       //round to km and 0 decimal places
       console.log("to_deliver_location: " + JSON.stringify(to_deliver_location, null, 2));
       console.log("item.preciseLocation: " + JSON.stringify(item.preciseLocation, null, 2));
@@ -311,19 +320,19 @@ export default function NewParcel() {
 
 
 
-      
+
     }
-    
+
 
 
     return (
       <Card key={item.id} disabled={!canDeliver}
-      
-      style={selectedItemId === item.id ? styles.selectedCard : styles.card} onPress={() => {
-        console.log(`Card ${item.id} pressed`);
-        setSelectedItemId(selectedItemId === item.id ? null : item.id);
 
-      }}>
+        style={selectedItemId === item.id ? styles.selectedCard : styles.card} onPress={() => {
+          console.log(`Card ${item.id} pressed`);
+          setSelectedItemId(selectedItemId === item.id ? null : item.id);
+
+        }}>
         <Card.Content>
 
           <View style={styles.titleRow}>
@@ -335,16 +344,16 @@ export default function NewParcel() {
 
           <Paragraph>Reputation: {item.reputation}</Paragraph>
           <Paragraph>Reputation threshold: {item.reputationThreshold ? item.reputationThreshold : "not set"}</Paragraph>
-     
+
           <Paragraph>License plate: {item.licensePlate}</Paragraph>
           {/* <Paragraph>Location: {item.preciseLocation_id}</Paragraph> */}
         </Card.Content>
         <Card.Actions>
           <Caption style={styles.details}>
-            {canDeliver ?  
-            `Distance: ${distance_to_parcel}`
-            
-            : "Reputation too low"}
+            {canDeliver ?
+              `Distance: ${distance_to_parcel}`
+
+              : "Reputation too low"}
           </Caption>
 
         </Card.Actions>
@@ -392,30 +401,30 @@ export default function NewParcel() {
 
       </Card>
 
-      {isParcelProcessing  || isParcelCreated
-       ? (
-       
-        null
-     
-   ) : (
-   
-    <View style={{
-      padding: 10,
+      {isParcelProcessing || isParcelCreated
+        ? (
 
-    }}>
+          null
 
-      <Title style={styles.title}>
-        <View style={styles.infoRow}>
-          {/* <Avatar.Icon icon="arrow-right" size={40}  style={{ backgroundColor: theme.colors.primary }}/> */}
-           
-         
-          <Subheading style={styles.infoText}>
-            Deliver To: {boxes?.items.find(box => box.id === selectedItemId)?.did}
-          </Subheading>
+        ) : (
 
-        </View>
-      </Title>
-      {/* <Title style={styles.title}>
+          <View style={{
+            padding: 10,
+
+          }}>
+
+            <Title style={styles.title}>
+              <View style={styles.infoRow}>
+                {/* <Avatar.Icon icon="arrow-right" size={40}  style={{ backgroundColor: theme.colors.primary }}/> */}
+
+
+                <Subheading style={styles.infoText}>
+                  Deliver To: {boxes?.items.find(box => box.id === selectedItemId)?.did}
+                </Subheading>
+
+              </View>
+            </Title>
+            {/* <Title style={styles.title}>
         <View style={styles.infoRow}>
 
           <Subheading>at: </Subheading>
@@ -425,21 +434,22 @@ export default function NewParcel() {
         </View>
       </Title> */}
 
-    </View>
+          </View>
 
-    
-   )}
-     
+
+        )}
+
 
       {(isParcelProcessing || isParcelCreated) ? (
-       
-          <FlatList
-            data={steps}
-            renderItem={renderStepCard}
-            keyExtractor={(item, index) => index.toString()}
-            
-          />
-        
+
+        <FlatList
+          ref={flatListRef}
+          data={steps}
+          renderItem={renderStepCard}
+          keyExtractor={(item, index) => index.toString()}
+
+        />
+
       ) : (
         <FlatList
           data={boxes?.items}
@@ -454,14 +464,14 @@ export default function NewParcel() {
           height: 60
         }}
         mode="contained"
-        disabled={selectedItemId === null || !location || !params.receiver_address || !courier 
-        
+        disabled={selectedItemId === null || !location || !params.receiver_address || !courier
+
         }
         loading={isParcelProcessing && !isParcelCreated}
         onPress={async () => {
 
           if (isParcelCreated) {
-         
+
             router.back();
             return;
           }
@@ -485,7 +495,7 @@ export default function NewParcel() {
             return;
           }
 
-          await createParcel(selectedBox, courier, String(params.receiver_address), location,String(params.trackingNumber));
+          await createParcel(selectedBox, courier, String(params.receiver_address), location, String(params.trackingNumber));
         }}>
         {isParcelProcessing ? steps[activeStep] : isParcelCreated ? 'Parcel created' : 'Deliver'}
       </Button>
@@ -564,11 +574,11 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 18, // Increased font size
-    
+
 
 
     backgroundColor: 'transparent',
   },
-  
+
 
 });

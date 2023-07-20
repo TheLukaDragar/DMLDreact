@@ -251,7 +251,7 @@ export default function Parcels() {
   return (
     <View style={styles.container}>
       {
-        isLoading || location === null ? (
+        isLoading ? (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
             <ActivityIndicator size="large" />
             <Text>Loading map...</Text>

@@ -274,9 +274,15 @@ export default function KeyBot() {
                 }>
 
 
+                
 
+                  <Card.Content
+                    style={{
+                      backgroundColor :'transparent'
+                    }}
 
-                  <Card.Content>
+                  >
+                   
                     <View style={styles.titleRow}>
                       <Avatar.Icon size={60} icon="cube"
                         style={{
@@ -302,7 +308,7 @@ export default function KeyBot() {
                     <Paragraph>Reputation threshold: {item.reputationThreshold ? item.reputationThreshold : "not set"}</Paragraph>
                     <Paragraph>Permission: {getPermissionText(item.permission)}</Paragraph>
                     <Paragraph>License plate: {item.licensePlate ? item.licensePlate : "not set"}</Paragraph>
-                    <Paragraph>Location: {item.preciseLocation_id}</Paragraph>
+                    {/* <Paragraph>Location: {item.preciseLocation_id}</Paragraph> */}
 
 
 
@@ -315,7 +321,7 @@ export default function KeyBot() {
 
 
 
-                    <Caption
+                    <Caption style={styles.cardCaption}
 
                     >{
                         item.boxStatus == null
@@ -425,23 +431,26 @@ const styles = StyleSheet.create({
 
   },
   page: {
+    
     flex: 1,
-
-
-
-
-
   },
   card: {
+    justifyContent: 'center',
+    height: '100%',
+   
     margin: 10,
     flex: 1,
-    height: '100%',
-
-
-
+   
   },
+  cardCaption: {
+    justifyContent: 'flex-end',
+    alignItems: 'flex-end',
+  
+  },
+
   addCard: {
-    margin: 10,
+    marginRight: 10,
+    marginBottom:0,
     flex: 1,
     height: '100%',
 
@@ -460,7 +469,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   pagerView: {
-    flex: 6,
+    flex: 3,
 
 
   },

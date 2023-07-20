@@ -157,7 +157,7 @@ export default function ConnectToTheBox() {
                       icon="car"
 
                       onPress={() => {
-                        router.replace("/parcel/" + boxDetails.id + "/deposit");
+                        router.replace("/parcel/" + parcel.id + "/deposit");
                       }}
                     >Access Vehicle
                     </Button>
