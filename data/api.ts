@@ -154,6 +154,7 @@ export interface ParcelQueryFilterDto {
   limit?: number;
   orderBy?: string;
   desc?: boolean;
+  depositTime?: Date;
 }
 
 interface ApproximateLocation {

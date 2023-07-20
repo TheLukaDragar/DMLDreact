@@ -23,8 +23,8 @@ export enum BoxPermissionLevel {
 }
 export enum BoxStatus {
 
-    NOT_READY = 0,
-    READY = 1,
+    NOT_READY = 1,
+    READY = 2,
 }
 
   

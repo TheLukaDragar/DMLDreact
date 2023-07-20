@@ -274,15 +274,15 @@ export default function KeyBot() {
                 }>
 
 
-                
+
 
                   <Card.Content
                     style={{
-                      backgroundColor :'transparent'
+                      backgroundColor: 'transparent'
                     }}
 
                   >
-                   
+
                     <View style={styles.titleRow}>
                       <Avatar.Icon size={60} icon="cube"
                         style={{
@@ -431,29 +431,29 @@ const styles = StyleSheet.create({
 
   },
   page: {
-    
+
     flex: 1,
   },
   card: {
     justifyContent: 'center',
     height: '100%',
-   
+
     margin: 10,
     flex: 1,
-   
+
   },
   cardCaption: {
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
-  
+
   },
 
   addCard: {
-    marginRight: 10,
-    marginBottom:0,
-    flex: 1,
+    justifyContent: 'center',
     height: '100%',
 
+    margin: 10,
+    flex: 1,
   },
   addCardContent: {
 

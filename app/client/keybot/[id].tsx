@@ -257,7 +257,11 @@ export default function KeyBotDetails() {
 
 
 
-        let updatedBoxDetails: UpdateBoxDto = { ...BoxDetails };
+        let updatedBoxDetails: UpdateBoxDto = { ...BoxDetails 
+        
+        };
+
+       
         const updatedBox = await updateBox(updatedBoxDetails).unwrap();
         console.log("updatedBox", updatedBox);
         setVisible(false);
