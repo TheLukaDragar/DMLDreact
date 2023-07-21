@@ -1477,7 +1477,7 @@ export const getNftDetails = createAsyncThunk(
 
       const contract = new ethers.Contract(parcelNFTSCAddress, parcelNFTSC_ABI, wallet);
 
-      console.log("calling getOwnerOfNft with args: " + "tokenId: " + tokenId);
+      console.log("calling getNftDetails with args: " + "tokenId: " + tokenId);
       const {
         parcelId ,
         sender,

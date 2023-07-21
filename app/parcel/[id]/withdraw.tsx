@@ -16,7 +16,7 @@ import ScreenIndicators from '../../../components/ScreenIndicators';
 import StepCard from '../../../components/StepCard';
 import { View } from '../../../components/Themed';
 import { Box, ParcelData, PreciseLocation, RateTransactionDto, RatingType, getErrorMessage, isErrorWithMessage, useGetParcelByIdQuery, useLazyGetBoxAccessKeyQuery, useLazyGetBoxPreciseLocationQuery, useLazyGetBoxQuery, useRateTransactionMutation, useUpdateParcelByIdMutation, useWithdrawParcelMutation } from '../../../data/api';
-import { CreateDatasetResponse, Metadata, UploadMetadataToIPFSResponse, callCreateDataset, callPushToSMS, callSellDataset, updateBox, uploadMetadataToIPFS } from '../../../data/blockchain';
+import { CreateDatasetResponse, Metadata, UploadMetadataToIPFSResponse, callCreateDataset, callPushToSMS, callSellDataset, getNftDetails, setReputation, updateBox, uploadMetadataToIPFS } from '../../../data/blockchain';
 import { useAppDispatch, useAppSelector } from '../../../data/hooks';
 
 export default function ConnectToTheBox() {
@@ -32,6 +32,9 @@ export default function ConnectToTheBox() {
   const [getBox, { data: boxData }] = useLazyGetBoxQuery();
   const [updateParcelById, { }] = useUpdateParcelByIdMutation();
   const [withdrawParcel, { }] = useWithdrawParcelMutation();
+  const [nftDetails, setNftDetails] = useState<{
+    parcelId: string, sender: string, receiver: string
+  } | undefined>(undefined);
 
   const [boxDetails, setBoxDetails] = useState<Box | undefined>(undefined);
 
@@ -105,6 +108,16 @@ export default function ConnectToTheBox() {
         setBoxDetails(boxResponse);
       }
       fetchBoxDetails();
+      const fetchBlockchainDetails = async () => {
+        try {
+          let blockchainDetails = await dispatch(getNftDetails(parcel.nftId)).unwrap();
+          console.log(blockchainDetails);
+          setNftDetails(blockchainDetails);
+        } catch (error) {
+          console.error('Failed to load box details', error);
+        }
+      }
+      fetchBlockchainDetails();
     }
   }, [parcel, getBox]);
 
@@ -133,26 +146,31 @@ export default function ConnectToTheBox() {
   }, [boxRating]);
 
   useEffect(() => {
-    if (courierRating > 0 && parcel && boxData) {
-      console.log("courierRating", courierRating);
-      try {
-        const rating_courier: RateTransactionDto = {
-          rating: 5,
-          recipient_id: parseInt(parcel.courier_id),
-          parcel_id: parcel.id,
-          ratingType: RatingType.COURIER,
-        };
-        rateTransaction(rating_courier).unwrap();
-        console.log("rating_courier success");
-      }
-      catch (error) {
-        console.log(error);
-      }
+    const rateCourier = async () => {
+      if (courierRating > 0 && parcel && boxData && nftDetails) {
+        console.log("courierRating", courierRating);
+        try {
+          const rating_courier: RateTransactionDto = {
+            rating: 5,
+            recipient_id: parseInt(parcel.courier_id),
+            parcel_id: parcel.id,
+            ratingType: RatingType.COURIER,
+          };
+          await rateTransaction(rating_courier).unwrap();
+          console.log("rating_courier success");
 
+          //also rate on blockchain 
+          const set_BC_rating = await dispatch(setReputation({ user: nftDetails.sender, score: courierRating })).unwrap();
+          console.log("set_BC_rating", set_BC_rating);
+        }
+        catch (error) {
+          console.log(error);
+        }
+      }
+    };
 
-    }
+    rateCourier();
   }, [courierRating]);
-
 
 
   useEffect(() => {
@@ -521,7 +539,7 @@ export default function ConnectToTheBox() {
                 icon="check"
                 contentStyle={{ height: 80, width: 200 }}
                 onPress={() => {
-                  
+
 
                   if (pagerRef && pagerRef.current
                   ) {
