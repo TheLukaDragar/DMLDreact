@@ -129,7 +129,7 @@ export default function RootLayout(): ReactNode {
 
                     <Stack.Screen name="parcel/[id]/withdraw"
                       options={{
-                        title: "Pa3r3rcel",
+                        title: "Withdraw Parcel",
 
 
                         headerShown: true,

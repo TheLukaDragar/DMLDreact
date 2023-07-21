@@ -223,7 +223,7 @@ export default function Parcels() {
           mode="contained"
             onPress={() => {
               router.push({
-                pathname: "/parcel/" + item.id + "/details",
+                pathname: "/parcel/" + item.id + "/withdraw",
 
               }
               )

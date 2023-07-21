@@ -466,7 +466,7 @@ export default function ConnectToTheBox() {
               >Place the Parcel in the Vehicle</Title>
               <Title style={styles.subtitle}
               >
-                Open the vehicle, ensure space, place the box securely, and close the vehicle door or trunk.
+                Open the vehicle, ensure space, place the parcel securely, and close the vehicle door or trunk.
 
               </Title>
               <Button mode="contained"
