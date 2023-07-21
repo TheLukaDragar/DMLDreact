@@ -509,8 +509,8 @@ export const apiSlice = createApi({
         return response
       },
       invalidatesTags: (result, error, arg) => [{ type: 'Box', id: arg.id }, 'Boxes'],
-    
-     
+
+
 
     }),
 
@@ -581,6 +581,26 @@ export const apiSlice = createApi({
       }
 
     }),
+    //todo doesent work error 500
+    getParcelPreciseLocation: builder.query<PreciseLocation, number>({
+      query: (id) => ({
+        url: `/parcel/${id}/location`,
+        method: 'GET',
+      }),
+      transformResponse: (response: any) => response,
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        console.log('getParcelPreciseLocation', arg, dispatch);
+        try {
+          const { data } = await queryFulfilled;
+          console.log('/parcel/${id}/location fulfiled', JSON.stringify(data));
+        } catch (error) { }
+      },
+      transformErrorResponse: (response: any) => {
+        console.log('error /parcel/${id}/location', response);
+        return response
+      }
+    }),
+
 
     getBoxAccessKey: builder.query<getBoxAccessKeyResponse, getBoxAccessKeyParams>({
       query: ({ boxId, challenge, preciseLocation }) => ({
@@ -943,5 +963,5 @@ export const { reducer, middleware } = apiSlice
 // Export the endpoint for use in components
 export const { useGetAuthMsgQuery, useRegisterWalletMutation, useLoginWalletMutation, useGetMeQuery, useLazyGetAuthMsgQuery, useLazyGetMeQuery, useGetUserDetailsQuery, useLazyGetUserDetailsQuery, useCreateParcelByWalletMutation, useLazyGetDoesUserHavePermissionToBoxQuery, useLazyGetBoxPreciseLocationQuery
   , useGetBoxesQuery, useGetBoxQuery, useLazyGetBoxQuery, useLazyGetBoxesQuery, useConnectBoxMutation, useSetBoxPreciseLocationMutation, useGetBoxPreciseLocationQuery, useCreateApproximateLocationMutation, useUpdateApproximateLocationMutation, useGetBoxAccessKeyQuery, useLazyGetBoxAccessKeyQuery
-  , useDepositParcelMutation, useLazyGetParcelByIdQuery, useGetParcelByIdQuery, useWithdrawParcelMutation, useRateTransactionMutation, useUpdateParcelByIdMutation, useUpdateMeMutation, useGetParcelsQuery, useUpdateBoxMutation
+  , useDepositParcelMutation, useLazyGetParcelByIdQuery, useGetParcelByIdQuery, useWithdrawParcelMutation, useRateTransactionMutation, useUpdateParcelByIdMutation, useUpdateMeMutation, useGetParcelsQuery, useUpdateBoxMutation, useLazyGetParcelPreciseLocationQuery
 } = apiSlice

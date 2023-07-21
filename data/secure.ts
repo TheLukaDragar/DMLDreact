@@ -9,8 +9,8 @@ import "react-native-get-random-values";
 import "@ethersproject/shims";
 
 import { ethers } from 'ethers';
-import { setPrivateKey } from './blockchain';
 import { UserType2 } from '../constants/Auth';
+import { setPrivateKey } from './blockchain';
 
 
 //from gimly
@@ -140,7 +140,7 @@ const secureSlice = createSlice({
             state.userData.userType = action.payload;
         }
         );
-        
+
 
         //full sign out
         builder.addCase(full_signout.fulfilled, (state, action) => {
@@ -294,8 +294,8 @@ export const createWallet = createAsyncThunk(
 
             console.log('createWallet', "saved wallet");
 
-            
 
+            thunkAPI.dispatch(setPrivateKey(wallet.privateKey));
 
             return {
                 mnemonicPhrase: wallet.mnemonic.phrase,
@@ -336,6 +336,7 @@ export const loadDemoClientWallet = createAsyncThunk(
 
             //set user type
             await SecureStore.setItemAsync('userType', String(UserType2.PARCEL_RECEIVER));
+            thunkAPI.dispatch(setPrivateKey(wallet.privateKey));
 
 
             console.log('loadDemoClientWallet', "saved wallet");
@@ -374,6 +375,8 @@ export const loadDemoCourierWallet = createAsyncThunk(
             await SecureStore.setItemAsync('mnemonic', mnemonic);
             console.log('loadDemoCourierWallet', "mnemonic saved");
             await SecureStore.setItemAsync('pin', "1111");
+
+            thunkAPI.dispatch(setPrivateKey(wallet.privateKey));
 
             console.log('loadDemoCourierWallet', "saved wallet");
 
@@ -432,7 +435,7 @@ export const setUserType = createAsyncThunk(
     'secure/setUserType',
     async (userType: UserType2, thunkAPI) => {
         await SecureStore.setItemAsync('userType', String(userType));
-        
+
         return userType;
     }
 );

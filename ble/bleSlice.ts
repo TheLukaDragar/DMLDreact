@@ -11,10 +11,10 @@ let device: Device;
 let logBuffer: string = "";
 export const demoDevice = {
     id: 'F9:E0:C3:CE:C3:14',
-    name: 'KeyBot_000000000000',
+    name: 'BOX_000000000000',
     rssi: 0,
     solicitedServiceUUIDs: [],
-    localName: 'KeyBot_000000000000',
+    localName: 'BOX_000000000000',
 
 };
 const stopScan = () => {

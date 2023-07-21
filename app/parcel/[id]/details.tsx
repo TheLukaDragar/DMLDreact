@@ -1,14 +1,15 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Avatar, Button, Caption, Card, Divider, Title } from 'react-native-paper';
+import { ActivityIndicator, Avatar, Button, Caption, Card, ProgressBar, Title } from 'react-native-paper';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View } from '../../../components/Themed';
-import { Box, useGetParcelByIdQuery, useLazyGetBoxQuery } from '../../../data/api';
+import { Box, useGetMeQuery, useGetParcelByIdQuery, useLazyGetBoxQuery } from '../../../data/api';
 
 import Constants from 'expo-constants';
-import { Linking, StyleSheet } from 'react-native';
-import { getBoxDatasets, getNftDetails } from '../../../data/blockchain';
+import { Linking, ScrollView, StyleSheet } from 'react-native';
+import { UserType2 } from '../../../constants/Auth';
+import { Dataset, TaskData, getBoxDatasets, getDatasetOrder, getNftDetails, monitorTaskProgress, runApp } from '../../../data/blockchain';
 import { useAppDispatch } from '../../../data/hooks';
 
 
@@ -25,17 +26,38 @@ export default function ConnectToTheBox() {
   //useLazyGetParcelByIdQuery
   //useLazyGetParcelByIdQuery
   // useGetParcelByIdQuery
-  const { data: parcel, error: parcelError, isLoading: parcelLoading } = useGetParcelByIdQuery(parseInt(String(params.id)));
+  const { data: parcel, error: parcelError, isLoading: parcelLoading } = useGetParcelByIdQuery(parseInt(String(params.id)),
+    {
+      refetchOnMountOrArgChange: true,
+    }
+
+  );
+  const { data: user } = useGetMeQuery(undefined, {});
+
   const [getBox, { data: boxData, error: boxError, isLoading: boxLoading }] = useLazyGetBoxQuery();
   const [boxDetails, setBoxDetails] = useState<Box | undefined>(undefined);
   const [nftDetails, setNftDetails] = useState<{
     parcelId: string, sender: string, receiver: string
   } | undefined>(undefined);
-  const [datasets, setDatasets] = useState<string[]>([]);
+  const [datasets, setDatasets] = useState<Dataset[]>([]);
   const dispatch = useAppDispatch();
 
 
-  console.log(parcel);
+
+  const [taskInfos, setTaskInfo] = useState<{
+    completed: number;
+    failed: number;
+    timeout: number;
+    datasets: Record<string, TaskData>; // object with `dataset_address` as keys
+  }>({
+    completed: 0,
+    failed: 0,
+    timeout: 0,
+    datasets: {}
+  });
+
+
+  //console.log(parcel);
   useEffect(() => {
     if (parcel) {
       const fetchBoxDetails = async () => {
@@ -63,9 +85,31 @@ export default function ConnectToTheBox() {
 
       const fetchBlockchainDatasets = async () => {
         try {
-          let blockchainDetails = await dispatch(getBoxDatasets(parcel.nftId)).unwrap();
-          console.log(blockchainDetails);
-          setDatasets(blockchainDetails);
+          let dataset_adresses = await dispatch(getBoxDatasets(parcel.nftId)).unwrap();
+          console.log(dataset_adresses);
+
+
+          let datasets: Dataset[] = [];
+          //for each dataset, fetch the metadata
+          for (let i = 0; i < dataset_adresses.length; i++) {
+
+            try {
+              let dataset = await dispatch(getDatasetOrder(dataset_adresses[i])).unwrap();
+              console.log(dataset);
+              datasets.push(dataset);
+
+            }
+            catch (error) {
+              console.error('Failed to load box details', error);
+            }
+          }
+
+          setDatasets(datasets);
+
+
+
+
+
         } catch (error) {
           console.error('Failed to load box details', error);
         }
@@ -78,6 +122,56 @@ export default function ConnectToTheBox() {
 
 
   }, [parcel, getBox]);
+
+  const runTask = async (nftId: string, datasets: Dataset[]) => {
+    const datasetTasksDictionary: Record<string, string> = {}; // mapping dataset_address to taskIds
+
+    for (const dataset of datasets) {
+      const result = await dispatch(runApp({
+        tokenId: nftId,
+        dataset: dataset.dataset,
+        price: dataset.datasetprice,
+      })).unwrap();
+
+      datasetTasksDictionary[dataset.dataset] = result.tasks[0]; // Assuming there is only one task per dataset
+    }
+
+    while (true) {
+      const taskIds = Object.values(datasetTasksDictionary);
+      const { tasksCompleted, tasksFailed, tasksTimeout, tasksData } = await dispatch(
+        monitorTaskProgress({ tasks: taskIds })
+      ).unwrap();
+
+      const datasetsState = tasksData.reduce((acc, taskData) => {
+        const dataset_address = Object.keys(datasetTasksDictionary).find(dataset_address =>
+          datasetTasksDictionary[dataset_address] === taskData.taskId
+        );
+
+        if (dataset_address) {
+          acc[dataset_address] = {
+            taskId: taskData.taskId,
+            statusName: taskData.statusName,
+            taskTimedOut: taskData.taskTimedOut,
+            results: taskData.results, // replace this with actual property name for the results
+          };
+        }
+        return acc;
+      }, {} as Record<string, TaskData>);
+
+      setTaskInfo(prevState => ({
+        completed: tasksCompleted,
+        failed: tasksFailed,
+        timeout: tasksTimeout,
+        datasets: { ...prevState.datasets, ...datasetsState }
+      }));
+
+      if (tasksCompleted === taskIds.length || tasksFailed > 0 || tasksTimeout > 0) {
+        break;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    }
+  };
 
 
 
@@ -99,77 +193,151 @@ export default function ConnectToTheBox() {
           </View>
         ) : (
           parcel && boxDetails && (
-            <Animated.View entering={FadeInUp.duration(1000).springify()} style={styles.cardContainer}>
+            <ScrollView style={styles.cardContainer}>
+              <Animated.View entering={FadeInUp.duration(1000).springify()}>
 
-              {/* Card with details */}
-              <View style={[styles.detailsContainer]}>
-                <Card style={styles.card}>
-
-                  <Card.Content>
-
-                    <View style={styles.titleRow}>
-                      <Avatar.Icon icon="package-variant-closed" size={46} />
-                      <Title style={styles.cardTitle}>{parcel.nftId}</Title>
-                    </View>
-
-                    <Title style={styles.details}>Tracking Number: <Caption style={styles.details}>{parcel.trackingNumber}</Caption></Title>
-
-                    <Title style={styles.details}>Created: <Caption style={styles.details}>{new Intl.DateTimeFormat('en', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(parcel._createTime))}</Caption></Title>
-
-                    <Title style={styles.details}>Courier: <Caption style={styles.details}>{nftDetails?.sender}</Caption></Title>
-
-                    <Title style={styles.details}>Receiver: <Caption style={styles.details}>{nftDetails?.receiver}</Caption></Title>
-
-                    <Title style={styles.details}>MetaData Datasets: <Caption style={styles.details}>{datasets.length}</Caption></Title>
-
-                    <Card.Actions>
-
-
-                      <Button
-                        onPress={() => {
-                          Linking.openURL(explorerUrl + "/tx/" + parcel.transactionHash);
-                        }}
-                      >NFT Details</Button>
-                    </Card.Actions>
+                {/* Card with details */}
+                <View style={[styles.detailsContainer]}>
+                  {/* Card 2: Box Details */}
+                  <Card style={styles.card}>
+                    <Card.Content>
 
 
 
-                    <Divider style={styles.divider} />
-                    <Card.Cover source={{ uri: boxDetails.imageUrl }}
+                      <View style={styles.titleRow}>
+                        <Avatar.Icon icon="cube" size={46} />
+                        <Title style={styles.cardTitle}>{boxDetails.did}</Title>
+                      </View>
+                      <Card.Cover source={{ uri: boxDetails.imageUrl }} style={{ marginVertical: 10 }} />
 
-                    style={{ marginBottom: 10 }}
+                      {/* Box Details */}
+                      <Title style={styles.details}>License Plate: <Caption style={styles.details}>{boxDetails.licensePlate}</Caption></Title>
 
-                    />
-                    <View style={styles.titleRow}>
-                      <Avatar.Icon icon="cube" size={46} />
-                      <Title style={styles.cardTitle}>{boxDetails.did}</Title>
-                    </View>
+                      {/* Card Actions */}
+                      <Card.Actions>
+                        {
+                          user?.userType === UserType2.RENTER ? (
+                            <Button
+                              disabled={parcel.depositTime === null || parcel.withdrawTime !== null}
+                              mode="contained"
+                              icon="car"
+                              onPress={() => { router.replace("/parcel/" + parcel.id + "/withdraw"); }}
+                            >Access Vehicle</Button>
+                          ) : user?.userType === UserType2.PARCEL_DELIVERY ? (
+                            <Button
+                              mode="contained"
+                              icon="car"
+                              disabled={parcel.depositTime !== null}
+                              onPress={() => { router.replace("/parcel/" + parcel.id + "/deposit"); }}
+                            >Access Vehicle</Button>
+                          ) : null
+                        }
+                      </Card.Actions>
+                    </Card.Content>
+                  </Card>
+                  <Card style={styles.card}>
+                    <Card.Content>
+                      <View style={styles.titleRow}>
+                        <Avatar.Icon icon="package-variant-closed" size={46} />
+                        <Title style={styles.cardTitle}>{parcel.nftId}</Title>
+                      </View>
 
-                    <Title style={styles.details}>License Plate: <Caption style={styles.details}>{boxDetails.licensePlate}</Caption></Title>
-                    {/* <Title style={styles.details}>Address: <Caption style={styles.details}>{parcel.location_id}</Caption></Title> */}
+                      {/* Parcel Details */}
+                      <Title style={styles.details}>Tracking Number: <Caption style={styles.details}>{parcel.trackingNumber}</Caption></Title>
+                      <Title style={styles.details}>Created: <Caption style={styles.details}>{new Intl.DateTimeFormat('en', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(parcel._createTime))}</Caption></Title>
+                      {
+                        parcel.depositTime !== null ? (
+                          <Title style={styles.details}>Deposit Time: <Caption style={styles.details}>{new Intl.DateTimeFormat('en', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(parcel.depositTime))}</Caption></Title>
+                        ) : null
+                      }
+                      {
+                        parcel.withdrawTime !== null ? (
+                          <Title style={styles.details}>Withdraw Time: <Caption style={styles.details}>{new Intl.DateTimeFormat('en', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(parcel.withdrawTime))}</Caption></Title>
+                        ) : null
+                      }
+                      <Title style={styles.details}>Courier: <Caption style={styles.details}>{nftDetails?.sender}</Caption></Title>
+                      <Title style={styles.details}>Receiver: <Caption style={styles.details}>{nftDetails?.receiver}</Caption></Title>
+                      {/* <Title style={styles.details}>MetaData Datasets: <Caption style={styles.details}>{datasets.length}</Caption></Title> */}
+                      {
+                        parcel.depositTime !== null ? (
+                          <Title style={styles.details}>Status: <Caption style={styles.details}>Delivered</Caption></Title>
+                        ) : (
+                          <Title style={styles.details}>Status: <Caption style={styles.details}>To be delivered</Caption></Title>
+                        )
+                      }
+
+                      {/* Card Actions */}
+                      <Card.Actions>
+                        <Button onPress={() => { Linking.openURL(explorerUrl + "/tx/" + parcel.transactionHash); }}>NFT Details</Button>
+                      </Card.Actions>
+                    </Card.Content>
+                  </Card>
+                  <Card style={styles.card}>
+                    <Card.Content>
+                      <View style={styles.titleRow}>
+                        <Avatar.Icon icon="database" size={46} />
+                        <Title style={styles.cardTitle}>Audit trail</Title>
+                      </View>
+
+                      {/* <Title style={styles.details}>MetaData Datasets: <Caption style={styles.details}>{datasets.length}</Caption></Title> */}
+                      {
+                        datasets.map((dataset, index) => {
+                          // Get task information for this dataset from state
+                          const taskInfo = taskInfos.datasets[dataset.dataset]; // Assuming `taskInfos` is a state variable holding the task info
+
+                          return (
+                            <Card style={styles.innerCard} key={index}>
+                              <Card.Content>
+                                <View style={styles.titleRow}>
+                                  <Avatar.Icon icon="folder" size={24} />
+                                  <Title style={{ ...styles.cardTitle, fontSize: 15 }}>Dataset {index + 1}</Title>
+                                </View>
+                                <Title style={styles.details}>Address: <Caption style={styles.details}>{dataset.dataset}</Caption></Title>
+
+                                <Title style={styles.details}>{"Created: "}
+                                  <Caption style={styles.details}>
+                                    {isNaN(Date.parse(dataset.publicationTimestamp)) ? "Invalid date" :
+                                      new Intl.DateTimeFormat('en', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                                        .format(new Date(dataset.publicationTimestamp))}
+                                  </Caption>
+                                </Title>
+
+                                {/* Task Status */}
+                                {taskInfo && (
+                                  <>
+                                    <Title style={styles.details}>Status: <Caption style={styles.details}>{taskInfo.statusName}</Caption></Title>
+
+                                    {/* Progress Bar */}
+                                    <ProgressBar progress={taskInfo.statusName === 'COMPLETED' ? 1 : 0.5} />
+                                  </>
+                                )}
+
+                                {/* Dataset specific action */}
+                              </Card.Content>
+                            </Card>
+                          )
+                        })
+                      }
+
+                      {/* Card Actions */}
+                      <Card.Actions>
+                        <Button mode="contained"
+                          icon="database"
+                          onPress={() => { runTask(parcel.nftId, datasets); }}
+                        >
+                          Download Datasets
+                        </Button>
+                      </Card.Actions>
+                    </Card.Content>
+                  </Card>
+
+                </View>
 
 
-                  </Card.Content>
-                  <Card.Actions>
-
-                    <Button
-                      mode="contained"
-                      icon="car"
-
-                      onPress={() => {
-                        router.replace("/parcel/" + parcel.id + "/deposit");
-                      }}
-                    >Access Vehicle
-                    </Button>
-
-                  </Card.Actions>
-                </Card>
-              </View>
-
-              {/* Image */}
 
 
-            </Animated.View>
+              </Animated.View>
+            </ScrollView>
           )
         )}
 
@@ -192,8 +360,10 @@ const styles = StyleSheet.create({
     width: '80%',
   },
   card: {
-    marginBottom: 10,
-    borderRadius: 0,
+    flex: 1,
+    margin: 10,
+
+    borderRadius: 8,
 
   },
   cardTitle: {
@@ -218,7 +388,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   detailsContainer: {
-    flex: 2, // Adjusted to match layout requirement
+    flex: 1, // Adjusted to match layout requirement
   },
   cardContainer: {
     flex: 1, // Adjusted to match layout requirement
@@ -232,6 +402,11 @@ const styles = StyleSheet.create({
   image: {
     flex: 1,
 
+  },
+  innerCard: {
+    flex: 1,
+    margin: 5,
+    borderRadius: 8,
   },
 
 

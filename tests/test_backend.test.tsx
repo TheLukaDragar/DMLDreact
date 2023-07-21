@@ -39,7 +39,7 @@ describe('Backend Test Scenario', () => {
 
     let courierComponent: any, courierResult: any, clientComponent: any, clientResult: any, courierUserData: any, clientUserData: any;
 
-    const demo_box_did = "KeyBot_000000000000";
+    const demo_box_did = "BOX_000000000000";
     let boxes : GetBoxesResponse
     let box : BoxItem | undefined;
     const car_location = {

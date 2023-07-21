@@ -8,7 +8,7 @@ import { useAppDispatch, useAppSelector } from '../../data/hooks';
 import * as Location from 'expo-location';
 import React, { useEffect } from 'react';
 import Toast from 'react-native-root-toast';
-import { Box, ParcelData, PreciseLocation, useGetMeQuery, useGetParcelsQuery, useLazyGetBoxQuery } from '../../data/api';
+import { Box, ParcelData, PreciseLocation, useGetMeQuery, useGetParcelsQuery, useLazyGetBoxQuery, useLazyGetParcelPreciseLocationQuery } from '../../data/api';
 
 import MapView, { Callout, Marker } from 'react-native-maps';
 
@@ -48,8 +48,10 @@ export default function Parcels() {
     box: Box;
   }
   const [boxDetails, setBoxDetails] = React.useState<BoxData[]>([]);
+  const [parcelLocations, setParcelLocations] = React.useState<PreciseLocation[]>([]);
 
   const [getBox, { data: boxData }] = useLazyGetBoxQuery();
+  const [getParcelLocation, { data: parcelLocationData }] = useLazyGetParcelPreciseLocationQuery()
 
 
   useEffect(() => {
@@ -65,6 +67,24 @@ export default function Parcels() {
         setBoxDetails(fetchedDetails);
       }
       fetchBoxDetails();
+      // const fetchParcelLocations = async () => {
+      //   let fetchedLocations = [];
+      //   for (let parcel of parcels) {
+      //     if (parcel.location_id) {
+      //       try {
+      //         let locationResponse = await getParcelLocation(parcel.location_id).unwrap();
+      //         if (locationResponse) { // Check for existence before access
+      //           fetchedLocations.push(locationResponse);
+      //         }
+      //       } catch (error) {
+      //         console.error('Error fetching parcel location: ', error);
+      //         // handle the error as you see fit
+      //       }
+      //     }
+      //   }
+      //   setParcelLocations(fetchedLocations);
+      // };
+      // fetchParcelLocations(); //todo doesent work
     }
   }, [parcels, getBox]);
 
@@ -167,7 +187,7 @@ export default function Parcels() {
               zoom: 15,
             }
             );
-            
+
 
 
             setSelectedParcel(null);
@@ -193,6 +213,8 @@ export default function Parcels() {
 
       }}
 
+
+
       >
         <Card.Content>
 
@@ -214,27 +236,39 @@ export default function Parcels() {
           <Title style={styles.details}>License Plate: <Caption style={styles.details}>{box?.box.licensePlate}</Caption></Title>
           {/* <Title style={styles.details}>Address: <Caption style={styles.details}>{item.location_id}</Caption></Title> */}
           <Title style={styles.details}>Distance: <Caption style={styles.details}>{distance_to_parcel}</Caption></Title>
+          {
+            item.depositTime !== null ? (
+              <Title style={styles.details}>Status: <Caption style={styles.details}>Delivered</Caption></Title>
+            ) : (
+              <Title style={styles.details}>Status: <Caption style={styles.details}>To be delivered
+              </Caption></Title>
+            )
+
+          }
+
 
         </Card.Content>
         <Card.Actions>
 
           <Button
-          icon="car"
-          mode="contained"
+            mode="outlined"
+            onPress={() => {
+              router.push("/parcel/" + item.id + "/details");
+            }}
+          >Details</Button>
+          <Button
+            disabled={item.depositTime !== null}
+            icon="car"
+            mode="contained"
             onPress={() => {
               router.push({
-                pathname: "/parcel/" + item.id + "/details",
+                pathname: "/parcel/" + item.id + "/deposit",
 
               }
               )
             }}
           >Drop off</Button>
 
-          {/* <Button
-            onPress={() => {
-              router.push("/parcel/" + item.id + "/deposit");
-            }}
-          >D</Button> */}
 
 
         </Card.Actions>
@@ -287,11 +321,11 @@ export default function Parcels() {
                         latitude: box.box.preciseLocation.latitude || 0,
                         longitude: box.box.preciseLocation.longitude || 0,
                       }}
-                     
+
                     >
                       <Callout style={{
-                        backgroundColor:'white',
-                        
+                        backgroundColor: 'white',
+
                       }}
                       >
                         <View style={styles.markerText}>
@@ -307,6 +341,7 @@ export default function Parcels() {
 
                   ) : null
               )}
+
             </MapView>
 
             <View style={styles.parcelcontainer}>
@@ -373,14 +408,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center', // This aligns the icon and the title vertically
     backgroundColor: 'transparent',
-  
+
   },
   markerTitle: {
     fontSize: 15,
     marginLeft: 5, // To provide some spacing between the icon and the title
-    color:'black'
+    color: 'black'
 
-   
+
   },
   details: {
     fontSize: 14,

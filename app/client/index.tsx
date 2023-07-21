@@ -1,7 +1,7 @@
 import { FlatList, StyleSheet } from 'react-native';
 
 import { useRouter } from 'expo-router';
-import { ActivityIndicator, Avatar, Button, Caption, Card, Divider, Snackbar, Title, useTheme } from 'react-native-paper';
+import { ActivityIndicator, Avatar, Button, Caption, Card, Snackbar, Title, useTheme } from 'react-native-paper';
 import { Text, View } from '../../components/Themed';
 import { useAppDispatch, useAppSelector } from '../../data/hooks';
 
@@ -27,7 +27,7 @@ export default function Parcels() {
   const { data: parcels, error, isLoading, isFetching, isError } = useGetParcelsQuery(
     {
       recipient_id: client ? client.id : undefined,
-      
+
       //depositTime:null, //TODO: add filter for deposit time
       limit: 5,
       orderBy: "id",
@@ -168,7 +168,7 @@ export default function Parcels() {
               zoom: 15,
             }
             );
-            
+
 
 
             setSelectedParcel(null);
@@ -214,13 +214,23 @@ export default function Parcels() {
           </View>
           <Title style={styles.details}>License Plate: <Caption style={styles.details}>{box?.box.licensePlate}</Caption></Title>
           <Title style={styles.details}>Distance: <Caption style={styles.details}>{distance_to_parcel}</Caption></Title> */}
+          {
+            item.depositTime !== null ? (
+              <Title style={styles.details}>Status: <Caption style={styles.details}>Delivered</Caption></Title>
+            ) : (
+              <Title style={styles.details}>Status: <Caption style={styles.details}>In Delivery
+              </Caption></Title>
+            )
+
+          }
 
         </Card.Content>
         <Card.Actions>
 
           <Button
-          icon="car"
-          mode="contained"
+            icon="car"
+            disabled={item.depositTime === null}
+            mode="contained"
             onPress={() => {
               router.push({
                 pathname: "/parcel/" + item.id + "/withdraw",
@@ -231,7 +241,7 @@ export default function Parcels() {
           >Pick Up</Button>
 
           <Button
-          icon="package-variant-closed"
+            icon="package-variant-closed"
             onPress={() => {
               router.push("/parcel/" + item.id + "/details");
             }}
@@ -289,11 +299,11 @@ export default function Parcels() {
                         latitude: box.box.preciseLocation.latitude || 0,
                         longitude: box.box.preciseLocation.longitude || 0,
                       }}
-                     
+
                     >
                       <Callout style={{
-                        backgroundColor:'white',
-                        
+                        backgroundColor: 'white',
+
                       }}
                       >
                         <View style={styles.markerText}>
@@ -375,14 +385,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center', // This aligns the icon and the title vertically
     backgroundColor: 'transparent',
-  
+
   },
   markerTitle: {
     fontSize: 15,
     marginLeft: 5, // To provide some spacing between the icon and the title
-    color:'black'
+    color: 'black'
 
-   
+
   },
   details: {
     fontSize: 14,

@@ -483,7 +483,7 @@ export const uploadMetadataToIPFS = createAsyncThunk(
       } else {
         ipfsRes = await uploadToIPFS(encryptedData);
       }
-
+      console.log("ipfsRes: " + JSON.stringify(ipfsRes));
       // Return IPFS result along with other details
       return { ipfsRes, aesKey, checksum };
     } catch (error) {
@@ -491,6 +491,54 @@ export const uploadMetadataToIPFS = createAsyncThunk(
     }
   }
 );
+
+// export const uploadMetadataToIPFS = createAsyncThunk(
+//   'blockchain/uploadMetadataToIPFS',
+//   async (metadata: Metadata, thunkAPI): Promise<UploadMetadataToIPFSResponse> => {
+//     try {
+//       // Get the current state
+
+//       const isTestingEnv = metadata.testingEnv;
+
+//       //remve testing env from metadata
+//       delete metadata.testingEnv;
+
+
+
+
+
+//       // Generate AES key
+//       const aesKey = generateAes256Key();
+//       console.log("aesKey: " + aesKey);
+
+//       let ipfsRes;
+//       if (isTestingEnv) {
+//         const dataBuffer = Buffer.from(JSON.stringify(metadata));
+
+
+
+//         // Encrypt data
+//         const encryptedData = await encryptAes256Cbc(dataBuffer, aesKey);
+//         console.log("Encrypted Data: " + encryptedData.toString('base64'));
+
+//         const checksum = await sha256Sum(encryptedData);
+//         console.log("checksum: " + checksum);
+//         console.log("uploading to testing ipfs node");
+//         ipfsRes = await uploadToIPFSTesting(encryptedData);
+//       } else {
+//         const aesKey = generateAes256Key();
+//         ipfsRes = await uploadToIPFS(JSON.stringify(metadata), aesKey);
+//       }
+//       console.log("ipfsRes: " + JSON.stringify(ipfsRes));
+//       console.log("ipfsRes.Hash: " + ipfsRes.Hash);
+//       //console.log("checksum: " + checksum);
+//       // Return IPFS result along with other details
+//       return { ipfsRes, aesKey, checksum: ipfsRes.Checksum };
+//     } catch (error) {
+//       return handleError(error, thunkAPI);
+//     }
+//   }
+// );
 
 export const downloadMetadataFromIPFS = createAsyncThunk(
   'blockchain/downloadMetadataFromIPFS',
@@ -1193,7 +1241,7 @@ export interface UpdateBoxResponse {
 //user approves the other user to transfer the NFT to himself
 export const updateBox = createAsyncThunk(
   'blockchain/updateBox',
-  async (updateBox: UpdateBox, thunkAPI) : Promise<UpdateBoxResponse> => {
+  async (updateBox: UpdateBox, thunkAPI): Promise<UpdateBoxResponse> => {
     try {
       // Get the current state
       const state = thunkAPI.getState() as RootState;
@@ -1237,8 +1285,9 @@ export const updateBox = createAsyncThunk(
       console.log("txReceipt: " + JSON.stringify(txReceipt));
       const tx_hash = txReceipt.transactionHash;
 
-      return { tx_data: JSON.stringify(txReceipt) , txHash: tx_hash
-      
+      return {
+        tx_data: JSON.stringify(txReceipt), txHash: tx_hash
+
       } as UpdateBoxResponse;
 
     }
@@ -1249,6 +1298,89 @@ export const updateBox = createAsyncThunk(
   }
 );
 
+export interface Dataset {
+  dataset: string;
+  datasetprice: number;
+  volume: number;
+  tag: string;
+  apprestrict: string;
+  workerpoolrestrict: string;
+  requesterrestrict: string;
+  salt: string;
+  sign: string;
+  orderHash: string;
+  chainId: number;
+  publicationTimestamp: string;
+  signer: string;
+  status: string;
+  remaining: number;
+}
+
+
+export const getDatasetOrder = createAsyncThunk(
+  'blockchain/getDatasetOrder',
+  async (dataset_address: string, thunkAPI): Promise<Dataset> => {
+    try {
+      // Get the current state
+      const state = thunkAPI.getState() as RootState;
+
+      // Get the wallet from the state
+      const privateKey = state.blockchain.privateKey;
+
+      // Check if the wallet exists
+      if (!privateKey) {
+        throw new Error("Wallet not found");
+      }
+
+
+      const wallet = new ethers.Wallet(privateKey, provider);
+      const query = {
+        "chainId": chainId,
+        "app": DLMDApp,
+        "dataset": dataset_address,
+        "workerpool": "0xdb214a4A444D176e22030bE1Ed89dA1b029320f2", //debug workerpool
+        "requester": wallet.address,
+        "minTag": "0x0000000000000000000000000000000000000000000000000000000000000003",
+        "maxTag": "0x0000000000000000000000000000000000000000000000000000000000000003"
+      }
+
+      //fetch datasetOrder of dataset
+
+      const GETdatasetOrder = await fetch(marketplaceURL + '/datasetorders?' + objToQueryString(query), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!GETdatasetOrder.ok) {
+        console.log(GETdatasetOrder);
+        throw new Error("Error fetching datasetOrder");
+      }
+
+      let response = await GETdatasetOrder.json()
+      let orderData = response.orders[0];
+      let order = orderData && orderData.order;
+
+      if (!order) {
+        throw new Error("No datasetOrder found");
+      }
+
+      let dataset = {
+        ...orderData,
+        ...order
+      };
+
+      console.log("dataset: " + JSON.stringify(dataset));
+
+      return dataset as Dataset;
+
+    }
+    catch (error) {
+      return handleError(error, thunkAPI);
+    }
+  }
+);
 
 export const getBoxDatasets = createAsyncThunk(
   'blockchain/getBoxDatasets',
@@ -1413,7 +1545,7 @@ export const getBalance = createAsyncThunk(
     }
     catch (error) {
       return handleError(error, thunkAPI);
-      
+
     }
   }
 );
@@ -1459,7 +1591,7 @@ export const getOwnerOfNft = createAsyncThunk(
 //getNftDetails
 export const getNftDetails = createAsyncThunk(
   'blockchain/getNftDetails',
-  async (tokenId: string, thunkAPI) : Promise<{ parcelId: string, sender: string, receiver: string }> => {
+  async (tokenId: string, thunkAPI): Promise<{ parcelId: string, sender: string, receiver: string }> => {
     try {
       // Get the current state
       const state = thunkAPI.getState() as RootState;
@@ -1479,24 +1611,24 @@ export const getNftDetails = createAsyncThunk(
 
       console.log("calling getNftDetails with args: " + "tokenId: " + tokenId);
       const {
-        parcelId ,
+        parcelId,
         sender,
         receiver
       } = await contract.boxes(tokenId) as { parcelId: string, sender: string, receiver: string };
 
 
-      
+
 
       console.log("details: " + JSON.stringify({
-        parcelId ,
+        parcelId,
         sender,
         receiver
       }));
 
-     
+
 
       return {
-        parcelId ,
+        parcelId,
         sender,
         receiver
       };
@@ -1828,11 +1960,25 @@ export const runApp = createAsyncThunk(
   }
 );
 
+export const TASK_STATUS_MAP = {
+  0: 'UNSET',
+  1: 'ACTIVE',
+  2: 'REVEALING',
+  3: 'COMPLETED',
+  4: 'FAILED',
+  timeout: 'TIMEOUT',
+};
 
+export type TaskData = {
+  taskId: string;
+  statusName: string;
+  taskTimedOut: boolean;
+  results: any; // replace 'any' with the actual type of your result
+};
 //thunk for checking progress of tasks
 export const monitorTaskProgress = createAsyncThunk(
   'blockchain/monitorTaskProgress',
-  async ({ tasks }: { tasks: string[] }, thunkAPI) => {
+  async ({ tasks }: { tasks: string[] }, thunkAPI) : Promise<{ tasksCompleted: number, tasksFailed: number, tasksTimeout: number, tasksData: TaskData[] }> => {
     try {
 
       // Get the current state
@@ -1846,14 +1992,7 @@ export const monitorTaskProgress = createAsyncThunk(
         throw new Error("Wallet not found");
       }
 
-      const TASK_STATUS_MAP = {
-        0: 'UNSET',
-        1: 'ACTIVE',
-        2: 'REVEALING',
-        3: 'COMPLETED',
-        4: 'FAILED',
-        timeout: 'TIMEOUT',
-      };
+
 
       const decodeTaskResult = (results: any) => {
         try {
@@ -1885,7 +2024,7 @@ export const monitorTaskProgress = createAsyncThunk(
 
 
         return {
-          taskid: task,
+          taskId: task,
           //data:JSON.stringify(taskData),
           statusName:
             taskData.status < 3 && taskTimedOut ? TASK_STATUS_MAP.timeout
@@ -1902,7 +2041,7 @@ export const monitorTaskProgress = createAsyncThunk(
       const tasksTimeout = tasksProgress.filter((task) => task.statusName === 'TIMEOUT');
 
 
-
+      console.log("tasksProgress: " + JSON.stringify(tasksProgress));
       return { tasksCompleted: tasksCompleted.length, tasksFailed: tasksFailed.length, tasksTimeout: tasksTimeout.length, tasksData: tasksProgress };
     }
     catch (error) {
@@ -2128,7 +2267,7 @@ const blockchainSlice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(getBalance.fulfilled, (state, action) => {
       console.log("getBalance.fulfilled: " + action.payload);
-        state.balance = action.payload;
+      state.balance = action.payload;
     });
     builder.addCase(getBalance.rejected, (state, action) => {
       console.log("getBalance.rejected: " + action.payload);
