@@ -1,7 +1,7 @@
 import { useRouter, useSegments } from "expo-router";
 import React from "react";
 import { useAppDispatch, useAppSelector } from '../data/hooks';
-import { UserType } from "../constants/Auth";
+import { UserType2 } from "../constants/Auth";
 const AuthContext = React.createContext(null);
 
 // This hook can be used to access the user info.
@@ -56,10 +56,12 @@ function useProtectedRoute(user) {
       console.log("user type", user_type);
 
       //check user type
-      if (user_type === UserType.CLIENT) {
+      if (user_type === UserType2.RENTER) {
         router.replace("client");
-      } else if (user_type === UserType.COURIER) {
+      } else if (user_type === UserType2.PARCEL_DELIVERY) {
         router.replace("courier");
+      }else if (user_type === null || isNaN(user_type)) {
+        router.replace("auth");
       }
         console.log("redirect to home");
     }

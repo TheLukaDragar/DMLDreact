@@ -32,7 +32,7 @@ export interface User {
   reputation: null;
   status: number;
   tableName: string;
-  userType: UserType2 | null;
+  userType: UserType2;
 }
 export interface UserName {
   firstName: null | string;
@@ -66,6 +66,7 @@ interface RegisterWallet {
   timestamp: number
   email?: string
   username?: string
+  userType?: UserType2
 }
 interface connectBox {
   macAddress: string

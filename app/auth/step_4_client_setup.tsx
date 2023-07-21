@@ -10,6 +10,7 @@ import '@ethersproject/shims';
 
 import { ethers } from 'ethers';
 import { isErrorWithMessage, isFetchBaseQueryError, useLazyGetAuthMsgQuery, useRegisterWalletMutation } from '../../data/api';
+import { UserType2 } from '../../constants/Auth';
 
 
 
@@ -69,6 +70,7 @@ export default function Step_4_client_setup() {
           timestamp: msg?.timestamp!,
           ...(email !== '' && { email }),
           ...(username !== '' && { username }),
+          userType:UserType2.RENTER
         }).unwrap();
 
         console.log(payload, "payload");

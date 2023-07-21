@@ -9,7 +9,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import React, { useState } from 'react';
 import Toast from 'react-native-root-toast';
 import PinInput from '../../components/PinInput';
-import { UserType } from '../../constants/Auth';
+import { UserType, UserType2 } from '../../constants/Auth';
 import { createWallet, setUserType } from '../../data/secure';
 
 
@@ -146,7 +146,8 @@ export default function step_2_create_wallet() {
               setLoading(true);
               setTimeout(async () => {
                 await dispatch(createWallet(pinn)).unwrap();
-                await dispatch(setUserType(params.role as UserType)).unwrap();
+                //TODO change enums to us2
+                await dispatch(setUserType(params.role as UserType == UserType.CLIENT ? UserType2.RENTER : params.role as UserType == UserType.COURIER ? UserType2.PARCEL_DELIVERY : UserType2.PARCEL_RECEIVER)).unwrap();
                 
               }, 100);
             }

@@ -10,7 +10,7 @@ import "@ethersproject/shims";
 
 import { ethers } from 'ethers';
 import { setPrivateKey } from './blockchain';
-import { UserType } from '../constants/Auth';
+import { UserType2 } from '../constants/Auth';
 
 
 //from gimly
@@ -24,7 +24,7 @@ export type KeyChainData = {
 
 export type UserData = {
     token: string | null
-    userType: UserType | null
+    userType: UserType2 | null
 }
 
 
@@ -209,7 +209,8 @@ export const getSecure = createAsyncThunk(
             keyChainData.did = await SecureStore.getItemAsync('did');
 
             userData.token = await SecureStore.getItemAsync('token');
-            userData.userType = await SecureStore.getItemAsync('userType') ===  UserType.CLIENT ? UserType.CLIENT : UserType.COURIER;
+            const string_userType = await SecureStore.getItemAsync('userType');
+            userData.userType = Number(string_userType) as UserType2;
 
             console.log('getSecure', userData);
 
@@ -334,7 +335,7 @@ export const loadDemoClientWallet = createAsyncThunk(
             await SecureStore.setItemAsync('pin', "1111");
 
             //set user type
-            await SecureStore.setItemAsync('userType', UserType.CLIENT);
+            await SecureStore.setItemAsync('userType', String(UserType2.PARCEL_RECEIVER));
 
 
             console.log('loadDemoClientWallet', "saved wallet");
@@ -377,7 +378,7 @@ export const loadDemoCourierWallet = createAsyncThunk(
             console.log('loadDemoCourierWallet', "saved wallet");
 
             //SET USER TYPE
-            await SecureStore.setItemAsync('userType', UserType.COURIER);
+            await SecureStore.setItemAsync('userType', String(UserType2.PARCEL_DELIVERY));
 
             return {
                 mnemonicPhrase: mnemonic,
@@ -429,8 +430,8 @@ export const setToken = createAsyncThunk(
 //set UserType in secure store
 export const setUserType = createAsyncThunk(
     'secure/setUserType',
-    async (userType: UserType, thunkAPI) => {
-        await SecureStore.setItemAsync('userType', userType);
+    async (userType: UserType2, thunkAPI) => {
+        await SecureStore.setItemAsync('userType', String(userType));
         
         return userType;
     }
