@@ -70,12 +70,12 @@ export default function Incoming() {
           <Title style={styles.cardTitle}>{item.title}</Title>
         </View>
         <Title style={styles.details}>Tracking Number: <Caption style={styles.details}>{item.trackingNumber}</Caption></Title>
-        <Title style={styles.details}>Address: <Caption style={styles.details}>{item.address}</Caption></Title>
+        <Title style={styles.details}>Recipient address: <Caption style={styles.details}>{item.address}</Caption></Title>
 
         <Title style={styles.details}>Sender: <Caption style={styles.details}>{item.sender}</Caption></Title>
-        <Title style={styles.details}>Receiver: <Caption style={styles.details}>{item.receiver}</Caption></Title>
+        <Title style={styles.details}>Recipient: <Caption style={styles.details}>{item.receiver}</Caption></Title>
     
-        <Title style={styles.details}>Receiver Address: <Caption style={styles.details}>{item.receiver_address}</Caption></Title>
+        <Title style={styles.details}>Recipient wallet adddres: <Caption style={styles.details}>{"\n"+item.receiver_address}</Caption></Title>
 
       </Card.Content>
       <Card.Actions>

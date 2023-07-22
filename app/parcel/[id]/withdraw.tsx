@@ -79,6 +79,9 @@ export default function ConnectToTheBox() {
 
   useEffect(() => {
     if (flatListRef.current) {
+      if (activeStep == 0) {
+        return;
+      }
       flatListRef.current.scrollToIndex({
         index: activeStep - 1, animated: true, viewPosition: 0,
       });

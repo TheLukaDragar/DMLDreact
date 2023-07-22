@@ -345,7 +345,7 @@ export default function NewParcel() {
           <Paragraph>Reputation: {item.reputation}</Paragraph>
           <Paragraph>Reputation threshold: {item.reputationThreshold ? item.reputationThreshold : "not set"}</Paragraph>
 
-          <Paragraph>License plate: {item.licensePlate}</Paragraph>
+          <Paragraph>Vehicle licence plate: {item.licensePlate}</Paragraph>
           {/* <Paragraph>Location: {item.preciseLocation_id}</Paragraph> */}
         </Card.Content>
         <Card.Actions>
@@ -419,7 +419,7 @@ export default function NewParcel() {
 
 
                 <Subheading style={styles.infoText}>
-                  Deliver To: {boxes?.items.find(box => box.id === selectedItemId)?.did}
+                  Deliver point: {boxes?.items.find(box => box.id === selectedItemId)?.did}
                 </Subheading>
 
               </View>

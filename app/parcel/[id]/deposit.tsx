@@ -70,8 +70,12 @@ export default function ConnectToTheBox() {
 
   useEffect(() => {
     if (flatListRef.current) {
-      flatListRef.current.scrollToIndex({ index: activeStep - 1, animated: true, viewPosition: 0, 
-       });
+      if (activeStep == 0) {
+        return;
+      }
+      flatListRef.current.scrollToIndex({
+        index: activeStep - 1, animated: true, viewPosition: 0,
+      });
       console.log("scrolling to index", activeStep - 1);
     }
   }, [activeStep]);
@@ -316,7 +320,7 @@ export default function ConnectToTheBox() {
 
       // Step 7: transfer NFT to receiver
 
-       
+
       await new Promise(resolve => setTimeout(resolve, 500));
       //already done in the previous step
       nextStep();
@@ -391,22 +395,22 @@ export default function ConnectToTheBox() {
                 && ble.deviceConnectionState.status === 'ready'
 
                 ? (
-                  <><Avatar.Icon size={48} icon="cube" /><><Title style={styles.title} >Connected</Title><Subheading>{ble.connectedDevice?.localName}</Subheading><Subheading>{ble.connectedDevice?.id}</Subheading></></>
+                  <><Avatar.Icon size={56} icon="cube" /><><Title style={styles.title} >Connected</Title><Subheading>{ble.connectedDevice?.localName}</Subheading><Subheading>{ble.connectedDevice?.id}</Subheading></></>
 
                 ) : (
                   <>
-                    <Avatar.Icon size={48} icon="cube" style={{ backgroundColor: "grey" }}
+                    <Avatar.Icon size={56} icon="cube" style={{ backgroundColor: "grey" }}
 
                     />
                     <Title style={styles.title}
 
-                    >Connect to the Box</Title>
+                    >Connect to the Vehicle system (Box)</Title>
                     <Title style={styles.subtitle}>
-                      To unlock the vehicle, you need to connect to the box first.
+                      To unlock the Vehicle, you need to connect to the box first.
 
                     </Title>
 
-                    <Button icon="bluetooth" mode="contained" contentStyle={{ padding: 10 }}
+                    <Button icon="bluetooth" mode="contained" contentStyle={{ height: 80, width: 200 }}
 
                       onPress={() => {
                         console.log('Connecting to Box ' + boxDetails?.macAddress);
@@ -416,7 +420,7 @@ export default function ConnectToTheBox() {
                     </Button>
                   </>
                 )}
-              <Button mode="contained" onPress={() => BleDisconnect()} style={{ margin: 20 }}>
+              <Button mode="contained" onPress={() => BleDisconnect()} style={{ margin: 20 }} contentStyle={{ height: 60, width: 150 }}>
                 disconnect
               </Button>
 
@@ -425,7 +429,7 @@ export default function ConnectToTheBox() {
             <View key="1" style={styles.page}>
 
               <Avatar.Icon
-                size={48}
+                size={56}
                 icon="car"
                 style={{
                   backgroundColor:
@@ -438,7 +442,7 @@ export default function ConnectToTheBox() {
               <Title
                 style={styles.subtitle}
               >{ble.keyBotState.status === KeyBotState.KEYBOT_PRESSING_LEFT || ble.keyBotState.status === KeyBotState.KEYBOT_PRESSING_RIGHT ?
-                "Unlocking the vehicle..."
+                "Unlocking the Vehicle..."
                 : "Press the unlock button"
 
 
@@ -461,19 +465,19 @@ export default function ConnectToTheBox() {
 
             </View>
             <View key="2" style={styles.page}>
-              <Avatar.Icon size={48} icon="package-variant-closed" />
+              <Avatar.Icon size={56} icon="package-variant-closed" />
               <Title style={styles.title}
               >Place the Parcel in the Vehicle</Title>
               <Title style={styles.subtitle}
               >
-                Open the vehicle, ensure space, place the parcel securely, and close the vehicle door or trunk.
+                Open the Vehicle, ensure space, place the parcel securely, and close the Vehicle door or trunk.
 
               </Title>
               <Button mode="contained"
                 icon="check"
                 contentStyle={{ height: 80, width: 200 }}
                 onPress={() => {
-                  console.log('Confirmed parcel placement in the car')
+                  console.log('Confirmed parcel placement in the Vehicle')
 
                   if (pagerRef && pagerRef.current
                   ) {
@@ -482,12 +486,12 @@ export default function ConnectToTheBox() {
 
 
                 }}>
-                Done
+                OK
               </Button>
             </View>
             <View key="3" style={styles.page}>
               <Avatar.Icon
-                size={48}
+                size={56}
                 icon="car"
                 style={{
                   backgroundColor:
@@ -497,11 +501,11 @@ export default function ConnectToTheBox() {
               />
               <Title style={styles.title}
 
-              >Lock the Car</Title>
+              >Lock the Vehicle</Title>
               <Title
                 style={styles.subtitle}
               >{ble.keyBotState.status === KeyBotState.KEYBOT_PRESSING_LEFT || ble.keyBotState.status === KeyBotState.KEYBOT_PRESSING_RIGHT ?
-                "Locking the car..."
+                "Locking the Vehicle..."
                 : "Press the lock button"
 
 
@@ -524,33 +528,41 @@ export default function ConnectToTheBox() {
 
             </View>
             <View key="4" style={styles.page_flatlist}>
-              <Avatar.Icon
-                size={48}
-                icon="account-check"
-                style={{
-                  marginTop: 10,
-                }}
+              <View style={{
+                flex: isBlockchainProcessing || isBlockchainDone ? 2 : 3,
+                alignItems: "center", justifyContent: "center", marginTop: 10
 
-              />
-              <Title style={styles.title}
-              >
-                {isBlockchainProcessing
-                  ? 'Processing transfer of NFT Ownership...'
-                  : isBlockchainDone
-                    ? 'Transfer Complete!'
-                    : 'Transfer of NFT Ownership and update MetaData'}
-              </Title>
 
-              <Subheading
-                style={styles.subtitle}
-              >
-                {isBlockchainProcessing
-                  ? 'Your transfer is currently being processed. Please wait.'
-                  : isBlockchainDone
-                    ? 'The transfer has been successfully completed.'
-                    : 'I have delivered the parcel to the car and I am ready to transfer the ownership of the NFT to the car owner.'}
-              </Subheading>
 
+
+              }}>
+                <Avatar.Icon
+                  size={isBlockchainProcessing || isBlockchainDone ? 48 : 56}
+                  icon="account-check"
+                  style={{
+                    marginTop: 10,
+                  }}
+
+                />
+                <Title style={isBlockchainProcessing || isBlockchainDone ? styles.titlesmall : styles.title}>
+
+                  {isBlockchainProcessing
+                    ? 'Processing transfer of NFT Ownership...'
+                    : isBlockchainDone
+                      ? 'Transfer Complete!'
+                      : 'Transfer NFT Ownership and update MetaData'}
+                </Title>
+
+                <Subheading
+                  style={isBlockchainProcessing || isBlockchainDone ? styles.subtitle_small : styles.subtitle}
+                >
+                  {isBlockchainProcessing
+                    ? 'Your transfer is currently being processed. Please wait.'
+                    : isBlockchainDone
+                      ? 'The transfer has been successfully completed.'
+                      : 'I have delivered the parcel to the Vehicle and I am ready to transfer the ownership of the NFT to the Vehicle owner.'}
+                </Subheading>
+              </View>
               {(isBlockchainProcessing || isBlockchainDone) ? (
 
 
@@ -565,6 +577,8 @@ export default function ConnectToTheBox() {
                     getItemLayout={(data, index) => (
                       { length: 100, offset: 100 * index, index }
                     )}
+                    contentContainerStyle={{ flexGrow: 1, justifyContent: "flex-end" }}
+
 
                     ref={flatListRef}
                     data={steps}
@@ -580,13 +594,13 @@ export default function ConnectToTheBox() {
                       <Button
                         mode="outlined"
                         onPress={() => {
-                          console.log('Confirmed parcel placement in the car');
+                          console.log('Confirmed parcel placement in the Vehicle');
                           Linking.openURL(explorerUrl + "/tx/" + BlockchainTransaction);
                         }}
                         contentStyle={{ height: 80 }}
                         style={{
-                          marginRight: 10
-                          , flex: 1
+
+                          flex: 1
                         }}>
                         View on Blockchain
                       </Button>
@@ -628,47 +642,52 @@ export default function ConnectToTheBox() {
 
               ) : (
                 <>
+                  <View style={{
+                    flex: 1,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}>
+                    <Button
+                      mode="contained"
+                      loading={isBlockchainProcessing}
+                      onPress={() => {
+                        if (isBlockchainProcessing) return;
 
-                  <Button
-                    mode="contained"
-                    loading={isBlockchainProcessing}
-                    onPress={() => {
-                      if (isBlockchainProcessing) return;
+                        if (isBlockchainDone) {
+                          router.back();
 
-                      if (isBlockchainDone) {
-                        router.back();
+                          return;
+                        }
 
-                        return;
-                      }
+                        setIsBlockchainProcessing(true);
+                        blockchain(
+                          boxDetails,
+                          parcel,
+                          {
+                            latitude: location.coords.latitude,
+                            longitude: location.coords.longitude,
+                            inaccuracy: location.coords.accuracy,
+                          } as PreciseLocation
+                        );
+                      }}
 
-                      setIsBlockchainProcessing(true);
-                      blockchain(
-                        boxDetails,
-                        parcel,
-                        {
-                          latitude: location.coords.latitude,
-                          longitude: location.coords.longitude,
-                          inaccuracy: location.coords.accuracy,
-                        } as PreciseLocation
-                      );
-                    }}
+                      contentStyle={{
+                        height: 80, width: 200
+                      }}
 
-                    contentStyle={{
-                      height: 80, width: 200
-                    }}
-
-                    style={{
-
-
-
-
-
-                    }}
-                  >
+                      style={{
 
 
-                    Approve
-                  </Button>
+
+
+
+                      }}
+                    >
+
+
+                      Approve
+                    </Button>
+                  </View>
                 </>
 
               )}
@@ -717,11 +736,19 @@ const styles = StyleSheet.create({
   },
   title: {
     textAlign: "center", marginBottom: 10, //bold
-    fontWeight: "bold"
+    fontWeight: "bold", fontSize: 22, marginTop: 20
+  },
+  titlesmall: {
+    textAlign: "center", marginBottom: 5, //bold
+    fontWeight: "bold", marginTop: 10
   },
   subtitle: {
-    textAlign: "center", marginBottom: 20, marginHorizontal: 30
+    textAlign: "center", marginBottom: 40, marginHorizontal: 30
   },
+  subtitle_small: {
+    textAlign: "center", marginBottom: 10, marginHorizontal: 30
+  },
+
 
 
 });

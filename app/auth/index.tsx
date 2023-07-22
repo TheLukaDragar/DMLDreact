@@ -173,7 +173,7 @@ export default function TabTwoScreen() {
 
       <Text style={styles.title}>Welcome to DLMD</Text>
 
-      <Text>
+      {/* <Text>
         wallet:
         {secure.keyChainData.privateKey == null ? "null" : secure.keyChainData.privateKey}
 
@@ -183,7 +183,7 @@ export default function TabTwoScreen() {
         token:
         {secure.userData.token == null ? "null" : secure.userData.token}
 
-      </Text>
+      </Text> */}
 
 
 

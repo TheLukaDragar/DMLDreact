@@ -41,7 +41,7 @@ export default function TabLayout() {
 
         options={{
           headerShown: false,
-          title: "Incoming Parcels",
+          title: "Parcels to deliver",
           tabBarIcon: ({ color }) => <TabBarIcon2 name="truck-delivery" color={color} />
         }}
          

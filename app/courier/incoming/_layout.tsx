@@ -17,7 +17,7 @@ export default function Layout() {
         <Stack.Screen name="index"
         options={
             {
-                title: "Incoming Parcels",
+                title: "Parcels to deliver",
                 animation: "none",
             }
             

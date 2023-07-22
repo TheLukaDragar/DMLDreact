@@ -211,7 +211,7 @@ export default function ConnectToTheBox() {
                       <Card.Cover source={{ uri: boxDetails.imageUrl }} style={{ marginVertical: 10 }} />
 
                       {/* Box Details */}
-                      <Title style={styles.details}>License Plate: <Caption style={styles.details}>{boxDetails.licensePlate}</Caption></Title>
+                      <Title style={styles.details}>Vehicle licence plate: <Caption style={styles.details}>{boxDetails.licensePlate}</Caption></Title>
 
                       {/* Card Actions */}
                       <Card.Actions>
@@ -255,8 +255,8 @@ export default function ConnectToTheBox() {
                           <Title style={styles.details}>Withdraw Time: <Caption style={styles.details}>{new Intl.DateTimeFormat('en', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(parcel.withdrawTime))}</Caption></Title>
                         ) : null
                       }
-                      <Title style={styles.details}>Courier: <Caption style={styles.details}>{nftDetails?.sender}</Caption></Title>
-                      <Title style={styles.details}>Receiver: <Caption style={styles.details}>{nftDetails?.receiver}</Caption></Title>
+                      <Title style={styles.details}>Courier Wallet Address: <Caption style={styles.details}>{"\n" + nftDetails?.sender}</Caption></Title>
+                      <Title style={styles.details}>Recipient Wallet Address: <Caption style={styles.details}>{"\n" + nftDetails?.receiver}</Caption></Title>
                       {/* <Title style={styles.details}>MetaData Datasets: <Caption style={styles.details}>{datasets.length}</Caption></Title> */}
                       {
                         parcel.depositTime !== null ? (
@@ -292,7 +292,7 @@ export default function ConnectToTheBox() {
                                   <Avatar.Icon icon="folder" size={24} />
                                   <Title style={{ ...styles.cardTitle, fontSize: 15 }}>Dataset {index + 1}</Title>
                                 </View>
-                                <Title style={styles.details}>Address: <Caption style={styles.details}>{dataset.dataset}</Caption></Title>
+                                <Title style={styles.details}>Dataset Address: <Caption style={styles.details}>{"\n"+dataset.dataset}</Caption></Title>
 
                                 <Title style={styles.details}>{"Created: "}
                                   <Caption style={styles.details}>

@@ -1,9 +1,9 @@
 
-import { Buffer } from 'buffer';
 import '@ethersproject/shims';
+import { Buffer } from 'buffer';
 
-import { utils } from 'ethers';
 import aesJs from 'aes-js';
+import { utils } from 'ethers';
 import * as FileSystem from 'expo-file-system';
 import JSZip from 'jszip';
 
@@ -124,14 +124,8 @@ export const IPFSGateways ={
 
     const formData = new FormData();
 
-    //print type of data and 
-    console.log("data", data);
-    console.log("typeof data", typeof data);
-    console.log("data instanceof Blob", data instanceof Blob);
-    console.log("data instanceof File", data instanceof File);
-
     const blob = new Blob([new Uint8Array(data)], {type: 'application/octet-stream'});
-
+  
     
     formData.append("file" , blob, "metadata.txt");
   
@@ -163,13 +157,13 @@ export const IPFSGateways ={
 
   async function callIpfsCommand(data : Buffer) : Promise<IpfsData>{
 
-    // Generate a temporary filename in the app's document directory
-    const dataString = data.toString();
-
+    const dataString = data.toString('base64');
+    console.log("dataString", dataString);
+    
     const filename = FileSystem.documentDirectory +'metadata' + '.txt';
-
-  // Write your data to the file
-    await FileSystem.writeAsStringAsync(filename, dataString, { encoding: FileSystem.EncodingType.UTF8 });
+    
+    // Write your data to the file
+    await FileSystem.writeAsStringAsync(filename, dataString, { encoding: FileSystem.EncodingType.Base64 });
 
     //compute sha256
 
