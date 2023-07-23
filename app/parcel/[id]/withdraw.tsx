@@ -449,22 +449,22 @@ export default function ConnectToTheBox() {
                 && ble.deviceConnectionState.status === 'ready'
 
                 ? (
-                  <><Avatar.Icon size={48} icon="cube" /><><Title style={styles.title} >Connected</Title><Subheading>{ble.connectedDevice?.localName}</Subheading><Subheading>{ble.connectedDevice?.id}</Subheading></></>
+                  <><Avatar.Icon size={56} icon="cube" /><><Title style={styles.title} >Connected</Title><Subheading>{ble.connectedDevice?.localName}</Subheading><Subheading>{ble.connectedDevice?.id}</Subheading></></>
 
                 ) : (
                   <>
-                    <Avatar.Icon size={48} icon="cube" style={{ backgroundColor: "grey" }}
+                    <Avatar.Icon size={56} icon="cube" style={{ backgroundColor: "grey" }}
 
                     />
                     <Title style={styles.title}
 
-                    >Connect to the Box</Title>
+                    >Connect to the Vehicle system (Box)</Title>
                     <Title style={styles.subtitle}>
-                      To unlock the vehicle, you need to connect to the box first.
+                      To unlock the Vehicle, you need to connect to the box first.
 
                     </Title>
 
-                    <Button icon="bluetooth" mode="contained" contentStyle={{ padding: 10 }}
+                    <Button icon="bluetooth" mode="contained" contentStyle={{ height: 80, width: 200 }}
 
                       onPress={() => {
                         console.log('Connecting to Box ' + boxDetails?.macAddress);
@@ -474,7 +474,7 @@ export default function ConnectToTheBox() {
                     </Button>
                   </>
                 )}
-              <Button mode="contained" onPress={() => BleDisconnect()} style={{ margin: 20 }}>
+              <Button mode="contained" onPress={() => BleDisconnect()} style={{ margin: 20 }} contentStyle={{ height: 60, width: 150 }}>
                 disconnect
               </Button>
 
@@ -483,7 +483,7 @@ export default function ConnectToTheBox() {
             <View key="1" style={styles.page}>
 
               <Avatar.Icon
-                size={48}
+                size={56}
                 icon="car"
                 style={{
                   backgroundColor:
@@ -519,7 +519,7 @@ export default function ConnectToTheBox() {
 
             </View>
             <View key="2" style={styles.page}>
-              <Avatar.Icon size={48} icon="package-variant-closed" />
+              <Avatar.Icon size={56} icon="package-variant-closed" />
 
               <Title style={styles.title}
               >
@@ -527,7 +527,7 @@ export default function ConnectToTheBox() {
               </Title>
 
               <Title style={styles.subtitle}>
-                Open the vehicle, grab your parcel, then close it securely.
+                Open the Vehicle, grab your parcel, then close it securely.
               </Title>
 
 
@@ -556,7 +556,7 @@ export default function ConnectToTheBox() {
             </View>
             <View key="3" style={styles.page}>
               <Avatar.Icon
-                size={48}
+                size={56}
                 icon="car"
                 style={{
                   backgroundColor:
@@ -566,11 +566,11 @@ export default function ConnectToTheBox() {
               />
               <Title style={styles.title}
 
-              >Lock the Car</Title>
+              >Lock the Vehicle</Title>
               <Title
                 style={styles.subtitle}
               >{ble.keyBotState.status === KeyBotState.KEYBOT_PRESSING_LEFT || ble.keyBotState.status === KeyBotState.KEYBOT_PRESSING_RIGHT ?
-                "Locking the car..."
+                "Locking the Vehicle..."
                 : "Press the lock button"
 
 
@@ -598,12 +598,12 @@ export default function ConnectToTheBox() {
                 alignItems: "center", flex: 3, justifyContent: "center"
               }}>
                 <Avatar.Icon
-                  size={48}
+                  size={56}
                   icon="star"
                 />
                 <Title style={styles.title}>Rate the Vehicle / Box</Title>
                 <Title style={styles.subtitle}>
-                  How was the condition of the vehicle? Was it clean and well-maintained?
+                  How was the condition of the Vehicle? Was it clean and well-maintained?
                 </Title>
               </View>
 
@@ -612,7 +612,7 @@ export default function ConnectToTheBox() {
               }}>
 
                 <AirbnbRating
-                  size={48}
+                  size={56}
                   showRating={false}
                   onFinishRating={(rating) => {
                     setBoxRating(rating);
@@ -655,7 +655,7 @@ export default function ConnectToTheBox() {
                 alignItems: "center", flex: 3, justifyContent: "center"
               }}>
                 <Avatar.Icon
-                  size={48}
+                  size={56}
                   icon="star"
                 />
                 <Title style={styles.title}>Rate the Courier</Title>
@@ -669,7 +669,7 @@ export default function ConnectToTheBox() {
               }}>
 
                 <AirbnbRating
-                  size={48}
+                  size={56}
                   showRating={false}
                   onFinishRating={(rating) => {
                     setCourierRating(rating);
@@ -718,15 +718,15 @@ export default function ConnectToTheBox() {
 
               }}>
                 <Avatar.Icon
-                  size={48}
+                  size={isBlockchainProcessing || isBlockchainDone ? 48 : 56}
                   icon="account-check"
                   style={{
                     marginTop: 10,
                   }}
 
                 />
-                <Title style={{ ...styles.title, marginHorizontal: 30 }}
-                >
+                <Title style={isBlockchainProcessing || isBlockchainDone ? styles.titlesmall : styles.title}>
+                
                   {isBlockchainProcessing
                     ? 'Uploading Parcel Withdrawal to Blockchain'
                     : isBlockchainDone
@@ -735,13 +735,13 @@ export default function ConnectToTheBox() {
                 </Title>
 
                 <Subheading
-                  style={styles.subtitle}
-                >
+                  style={isBlockchainProcessing || isBlockchainDone ? styles.subtitle_small : styles.subtitle}
+                  >
                   {isBlockchainProcessing
                     ? 'Updating NFT Metadata please wait...'
                     : isBlockchainDone
                       ? 'Parcel Withdrawal Completed'
-                      : 'I have withdrawn the parcel from the car and I am ready to confirm the withdrawal.'}
+                      : 'I have withdrawn the parcel from the Vehicle and I am ready to confirm the withdrawal.'}
                 </Subheading>
               </View>
 
@@ -777,7 +777,7 @@ export default function ConnectToTheBox() {
                       <Button
                         mode="outlined"
                         onPress={() => {
-                          console.log('Confirmed parcel placement in the car');
+                          console.log('Confirmed parcel placement in the Vehicle');
                           Linking.openURL(explorerUrl + "/tx/" + BlockchainTransaction);
                         }}
                         contentStyle={{ height: 80 }}
@@ -920,10 +920,17 @@ const styles = StyleSheet.create({
   },
   title: {
     textAlign: "center", marginBottom: 10, //bold
-    fontWeight: "bold"
+    fontWeight: "bold", fontSize: 22, marginTop: 20, marginHorizontal: 10
+  },
+  titlesmall: {
+    textAlign: "center", marginBottom: 5, //bold
+    fontWeight: "bold", marginTop: 10,marginHorizontal: 10
   },
   subtitle: {
-    textAlign: "center", marginBottom: 20, marginHorizontal: 30
+    textAlign: "center", marginBottom: 40, marginHorizontal: 30
+  },
+  subtitle_small: {
+    textAlign: "center", marginBottom: 10, marginHorizontal: 30
   },
 
 

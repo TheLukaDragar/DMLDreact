@@ -58,6 +58,7 @@ const provider = new CustomJsonRpcProvider(RPCUrl);
 const smsURL = "https://sms.scone-debug.v8-bellecour.iex.ec";
 const marketplaceURL = "https://api.market.v8-bellecour.iex.ec";
 const result_storageURL = "https://result.v8-bellecour.iex.ec";
+const workerpoolApiUrl = "https://core-debug.v8-bellecour.iex.ec";
 const hub_addres = "0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f"
 const iExecDatasetRegistryAddres = "0x799DAa22654128d0C64d5b79eac9283008158730";
 const chainId = '134';
@@ -66,6 +67,7 @@ const iexecresultIPFSGateway = "https://ipfs-gateway.v8-bellecour.iex.ec";
 console.log(RPCUrl);
 console.log(reputationSCAddress);
 console.log(parcelNFTSCAddress);
+console.log(workerpoolApiUrl);
 
 // Setup provider and contract outside of the slice
 // const provider = new ethers.providers.JsonRpcProvider(RPCUrl);
@@ -1974,11 +1976,24 @@ export type TaskData = {
   statusName: string;
   taskTimedOut: boolean;
   results: any; // replace 'any' with the actual type of your result
+  replicateStatus: {
+    status: string;
+    date: Date;
+
+  }[]
 };
+
+
+// export const getTaskDataOffChain = createAsyncThunk(
+//   'blockchain/getTaskDataOffChain',
+
+
+
+
 //thunk for checking progress of tasks
 export const monitorTaskProgress = createAsyncThunk(
   'blockchain/monitorTaskProgress',
-  async ({ tasks }: { tasks: string[] }, thunkAPI) : Promise<{ tasksCompleted: number, tasksFailed: number, tasksTimeout: number, tasksData: TaskData[] }> => {
+  async ({ tasks }: { tasks: string[] }, thunkAPI): Promise<{ tasksCompleted: number, tasksFailed: number, tasksTimeout: number, tasksData: TaskData[] }> => {
     try {
 
       // Get the current state
@@ -2016,11 +2031,37 @@ export const monitorTaskProgress = createAsyncThunk(
 
       const tasksProgress = await Promise.all(tasks.map(async (task) => {
         const taskData = await iexecContract.viewTask(task);
+        console.log("taskData: " + JSON.stringify(taskData));
 
         const now = Math.floor(Date.now() / 1000);
         const consensusTimeout = parseInt(taskData.finalDeadline, 10);
         const taskTimedOut = taskData.status !== 3 && now >= consensusTimeout && consensusTimeout !== 0;
         const decodedResult = decodeTaskResult(taskData.results);
+
+
+        //get offchain data from api 
+        const GETtask = await fetch(workerpoolApiUrl + '/tasks/' + task, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+        let replicateStatus;
+        if (!GETtask.ok) {
+          console.log(GETtask);
+
+        } else {
+
+
+
+          let taskDataOffChain = await GETtask.json()
+
+          console.log("taskDataOffChain: " + JSON.stringify(taskDataOffChain));
+          if (taskDataOffChain.replicates && taskDataOffChain.replicates.length > 0) {
+            replicateStatus = taskDataOffChain.replicates[0].statusUpdateList
+          }
+          console.log("replicateStatus: " + JSON.stringify(replicateStatus));
+        }
 
 
         return {
@@ -2031,17 +2072,18 @@ export const monitorTaskProgress = createAsyncThunk(
               : TASK_STATUS_MAP[taskData.status as keyof typeof TASK_STATUS_MAP],
           taskTimedOut,
           results: decodedResult,
+          replicateStatus: replicateStatus ? replicateStatus : [{ status: "INITIALIZING", date: new Date().toISOString() }]
         };
 
       }));
 
 
-      const tasksCompleted = tasksProgress.filter((task) => task.statusName === 'COMPLETED');
-      const tasksFailed = tasksProgress.filter((task) => task.statusName === 'FAILED');
+      const tasksCompleted = tasksProgress.filter((task) => task.statusName === 'COMPLETED' && task.replicateStatus && task.replicateStatus[task.replicateStatus.length - 1].status === 'COMPLETED');
+      const tasksFailed = tasksProgress.filter((task) => task.statusName === 'FAILED' || task.replicateStatus && task.replicateStatus[task.replicateStatus.length - 1].status === 'ABORTED');
       const tasksTimeout = tasksProgress.filter((task) => task.statusName === 'TIMEOUT');
 
 
-      console.log("tasksProgress: " + JSON.stringify(tasksProgress));
+
       return { tasksCompleted: tasksCompleted.length, tasksFailed: tasksFailed.length, tasksTimeout: tasksTimeout.length, tasksData: tasksProgress };
     }
     catch (error) {
