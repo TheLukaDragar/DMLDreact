@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Avatar, Button, Caption, Card, Divider, List, ProgressBar, Title, useTheme } from 'react-native-paper';
+import { ActivityIndicator, Avatar, Button, Caption, Card, Divider, List, Paragraph, ProgressBar, Title, useTheme } from 'react-native-paper';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View } from '../../../components/Themed';
@@ -255,7 +255,7 @@ export default function ConnectToTheBox() {
           {taskInfo && (
             <>
               <TouchableWithoutFeedback onPress={() => { Clipboard.setStringAsync(taskInfo.taskId); Toast.show("Task ID copied to clipboard"); }}>
-              <Title style={styles.details}>Task ID: <Caption style={styles.details}>{"\n" + taskInfo.taskId}</Caption></Title>
+                <Title style={styles.details}>Task ID: <Caption style={styles.details}>{"\n" + taskInfo.taskId}</Caption></Title>
               </TouchableWithoutFeedback>
               <Title style={styles.details}>Task Status: <Caption style={styles.details}>{taskInfo.statusName}</Caption></Title>
               <Title style={styles.details}>Task Offchain Status: <Caption style={styles.details}>{taskInfo.replicateStatus[taskInfo.replicateStatus.length - 1].status}</Caption></Title>
@@ -358,10 +358,15 @@ export default function ConnectToTheBox() {
                         <Avatar.Icon icon="cube" size={46} />
                         <Title style={styles.cardTitle}>{boxDetails.did}</Title>
                       </View>
-                      <Card.Cover source={{ uri: boxDetails.imageUrl }} style={{ marginVertical: 10 }} />
+                      <Card.Cover source={{ uri: boxDetails.imageUrl }} style={{ marginTop: 10,marginBottom:20 }} />
 
                       {/* Box Details */}
-                      <Title style={styles.details}>Vehicle licence plate: <Caption style={styles.details}>{boxDetails.licensePlate}</Caption></Title>
+                      <Title style={styles.details}>Vehicle licence plate: <Caption style={styles.details}>{"\n"+boxDetails.licensePlate}</Caption></Title>
+                     {
+                      boxDetails.description ? (
+                     <Paragraph style={styles.details}>Description: <Caption style={styles.details}>{"\n"+boxDetails.description}</Caption></Paragraph>
+                      ) : null
+                      }
 
                       {/* Card Actions */}
                       <Card.Actions>
@@ -406,10 +411,10 @@ export default function ConnectToTheBox() {
                         ) : null
                       }
                       <TouchableWithoutFeedback onPress={() => { Clipboard.setStringAsync(nftDetails?.sender || ""); Toast.show("Sender Wallet Address copied to clipboard"); }}>
-                      <Title style={styles.details}>Courier Wallet Address: <Caption style={styles.details}>{"\n" + nftDetails?.sender}</Caption></Title>
+                        <Title style={styles.details}>Courier Wallet Address: <Caption style={styles.details}>{"\n" + nftDetails?.sender}</Caption></Title>
                       </TouchableWithoutFeedback>
                       <TouchableWithoutFeedback onPress={() => { Clipboard.setStringAsync(nftDetails?.receiver || ""); Toast.show("Recipient Wallet Address copied to clipboard"); }}>
-                      <Title style={styles.details}>Recipient Wallet Address: <Caption style={styles.details}>{"\n" + nftDetails?.receiver}</Caption></Title>
+                        <Title style={styles.details}>Recipient Wallet Address: <Caption style={styles.details}>{"\n" + nftDetails?.receiver}</Caption></Title>
                       </TouchableWithoutFeedback>
                       {/* <Title style={styles.details}>MetaData Datasets: <Caption style={styles.details}>{datasets.length}</Caption></Title> */}
                       {

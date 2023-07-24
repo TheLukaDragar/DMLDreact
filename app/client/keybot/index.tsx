@@ -374,12 +374,14 @@ export default function KeyBot() {
             </View>
 
           </PagerView>
-          <View style={styles.screenContainers}>
 
-            <ScreenIndicators count={Boxes.total + 1} activeIndex={pageIndex} />
 
-          </View>
 
+        </View>
+
+        <View style={styles.screenContainers}>
+
+          <ScreenIndicators count={Boxes.total + 1} activeIndex={pageIndex} />
 
         </View>
 
@@ -444,8 +446,7 @@ const styles = StyleSheet.create({
 
   },
   cardCaption: {
-    justifyContent: 'flex-end',
-    alignItems: 'flex-end',
+  
 
   },
 
@@ -465,30 +466,28 @@ const styles = StyleSheet.create({
 
   },
   pagerContainer: {
-    flex: 1,
+    flex: 4,
 
     width: '100%',
   },
   pagerView: {
-    flex: 3,
+    flex: 1,
+
 
 
   },
   buttonContainer: {
-    flex: 1,
+    flex: 4,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  map: {
-    width: '100%',
-    height: '100%',
-  },
+  
   screenContainers: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
+  flex: 1,
+  justifyContent: 'flex-start',
+  alignItems: 'flex-start',
+ 
+
   },
   cardTitle: {
     fontSize: 20,

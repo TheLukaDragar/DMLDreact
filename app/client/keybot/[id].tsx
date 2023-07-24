@@ -4,7 +4,7 @@ import * as Location from 'expo-location';
 import { LocationObject } from 'expo-location';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Image, StyleSheet } from 'react-native';
+import { Image, ScrollView, StyleSheet } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { Button, IconButton, TextInput, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -169,8 +169,15 @@ export default function KeyBotDetails() {
     }
   }
 
+  const handleDetailsChange = (text: string) => {
+    if (BoxDetails) {
+      setBoxDetails({ ...BoxDetails, description: text });
+    }
+  }
+
+
   const haveBoxDetailsChanged = (newDetails: Box, initialDetails: Box): boolean => {
-    const relevantKeys: (keyof Box)[] = ['licensePlate', 'imageUrl', 'reputationThreshold', 'boxStatus', 'preciseLocation']; // Add any other keys that are relevant
+    const relevantKeys: (keyof Box)[] = ['licensePlate', 'imageUrl', 'reputationThreshold', 'boxStatus', 'preciseLocation', 'description']; // Add any other keys that are relevant
 
     const changed = relevantKeys.some((key: keyof Box) => {
       if (typeof newDetails[key] === 'object' && newDetails[key] !== null) {
@@ -250,7 +257,7 @@ export default function KeyBotDetails() {
           const updated_location = await setBoxPreciseLocation({
             boxId: BoxDetails?.id,
             preciseLocation: newLocation,
-            update:BoxDetails?.preciseLocation_id ? true : false
+            update: BoxDetails?.preciseLocation_id ? true : false
           }).unwrap();
           console.log("updated_location", updated_location);
         }
@@ -258,11 +265,12 @@ export default function KeyBotDetails() {
 
 
 
-        let updatedBoxDetails: UpdateBoxDto = { ...BoxDetails 
-        
+        let updatedBoxDetails: UpdateBoxDto = {
+          ...BoxDetails
+
         };
 
-       
+
         const updatedBox = await updateBox(updatedBoxDetails).unwrap();
         console.log("updatedBox", updatedBox);
         setVisible(false);
@@ -307,165 +315,187 @@ export default function KeyBotDetails() {
 
     <View style={styles.container}>
 
+      <ScrollView contentContainerStyle={styles.scrollViewContainer}>
 
-      <View style={styles.imageContainer}>
-        {
-          BoxDetails?.imageUrl ? (
-            <Image source={{ uri: BoxDetails.imageUrl }} style={styles.image} />
-          ) : (
-            <Text>No image uploaded</Text>
-          )
-        }
-
-
-
-        <IconButton
-          style={{
-            ...styles.overlayText,
-            backgroundColor: theme.colors.background,
-          }}
-          icon="image-edit-outline"
-          // iconColor={theme.colors.primary}
-          size={32}
-          onPress={handleUploadImage}
-          disabled={isUploading}
-        />
-
-      </View>
-
-      {BoxDetails?.preciseLocation?.latitude && BoxDetails?.preciseLocation?.longitude ? (
-        <MapView
-          style={styles.map}
-          ref={mapRef}
-          initialRegion={{
-            latitude: BoxDetails?.preciseLocation?.latitude,
-            longitude: BoxDetails?.preciseLocation?.longitude,
-            latitudeDelta: 0.0922,
-            longitudeDelta: 0.0421
-          }}
-          camera={
-            {
-              center: {
-                latitude: BoxDetails?.preciseLocation?.latitude,
-                longitude: BoxDetails?.preciseLocation?.longitude,
-              },
-              zoom: 18,
-              pitch: 0,
-              heading: 0,
-              altitude: 0,
-
-            }
-
-
+        <View style={styles.imageContainer}>
+          {
+            BoxDetails?.imageUrl ? (
+              <Image source={{ uri: BoxDetails.imageUrl }} style={styles.image} />
+            ) : (
+              <Text>No image uploaded</Text>
+            )
           }
-          userLocationAnnotationTitle="Box Location"
-          followsUserLocation={true}
-          showsUserLocation={true}
-        >
-          <Marker
-            coordinate={{
+
+
+
+          <IconButton
+            style={{
+              ...styles.overlayText,
+              backgroundColor: theme.colors.background,
+            }}
+            icon="image-edit-outline"
+            // iconColor={theme.colors.primary}
+            size={32}
+            onPress={handleUploadImage}
+            disabled={isUploading}
+          />
+
+        </View>
+
+        {BoxDetails?.preciseLocation?.latitude && BoxDetails?.preciseLocation?.longitude ? (
+          <MapView
+            style={styles.map}
+            ref={mapRef}
+            initialRegion={{
               latitude: BoxDetails?.preciseLocation?.latitude,
               longitude: BoxDetails?.preciseLocation?.longitude,
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421
             }}
-          />
-        </MapView>
-      ) : (
-        <Text style={{
-          ...styles.map, textAlign: 'center'
+            camera={
+              {
+                center: {
+                  latitude: BoxDetails?.preciseLocation?.latitude,
+                  longitude: BoxDetails?.preciseLocation?.longitude,
+                },
+                zoom: 18,
+                pitch: 0,
+                heading: 0,
+                altitude: 0,
 
-        }}>
-          No location set, please set box location.
-        </Text>
-      )}
+              }
 
 
-      {/* <Paragraph style={styles.address}>Address: {address == "" ? "Loading..." : address}</Paragraph> */}
-      <View style={styles.updateLocationContainer}>
-        <Button style={styles.updateLocationButton}
-          mode="contained"
-          loading={isUpdating}
-          onPress={() => {
-            if (location && location.coords && location?.coords.latitude && location?.coords.longitude && location?.coords.accuracy && BoxDetails) {
-              setBoxDetails({
-                ...BoxDetails, preciseLocation: {
-                  latitude: location?.coords.latitude,
-                  longitude: location?.coords.longitude,
-                  inaccuracy: location?.coords.accuracy,
-                }
-              });
+            }
+            userLocationAnnotationTitle="Box Location"
+            followsUserLocation={true}
+            showsUserLocation={true}
+          >
+            <Marker
+              coordinate={{
+                latitude: BoxDetails?.preciseLocation?.latitude,
+                longitude: BoxDetails?.preciseLocation?.longitude,
+              }}
+            />
+          </MapView>
+        ) : (
+          <Text style={{
+            ...styles.map, textAlign: 'center'
 
-              if (mapRef.current) {
-                mapRef.current.animateCamera({
-                  center: {
+          }}>
+            No location set, please set box location.
+          </Text>
+        )}
+
+
+        {/* <Paragraph style={styles.address}>Address: {address == "" ? "Loading..." : address}</Paragraph> */}
+        <View style={styles.updateLocationContainer}>
+          <Button style={styles.updateLocationButton}
+            contentStyle={{ height: 50 }}
+            mode="contained"
+            loading={isUpdating}
+            onPress={() => {
+              if (location && location.coords && location?.coords.latitude && location?.coords.longitude && location?.coords.accuracy && BoxDetails) {
+                setBoxDetails({
+                  ...BoxDetails, preciseLocation: {
                     latitude: location?.coords.latitude,
                     longitude: location?.coords.longitude,
-                  },
-                  zoom: 18,
+                    inaccuracy: location?.coords.accuracy,
+                  }
                 });
+
+                if (mapRef.current) {
+                  mapRef.current.animateCamera({
+                    center: {
+                      latitude: location?.coords.latitude,
+                      longitude: location?.coords.longitude,
+                    },
+                    zoom: 18,
+                  });
+                }
               }
             }
-          }
-          }
-
-
-
-        >
-          {BoxDetails?.preciseLocation?.latitude && BoxDetails?.preciseLocation?.longitude ? "Update Location" : "Set Location"}
-        </Button>
-      </View>
-
-      <View style={styles.inputContainer}>
-
-
-        <TextInput
-          label="License Plate"
-          value={BoxDetails?.licensePlate}
-          mode='outlined'
-          placeholder='XX1234567'
-          onChangeText={handleLicensePlateChange}
-
-          style={styles.licensePlateInput}
-          autoCapitalize='characters'
-        />
-
-
-        {licensePlateError ? <Text style={styles.errorText}>{licensePlateError}</Text> : null}
-
-        <Text>Reputation Threshold : {BoxDetails?.reputationThreshold || 0}</Text>
-        <Slider
-          value={BoxDetails?.reputationThreshold || 0}
-          onValueChange={handleReputationChange}
-          minimumValue={0}
-          maximumValue={5}
-          step={1}
-          thumbTintColor={theme.colors.primary}
-          minimumTrackTintColor={theme.colors.primary}
-          maximumTrackTintColor={theme.colors.primary}
-        />
-
-
-        <View style={styles.switchContainer}>
-          <Text style={styles.switchLabel}>Status:</Text>
-          <Switch
-
-            size={60}
-            value={isEnabled}
-            onChange={(value) => {
-              console.log("switch value", value);
-              setIsEnabled(value);
-            }
             }
 
 
-            activeTrackColor={theme.colors.primary}
-            renderOffIndicator={() => <Text style={{ fontSize: 14, color: theme.colors.secondary }}>Not Ready</Text>}
-            renderOnIndicator={() => <Text style={{ fontSize: 14, color: theme.colors.onPrimary }}>Ready
-            </Text>}
-          />
+
+          >
+            {BoxDetails?.preciseLocation?.latitude && BoxDetails?.preciseLocation?.longitude ? "Update Location" : "Set Location"}
+          </Button>
         </View>
-      </View>
-      <View style={styles.saveButtons}>
+        <View style={styles.inputContainer}>
+
+
+          <TextInput
+            label="License Plate"
+            value={BoxDetails?.licensePlate}
+            mode='outlined'
+            placeholder='XX1234567'
+            onChangeText={handleLicensePlateChange}
+
+            style={styles.licensePlateInput}
+            autoCapitalize='characters'
+          />
+
+          <TextInput
+            label="Description"
+            value={BoxDetails?.description}
+            mode='outlined'
+            placeholder='Enter more details here...'
+            onChangeText={handleDetailsChange}
+            style={styles.detailsInput}
+            multiline
+          />
+
+
+          {licensePlateError ? <Text style={styles.errorText}>{licensePlateError}</Text> : null}
+          <View style={styles.reputation}>
+            <Text
+              style={{
+                alignContent: 'center',
+                textAlign: 'left',
+                marginBottom: 10,
+                marginLeft: 15,
+              }}
+
+            >Reputation Threshold : {BoxDetails?.reputationThreshold || 0}</Text>
+            <Slider
+
+              value={BoxDetails?.reputationThreshold || 0}
+              onValueChange={handleReputationChange}
+              minimumValue={0}
+              maximumValue={5}
+              step={1}
+              thumbTintColor={theme.colors.primary}
+              minimumTrackTintColor={theme.colors.primary}
+              maximumTrackTintColor={theme.colors.primary}
+            />
+          </View>
+
+
+          <View style={styles.switchContainer}>
+            <Text style={styles.switchLabel}>Status:</Text>
+            <Switch
+
+              size={60}
+              value={isEnabled}
+              onChange={(value) => {
+                console.log("switch value", value);
+                setIsEnabled(value);
+              }
+              }
+
+
+              activeTrackColor={theme.colors.primary}
+              renderOffIndicator={() => <Text style={{ fontSize: 14, color: theme.colors.secondary }}>Not Ready</Text>}
+              renderOnIndicator={() => <Text style={{ fontSize: 14, color: theme.colors.onPrimary }}>Ready
+              </Text>}
+            />
+          </View>
+        </View>
         <Button
+          style={styles.saveButtons}
+          contentStyle={{ height: 50 }}
           mode="contained"
           loading={isUpdating}
           onPress={updateBoxDetailsAndNavigate}
@@ -474,7 +504,10 @@ export default function KeyBotDetails() {
           Save
         </Button>
 
-      </View>
+      </ScrollView>
+
+
+
 
     </View>
 
@@ -492,6 +525,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flex: 0.35,
+    height: 250,
 
     overflow: 'hidden',
   },
@@ -506,6 +540,7 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 0.25,
+    height: 200,
 
 
 
@@ -543,10 +578,12 @@ const styles = StyleSheet.create({
     color: 'red',
   },
   saveButtons: {
-    flex: 0.15,
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
     alignItems: 'center',
+    justifyContent: 'center',
+    width: '30%',
+    alignSelf: 'center',
+    marginBottom: 20,
+    marginTop: 20,
   },
   updateLocationContainer: {
 
@@ -562,6 +599,21 @@ const styles = StyleSheet.create({
 
 
   },
+  scrollViewContainer: {
+    paddingBottom: 20,  // Adjust as needed
+  },
+
+  detailsInput: {
+    minHeight: 120,  // Adjust as needed
+    textAlignVertical: 'top',
+    marginBottom: 10,
+  },
+  reputation: {
+    width: '100%',
+    marginBottom: 20,
+
+  },
+
 
 
 
