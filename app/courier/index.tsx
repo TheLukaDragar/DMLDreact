@@ -236,14 +236,28 @@ export default function Parcels() {
           <Title style={styles.details}>License Plate: <Caption style={styles.details}>{box?.box.licensePlate}</Caption></Title>
           {/* <Title style={styles.details}>Address: <Caption style={styles.details}>{item.location_id}</Caption></Title> */}
           <Title style={styles.details}>Distance: <Caption style={styles.details}>{distance_to_parcel}</Caption></Title>
+
           {
             item.depositTime !== null ? (
-              <Title style={styles.details}>Status: <Caption style={styles.details}>Delivered</Caption></Title>
+              <Title style={styles.details}>Deposited: <Caption style={styles.details}>{new Intl.DateTimeFormat('en', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(item.depositTime))}</Caption></Title>
+            ) : null
+          }
+          {
+            item.withdrawTime !== null ? (
+              <Title style={styles.details}>Withdrawn: <Caption style={styles.details}>{new Intl.DateTimeFormat('en', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(item.withdrawTime))}</Caption></Title>
+            ) : null
+          }
+          {
+            item.depositTime !== null ? (
+              item.withdrawTime !== null ? (
+                <Title style={styles.details}>Status: <Caption style={styles.details}>Delivered</Caption></Title>
+              ) : (
+                <Title style={styles.details}>Status: <Caption style={styles.details}>Deposited</Caption></Title>
+              )
             ) : (
-              <Title style={styles.details}>Status: <Caption style={styles.details}>To be delivered
+              <Title style={styles.details}>Status: <Caption style={styles.details}>In Delivery
               </Caption></Title>
             )
-
           }
 
 
@@ -256,6 +270,8 @@ export default function Parcels() {
               router.push("/parcel/" + item.id + "/details");
             }}
           >Details</Button>
+
+
           <Button
             disabled={item.depositTime !== null}
             icon="car"
@@ -268,6 +284,9 @@ export default function Parcels() {
               )
             }}
           >Drop off</Button>
+
+
+
 
 
 

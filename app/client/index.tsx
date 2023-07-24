@@ -204,7 +204,16 @@ export default function Parcels() {
           </View>
 
           <Title style={styles.details}>Tracking Number: <Caption style={styles.details}>{item.trackingNumber}</Caption></Title>
-
+          {
+            item.depositTime !== null ? (
+              <Title style={styles.details}>Deposited: <Caption style={styles.details}>{new Intl.DateTimeFormat('en', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(item.depositTime))}</Caption></Title>
+            ) : null
+          }
+          {
+            item.withdrawTime !== null ? (
+              <Title style={styles.details}>Withdrawn: <Caption style={styles.details}>{new Intl.DateTimeFormat('en', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(item.withdrawTime))}</Caption></Title>
+            ) : null
+          }
           {/* <Divider style={styles.divider} />
 
           <View style={styles.titleRow}>
@@ -216,20 +225,22 @@ export default function Parcels() {
           <Title style={styles.details}>Distance: <Caption style={styles.details}>{distance_to_parcel}</Caption></Title> */}
           {
             item.depositTime !== null ? (
-              <Title style={styles.details}>Status: <Caption style={styles.details}>Delivered</Caption></Title>
+              item.withdrawTime !== null ? (
+                <Title style={styles.details}>Status: <Caption style={styles.details}>Delivered</Caption></Title>
+              ) : (
+                <Title style={styles.details}>Status: <Caption style={styles.details}>Ready for pickup</Caption></Title>
+              )
             ) : (
               <Title style={styles.details}>Status: <Caption style={styles.details}>In Delivery
               </Caption></Title>
             )
-
           }
-
         </Card.Content>
         <Card.Actions>
 
           <Button
             icon="car"
-            disabled={item.depositTime === null}
+            disabled={item.depositTime === null || item.withdrawTime !== null}
             mode="contained"
             onPress={() => {
               router.push({
@@ -239,6 +250,7 @@ export default function Parcels() {
               )
             }}
           >Pick Up</Button>
+
 
           <Button
             icon="package-variant-closed"
