@@ -17,6 +17,7 @@ import { View } from '../../../components/Themed';
 import { Box, ParcelData, PreciseLocation, getErrorMessage, isErrorWithMessage, useDepositParcelMutation, useGetParcelByIdQuery, useLazyGetBoxAccessKeyQuery, useLazyGetBoxPreciseLocationQuery, useLazyGetBoxQuery, useUpdateParcelByIdMutation } from '../../../data/api';
 import { ApproveTransfer, ApproveTransferResponse, CreateDatasetResponse, Metadata, UploadMetadataToIPFSResponse, approveTransfer, callCreateDataset, callPushToSMS, callSellDataset, updateBox, uploadMetadataToIPFS } from '../../../data/blockchain';
 import { useAppDispatch, useAppSelector } from '../../../data/hooks';
+import { getLocation } from '../../../utils/getlocation';
 
 export default function ConnectToTheBox() {
   const router = useRouter();
@@ -127,7 +128,7 @@ export default function ConnectToTheBox() {
         return;
       }
 
-      let location = await Location.getCurrentPositionAsync({});
+      let location = await getLocation()
       setLocation(location);
     })();
   }, [])

@@ -21,6 +21,7 @@ import { authenticate, connectDeviceById, disconnectDevice, getChallenge, subscr
 import BLEDeviceList from '../../../components/BleDeviceList';
 import ScreenIndicators from '../../../components/ScreenIndicators';
 import { BoxPermissionLevel, BoxStatus } from '../../../constants/Auth';
+import { getLocation } from '../../../utils/getlocation';
 
 
 
@@ -73,7 +74,7 @@ export default function KeyBot() {
         return;
       }
 
-      let location = await Location.getCurrentPositionAsync({});
+      let location = await getLocation()
       console.log("location", location);
       setLocation(location);
     })();

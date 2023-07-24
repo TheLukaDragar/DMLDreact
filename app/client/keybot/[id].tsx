@@ -250,6 +250,7 @@ export default function KeyBotDetails() {
           const updated_location = await setBoxPreciseLocation({
             boxId: BoxDetails?.id,
             preciseLocation: newLocation,
+            update:BoxDetails?.preciseLocation_id ? true : false
           }).unwrap();
           console.log("updated_location", updated_location);
         }

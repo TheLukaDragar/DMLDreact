@@ -11,6 +11,7 @@ import Toast from 'react-native-root-toast';
 import { Box, ParcelData, PreciseLocation, useGetMeQuery, useGetParcelsQuery, useLazyGetBoxQuery } from '../../data/api';
 
 import MapView, { Callout, Marker } from 'react-native-maps';
+import { getLocation } from '../../utils/getlocation';
 
 export default function Parcels() {
 
@@ -88,7 +89,7 @@ export default function Parcels() {
         return;
       }
 
-      let location = await Location.getCurrentPositionAsync({});
+      let location = await getLocation()
       console.log("location: ", location);
       setLocation({
         latitude: location.coords.latitude,
@@ -275,7 +276,7 @@ export default function Parcels() {
   return (
     <View style={styles.container}>
       {
-        isLoading ? (
+        (isLoading || !location || location.latitude === undefined || location.longitude === undefined) ? (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
             <ActivityIndicator size="large" />
             <Text>Loading map...</Text>
@@ -286,8 +287,8 @@ export default function Parcels() {
               style={styles.map}
               ref={mapRef}
               initialRegion={{
-                latitude: location?.latitude || 45.5017,
-                longitude: location?.longitude || -73.5673,
+                latitude: location.latitude,
+                longitude: location.longitude,
                 latitudeDelta: 0.0922 / 2,
                 longitudeDelta: 0.0421 / 2,
               }}

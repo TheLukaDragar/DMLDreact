@@ -172,6 +172,7 @@ export interface PreciseLocation {
 interface setBoxPreciseLocation {
   boxId: number;
   preciseLocation: PreciseLocation;
+  update?: boolean;
 }
 export interface getBoxAccessKeyParams {
   boxId: number;
@@ -529,10 +530,10 @@ export const apiSlice = createApi({
 
     setBoxPreciseLocation: builder.mutation<any, setBoxPreciseLocation>({
       query: (body) => {
-        const { boxId, preciseLocation } = body;
+        const { boxId, preciseLocation,update } = body;
         return {
           url: `/location/box/${boxId}/precise`,
-          method: 'PATCH',
+          method: update ? 'PATCH' : 'POST',
           body: preciseLocation,
         };
       },

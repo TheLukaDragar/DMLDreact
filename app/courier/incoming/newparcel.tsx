@@ -14,6 +14,7 @@ import Toast from 'react-native-root-toast';
 import StepCard from '../../../components/StepCard';
 import { BoxStatus } from '../../../constants/Auth';
 import { CreateDatasetResponse, Metadata, MintBox, MintBoxResponse, UploadMetadataToIPFSResponse, callCreateDataset, callPushToSMS, callSellDataset, mintBox, uploadMetadataToIPFS } from '../../../data/blockchain';
+import { getLocation } from '../../../utils/getlocation';
 
 
 
@@ -246,7 +247,7 @@ export default function NewParcel() {
         return;
       }
 
-      let location = await Location.getCurrentPositionAsync({});
+      let location = await getLocation();
       setLocation({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
