@@ -1459,11 +1459,16 @@ export const setReputation = createAsyncThunk(
 
       console.log("calling addScore with args: " + "user: " + user + " score: " + score);
 
-      const tx = await contract.addScore(user, score, { gasLimit: 1000000 });
+      //multiply score to get wei
+      const scoreBigNumber = ethers.BigNumber.from(score).mul(ethers.BigNumber.from('1000000000000000000'));
+
+
+      const tx = await contract.addScore(user, scoreBigNumber, { gasLimit: 1000000 });
 
       //wait for tx to be mined
       const txReceipt = await tx.wait(1);
       console.log("txReceipt: " + JSON.stringify(txReceipt));
+      return { txHash: txReceipt.transactionHash };
 
 
     }
@@ -1500,12 +1505,12 @@ export const getReputation = createAsyncThunk(
       const contract = new ethers.Contract(reputationSCAddress, reputationSC_ABI, wallet);
 
       const res = await contract.reputation(address);
-      const score = ethers.utils.formatUnits(res[0], 'wei'); // Converts a BigNumber to a decimal string.
+      const score = ethers.utils.formatUnits(res[0], 18);
       const cnt = ethers.utils.formatUnits(res[1], 'wei'); // Converts a BigNumber to a decimal string.
 
       console.log("score: " + score + " cnt: " + cnt);
 
-      return parseFloat(score)
+      return Math.round(parseFloat(score) * 100) / 100; // round the score to two decimal places
     }
     catch (error) {
       return handleError(error, thunkAPI);
