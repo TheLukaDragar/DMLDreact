@@ -530,7 +530,7 @@ export const apiSlice = createApi({
 
     setBoxPreciseLocation: builder.mutation<any, setBoxPreciseLocation>({
       query: (body) => {
-        const { boxId, preciseLocation,update } = body;
+        const { boxId, preciseLocation, update } = body;
         return {
           url: `/location/box/${boxId}/precise`,
           method: update ? 'PATCH' : 'POST',
@@ -823,7 +823,8 @@ export const apiSlice = createApi({
       transformErrorResponse: (response: any) => {
         console.log('error /parcel/withdraw', response);
         return response
-      }
+      },
+      invalidatesTags: ['Parcels']
     }),
 
 

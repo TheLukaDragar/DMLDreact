@@ -110,8 +110,8 @@ async function loadWallet() {
         //call create box
         const url4 = "https://4gkntp89fl.execute-api.eu-central-1.amazonaws.com/development/box/create"
         newbox = {
-            "did":"BOX_000000000005",
-            "macAddress":"FF:FF:AB:36:64:D4",//"F9:E0:C3:CE:C3:14",
+            "did":"BOX_000000000006",
+            "macAddress":"FF:FF:AB:36:64:D8",//"F9:E0:C3:CE:C3:14",
             "key":keyhex,
             "boxStatus":1,
         }

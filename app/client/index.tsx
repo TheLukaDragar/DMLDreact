@@ -335,12 +335,22 @@ export default function Parcels() {
             </MapView>
 
             <View style={styles.parcelcontainer}>
-              {parcels &&
+              {parcels && parcels.length !== 0 ? (
                 <FlatList
                   data={parcels}
                   renderItem={renderItem}
                   keyExtractor={(item, index) => String(item.id) + index}
                 />
+              ) : (
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginHorizontal: 30,marginBottom:'30%' }}>
+                  <Caption style={{ textAlign: 'center' }}
+
+                  >You don't have any parcels yet. Set up the box to receive parcels and choose DLMD as your dilivery option.
+
+                  </Caption>
+                </View>
+              )
+
               }
             </View>
           </>

@@ -329,7 +329,7 @@ export default function ConnectToTheBox() {
         location: preciseLocation,
         user_id: parseInt(parcel_data.recipient_id),
         parcel_id: parcel_data.id,
-        action: "Client picked up the parcel",
+        action: "Client picked up the parcel from the Vehicle",
         timestamp: Date.now().toString(),
         testingEnv: false,
       }; // Prepare metadata from parcel data
