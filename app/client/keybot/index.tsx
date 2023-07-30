@@ -17,7 +17,8 @@ import '@ethersproject/shims';
 
 import { LocationObject } from 'expo-location';
 import PagerView from 'react-native-pager-view';
-import { authenticate, connectDeviceById, disconnectDevice, getChallenge, subscribeToEvents } from '../../../ble/bleSlice';
+import { authenticate, connectDeviceById, disconnectDevice, getChallenge, keyBotCommand, manualMotorControl, subscribeToEvents } from '../../../ble/bleSlice';
+import { KeyBotCommand, ManualMotorControlCommand } from '../../../ble/bleSlice.contracts';
 import BLEDeviceList from '../../../components/BleDeviceList';
 import ScreenIndicators from '../../../components/ScreenIndicators';
 import { BoxPermissionLevel, BoxStatus } from '../../../constants/Auth';
@@ -399,6 +400,114 @@ export default function KeyBot() {
             <Button mode="contained" onPress={() => BleDisconnect()} style={{ margin: 20 }}>
               disconnect
             </Button>
+
+            <Button mode="contained" onPress={() => {
+            router.push("client/keybot/" + Boxes.items[pageIndex].macAddress + "/control");
+            }} style={{ margin: 20 }}>
+              control
+            </Button>
+            {/* <Text>S1: {ble.midSensorsStatus.sensor_1_status}</Text>
+            <Text>S2: {ble.midSensorsStatus.sensor_2_status}</Text>
+            <Text>State: {ble.keyBotState.text}</Text>
+            <Text>Battery {ble.batteryLevel.text}</Text>
+            <View style={{ flexDirection: 'row' }}>
+              <Button
+                icon=""
+                mode="outlined"
+                onPress={() =>
+                  dispatch(
+                    manualMotorControl({ command: ManualMotorControlCommand.MOTOR1_FORWARD }),
+                  )
+                }
+                style={styles.buttonStyle}
+              >
+                Motor 1 Forward
+              </Button>
+              <Button
+                icon=""
+                mode="outlined"
+                onPress={() =>
+                  dispatch(
+                    manualMotorControl({ command: ManualMotorControlCommand.MOTOR1_BACKWARD }),
+                  )
+                }
+                style={styles.buttonStyle}
+              >
+                Motor 1 Backward
+              </Button>
+            </View>
+            <View style={{ flexDirection: 'row' }}>
+              <Button
+                icon=""
+                mode="outlined"
+                onPress={() =>
+                  dispatch(
+                    manualMotorControl({ command: ManualMotorControlCommand.MOTOR2_FORWARD }),
+                  )
+                }
+                style={styles.buttonStyle}
+              >
+                Motor 2 Forward
+              </Button>
+              <Button
+                icon=""
+                mode="outlined"
+                onPress={() =>
+                  dispatch(
+                    manualMotorControl({ command: ManualMotorControlCommand.MOTOR2_BACKWARD }),
+                  )
+                }
+                style={styles.buttonStyle}
+              >
+                Motor 2 Backward
+              </Button>
+            </View>
+            <View style={{ flexDirection: 'row', marginVertical: 30 }}>
+              <Button
+                icon=""
+                mode="contained"
+                contentStyle={{ height: 50, width: 150 }}
+                onPress={() =>
+                  dispatch(keyBotCommand({ command: KeyBotCommand.KEYBOT_PRESS_LEFT }))
+                }
+                style={styles.buttonStyle}
+              >
+                press left
+              </Button>
+              <Button
+                icon=""
+                mode="contained"
+                contentStyle={{ height: 50, width: 150 }}
+                onPress={() =>
+                  dispatch(keyBotCommand({ command: KeyBotCommand.KEYBOT_PRESS_RIGHT }))
+                }
+                style={styles.buttonStyle}
+              >
+                press right
+              </Button>
+            </View>
+            <View style={{ flexDirection: 'row' }}>
+              <Button
+                icon=""
+                mode="outlined"
+                onPress={() =>
+                  dispatch(keyBotCommand({ command: KeyBotCommand.KEYBOT_EMERGENCY_STOP }))
+                }
+                style={styles.buttonStyle}
+              >
+                emergency stop
+              </Button>
+              <Button
+                icon=""
+                mode="outlined"
+                onPress={() =>
+                  dispatch(keyBotCommand({ command: KeyBotCommand.KEYBOT_CENTER }))
+                }
+                style={styles.buttonStyle}
+              >
+                center
+              </Button>
+            </View> */}
           </View>
         ) : (
           <View style={styles.buttonContainer}>
@@ -446,7 +555,7 @@ const styles = StyleSheet.create({
 
   },
   cardCaption: {
-  
+
 
   },
 
@@ -481,12 +590,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  
+
   screenContainers: {
-  flex: 1,
-  justifyContent: 'flex-start',
-  alignItems: 'flex-start',
- 
+    flex: 1,
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
+
 
   },
   cardTitle: {
@@ -498,5 +607,8 @@ const styles = StyleSheet.create({
     alignItems: 'center', // This aligns the icon and the title vertically
     backgroundColor: 'transparent',
     marginBottom: 10,
+  },
+  buttonStyle: {
+    margin: 5,
   },
 });

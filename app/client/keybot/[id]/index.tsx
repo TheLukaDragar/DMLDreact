@@ -9,10 +9,10 @@ import MapView, { Marker } from 'react-native-maps';
 import { Button, IconButton, TextInput, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Switch from 'react-native-switch-toggles';
-import { Text, View } from '../../../components/Themed';
-import { BoxStatus } from '../../../constants/Auth';
-import { Box, PreciseLocation, UpdateBoxDto, getErrorMessage, useLazyGetBoxQuery, useSetBoxPreciseLocationMutation, useUpdateBoxMutation } from '../../../data/api';
-import { uploadToFirebase } from "../../../firebaseConfig";
+import { Text, View } from '../../../../components/Themed';
+import { BoxStatus } from '../../../../constants/Auth';
+import { Box, PreciseLocation, UpdateBoxDto, getErrorMessage, useLazyGetBoxQuery, useSetBoxPreciseLocationMutation, useUpdateBoxMutation } from '../../../../data/api';
+import { uploadToFirebase } from "../../../../firebaseConfig";
 
 
 export default function KeyBotDetails() {

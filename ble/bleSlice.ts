@@ -5,6 +5,8 @@ import Constants from 'expo-constants';
 import { BleManager, Device } from 'react-native-ble-plx';
 import { RootState } from '../data/store';
 import { ConnectionState, KeyBotCommand, KeyBotState, MidSensorState, NetworkState, SensorState, authenticateDeviceParams, bleSliceInterface, connectDeviceByIdParams, keybotCommandParams, manualMotorControlParams, testbuttonParams, toBLEDeviceVM } from './bleSlice.contracts';
+import { PermissionsAndroid, Platform } from 'react-native';
+import * as thisDevice from 'expo-device';
 
 const bleManager = new BleManager();
 let device: Device;
@@ -21,6 +23,58 @@ const stopScan = () => {
     console.log('Stopping scan');
     bleManager.stopDeviceScan();
 };
+type VoidCallback = (result: boolean) => void;
+
+const requestPermissions = async (cb: VoidCallback) => {
+    if (Platform.OS === 'android') {
+
+        const apiLevel = thisDevice.platformApiLevel;
+        //null check for apiLevel
+        //alert(apiLevel);
+
+
+        if (apiLevel != null && apiLevel < 31) {  //TODO apiLevel is null on my device
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+                {
+                    title: 'Location Permission',
+                    message: 'Bluetooth Low Energy requires Location',
+                    buttonNeutral: 'Ask Later',
+                    buttonNegative: 'Cancel',
+                    buttonPositive: 'OK',
+                },
+            ).catch(err => {
+                console.log(err);
+            });
+
+            cb(granted === PermissionsAndroid.RESULTS.GRANTED);
+        } else {
+
+            if (apiLevel == null) {
+                console.log("apiLevel is null");
+            }
+            // Android 12+ requires multiple permissions
+            const result = await PermissionsAndroid.requestMultiple([
+                PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+                PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+                PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+            ]);
+            const isGranted =
+                result['android.permission.BLUETOOTH_CONNECT'] ===
+                PermissionsAndroid.RESULTS.GRANTED &&
+                result['android.permission.BLUETOOTH_SCAN'] ===
+                PermissionsAndroid.RESULTS.GRANTED &&
+                result['android.permission.ACCESS_FINE_LOCATION'] ===
+                PermissionsAndroid.RESULTS.GRANTED;
+
+            cb(isGranted);
+
+        }
+    } else {
+        //ios permissions are handled by the library itself so we just return true here 
+        cb(true);
+    }
+};
 
 
 export const scanBleDevices = createAsyncThunk('ble/scanBleDevices', async (_, thunkAPI) => {
@@ -34,6 +88,15 @@ export const scanBleDevices = createAsyncThunk('ble/scanBleDevices', async (_, t
         thunkAPI.dispatch(addScannedDevice({ device: demoDevice }));
         return;
     }
+
+    
+    const granted = await new Promise(resolve => requestPermissions(resolve));
+    if (!granted) {
+        throw new Error('Ble permission not granted');
+    }
+
+
+
     //disconnect if connected
     if (device) {
         await device.cancelConnection();

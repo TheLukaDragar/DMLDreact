@@ -23,13 +23,21 @@ export default function Layout() {
         }
 
         />
-        <Stack.Screen name="[id]"
+        <Stack.Screen name="[id]/index"
         options={
             {
                 animation: "slide_from_bottom",
             }
         }
         />
+         <Stack.Screen name="[id]/control"
+        options={
+            {
+                animation: "slide_from_bottom",
+            }
+        }
+        />
+
       
 
        
