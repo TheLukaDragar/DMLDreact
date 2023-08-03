@@ -108,28 +108,28 @@ export default function KeyBot() {
 
 
       //check if location is null
-      if (location == null) {
-        throw new Error("Location service is not enabled please enable it");
-      }
+      // if (location == null) {
+      //   throw new Error("Location service is not enabled please enable it");
+      // }
 
 
-      //3. get location of the user
-      console.log(location?.coords.latitude);
-      console.log(location?.coords.longitude);
-      console.log(location?.coords.accuracy);
-      console.log(location?.timestamp);
+      // //3. get location of the user
+      // console.log(location?.coords.latitude);
+      // console.log(location?.coords.longitude);
+      // console.log(location?.coords.accuracy);
+      // console.log(location?.timestamp);
 
 
-      if (location?.coords.latitude == undefined || location?.coords.longitude == undefined || location?.coords.accuracy == undefined) {
-        throw new Error("Location service is not enabled please enable it");
+      // if (location?.coords.latitude == undefined || location?.coords.longitude == undefined || location?.coords.accuracy == undefined) {
+      //   throw new Error("Location service is not enabled please enable it");
 
-      }
+      // }
 
-      const preciseLocation: PreciseLocation = {
-        latitude: location?.coords.latitude!,
-        longitude: location?.coords.longitude!,
-        inaccuracy: location?.coords.accuracy!,
-      }
+      // const preciseLocation: PreciseLocation = {
+      //   latitude: location?.coords.latitude!,
+      //   longitude: location?.coords.longitude!,
+      //   inaccuracy: location?.coords.accuracy!,
+      // }
 
       //TODO REMOVE THIS HACK and use the real location
 
@@ -192,6 +192,7 @@ export default function KeyBot() {
       } else {
         console.log("error", err);
         setError(JSON.stringify(err));
+        
       }
     }
 

@@ -14,7 +14,7 @@ export async function getLocation() {
     const DELAY_IN_MS =
         Platform.OS === 'ios' ? IOS_DELAY_IN_MS : ANDROID_DELAY_IN_MS
 
-    const MAX_TRIES = 3
+    const MAX_TRIES = 5
     let tries = 1
 
     let location: LocationObject | null = null

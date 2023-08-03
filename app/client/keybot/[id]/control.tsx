@@ -24,7 +24,7 @@ import {
   subscribeToEvents
 } from '../../../../ble/bleSlice';
 import { KeyBotCommand, ManualMotorControlCommand } from '../../../../ble/bleSlice.contracts';
-import { PreciseLocation, isErrorWithMessage, isFetchBaseQueryError, useLazyGetBoxAccessKeyQuery } from '../../../../data/api';
+import { PreciseLocation, isErrorWithMessage, isFetchBaseQueryError, useLazyGetBoxAccessKeyQuery, useLazyGetBoxPreciseLocationQuery } from '../../../../data/api';
 import { callDatasetContract } from '../../../../data/blockchain';
 import { getLocation } from '../../../../utils/getlocation';
 
@@ -38,6 +38,7 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
   const [calibMode, setCalibMode] = useState(false);
   const params = useLocalSearchParams();
 
+  const [getBoxPreciseLocation] = useLazyGetBoxPreciseLocationQuery();
 
 
   const [getBoxAccessKey, { isLoading: isLoading, error: error }] = useLazyGetBoxAccessKeyQuery();
@@ -111,6 +112,10 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
 
   async function BleConnect() {
     try {
+
+      const preciseLocationBox = await getBoxPreciseLocation(parseInt(String(params.id))).unwrap();
+      console.log("preciseLocationBox", preciseLocationBox);
+
       // 1. Connect to device
       const connectResult = await dispatch(connectDeviceById({ id: String(params.id) })).unwrap();
       console.log("connectResult", connectResult);
@@ -120,31 +125,31 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
       console.log("challenge", challenge);
 
 
-      //check if location is null
-      if (location == null) {
-        throw new Error("Location service is not enabled please enable it");
-      }
+      // //check if location is null
+      // if (location == null) {
+      //   throw new Error("Location service is not enabled please enable it");
+      // }
 
 
-      //3. get location of the user
-      console.log(location?.coords.latitude);
-      console.log(location?.coords.longitude);
-      console.log(location?.coords.accuracy);
-      console.log(location?.timestamp);
+      // //3. get location of the user
+      // console.log(location?.coords.latitude);
+      // console.log(location?.coords.longitude);
+      // console.log(location?.coords.accuracy);
+      // console.log(location?.timestamp);
 
 
-      if (location?.coords.latitude == undefined || location?.coords.longitude == undefined || location?.coords.accuracy == undefined) {
-        throw new Error("Location service is not enabled please enable it");
+      // if (location?.coords.latitude == undefined || location?.coords.longitude == undefined || location?.coords.accuracy == undefined) {
+      //   throw new Error("Location service is not enabled please enable it");
 
-      }
+      // }
 
-      const preciseLocation: PreciseLocation = {
-        latitude: location?.coords.latitude!,
-        longitude: location?.coords.longitude!,
-        inaccuracy: location?.coords.accuracy!,
-      }
+      // const preciseLocation: PreciseLocation = {
+      //   latitude: location?.coords.latitude!,
+      //   longitude: location?.coords.longitude!,
+      //   inaccuracy: location?.coords.accuracy!,
+      // }
       // 3. Get solution from api 
-      const response = await getBoxAccessKey({ challenge: challenge, preciseLocation: preciseLocation, boxId: 1 }).unwrap();
+      const response = await getBoxAccessKey({ challenge: challenge, preciseLocation: preciseLocationBox, boxId: 1 }).unwrap();
 
 
 
@@ -303,13 +308,13 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
       </Button>
       <Text> {ble.connectedDevice?.name}</Text>
       <Text> {ble.sensorStatus.status}</Text>
-      
-      <Text>S1: {ble.midSensorsStatus.sensor_1_status}</Text>
+
+      {/* <Text>S1: {ble.midSensorsStatus.sensor_1_status}</Text> */}
       <Text>S2: {ble.midSensorsStatus.sensor_2_status}</Text>
       <Text>State: {ble.keyBotState.text}</Text>
       <Text>Battery {ble.batteryLevel.text}</Text>
       <View style={{ flexDirection: 'row' }}>
-        <Button
+        {/* <Button
           icon=""
           mode="outlined"
           onPress={() =>
@@ -320,8 +325,8 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
           style={styles.buttonStyle}
         >
           Motor 1 Forward
-        </Button>
-        <Button
+        </Button> */}
+        {/* <Button
           icon=""
           mode="outlined"
           onPress={() =>
@@ -332,7 +337,7 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
           style={styles.buttonStyle}
         >
           Motor 1 Backward
-        </Button>
+        </Button> */}
       </View>
       <View style={{ flexDirection: 'row' }}>
         <Button
@@ -345,7 +350,7 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
           }
           style={styles.buttonStyle}
         >
-          Motor 2 Forward
+          Motor Forward
         </Button>
         <Button
           icon=""
@@ -357,7 +362,7 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
           }
           style={styles.buttonStyle}
         >
-          Motor 2 Backward
+          Motor Backward
         </Button>
       </View>
       <View style={{ flexDirection: 'row', marginVertical: 10 }}>
