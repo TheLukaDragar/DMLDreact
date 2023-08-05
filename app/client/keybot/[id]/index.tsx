@@ -43,6 +43,8 @@ export default function KeyBotDetails() {
   const [location, setLocation] = React.useState<LocationObject | null>(null);
 
   const [permission, requestPermission] = ImagePicker.useCameraPermissions();
+  const [libpermission, requestLibPermission] = ImagePicker.useMediaLibraryPermissions();
+
   const [isUploading, setUploading] = useState(false);
   const [visible, setVisible] = React.useState(false);
   const [isEnabled, setIsEnabled] = React.useState(false);
@@ -59,6 +61,17 @@ export default function KeyBotDetails() {
     //   allowsEditing: true,
     //   aspect: [4, 3],
     // });
+
+    //ceck permission
+    if (permission?.status !== ImagePicker.PermissionStatus.GRANTED) {
+      requestPermission();
+      return;
+    }
+    if (libpermission?.status !== ImagePicker.PermissionStatus.GRANTED) {
+      requestLibPermission();
+      return;
+    }
+
 
     let pickerResult = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
