@@ -65,11 +65,10 @@ export default function KeyBotDetails() {
     //ceck permission
     if (permission?.status !== ImagePicker.PermissionStatus.GRANTED) {
       requestPermission();
-      return;
+     
     }
     if (libpermission?.status !== ImagePicker.PermissionStatus.GRANTED) {
       requestLibPermission();
-      return;
     }
 
 
