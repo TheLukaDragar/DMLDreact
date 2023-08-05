@@ -32,7 +32,7 @@ export async function getLocation() {
             ])
 
             if (!location) {
-                alert('Location not found')
+               
                 throw new Error('Timeout')
                
             }
@@ -44,6 +44,7 @@ export async function getLocation() {
     } while (!location && tries <= MAX_TRIES)
 
     if (!location) {
+        alert('Unable to get location. Please try again later.')
         const error = locationError ?? new Error('💣')
 
         throw error
