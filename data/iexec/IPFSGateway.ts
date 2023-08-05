@@ -137,7 +137,7 @@ export const IPFSGateways ={
       mode: "cors",
       body: formData,
     } as RequestInit ;
-  
+    console.log("options", options);
     let res = await fetch("https://ipfs-upload.iex.ec/api/v0/add?stream-channels=true&progress=false", options)
 
 
@@ -182,7 +182,11 @@ export const IPFSGateways ={
 
 
 
-   
+   return {
+      Name: "test",
+      Hash: "test",
+      
+   }
   
     const options = {
       method: 'POST',

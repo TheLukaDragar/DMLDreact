@@ -449,7 +449,7 @@ export default function ConnectToTheBox() {
                 && ble.deviceConnectionState.status === 'ready'
 
                 ? (
-                  <><Avatar.Icon size={56} icon="cube" /><><Title style={styles.title} >Connected</Title><Subheading>{ble.connectedDevice?.localName}</Subheading><Subheading>{ble.connectedDevice?.id}</Subheading></></>
+                  <><Avatar.Icon size={56} icon="cube" /><><Title style={styles.title} >Connected</Title><Subheading>{ble.connectedDevice?.name}</Subheading><Subheading>{ble.connectedDevice?.id}</Subheading></></>
 
                 ) : (
                   <>
@@ -749,7 +749,7 @@ export default function ConnectToTheBox() {
 
 
                 <><View style={{
-                  flex: 5,
+                  flex: 4,
                   width: "100%",
 
 

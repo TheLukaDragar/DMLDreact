@@ -24,7 +24,7 @@ import {
   subscribeToEvents
 } from '../../../../ble/bleSlice';
 import { KeyBotCommand, ManualMotorControlCommand } from '../../../../ble/bleSlice.contracts';
-import { PreciseLocation, isErrorWithMessage, isFetchBaseQueryError, useLazyGetBoxAccessKeyQuery, useLazyGetBoxPreciseLocationQuery } from '../../../../data/api';
+import { isErrorWithMessage, isFetchBaseQueryError, useLazyGetBoxAccessKeyQuery, useLazyGetBoxPreciseLocationQuery } from '../../../../data/api';
 import { callDatasetContract } from '../../../../data/blockchain';
 import { getLocation } from '../../../../utils/getlocation';
 
@@ -113,7 +113,7 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
   async function BleConnect() {
     try {
 
-      const preciseLocationBox = await getBoxPreciseLocation(parseInt(String(params.id))).unwrap();
+      const preciseLocationBox = await getBoxPreciseLocation(parseInt(String(params.boxId))).unwrap();
       console.log("preciseLocationBox", preciseLocationBox);
 
       // 1. Connect to device
@@ -149,7 +149,7 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
       //   inaccuracy: location?.coords.accuracy!,
       // }
       // 3. Get solution from api 
-      const response = await getBoxAccessKey({ challenge: challenge, preciseLocation: preciseLocationBox, boxId: 1 }).unwrap();
+      const response = await getBoxAccessKey({ challenge: challenge, preciseLocation: preciseLocationBox, boxId: parseInt(String(params.boxId)) }).unwrap();
 
 
 

@@ -32,7 +32,9 @@ export async function getLocation() {
             ])
 
             if (!location) {
+                alert('Location not found')
                 throw new Error('Timeout')
+               
             }
         } catch (err) {
             locationError = err as Error

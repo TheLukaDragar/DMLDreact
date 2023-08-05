@@ -8,7 +8,7 @@ import { useAppDispatch, useAppSelector } from '../../../data/hooks';
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { BoxItem, PreciseLocation, getErrorMessage, isErrorWithMessage, isFetchBaseQueryError, useGetBoxesQuery, useGetMeQuery, useLazyGetBoxAccessKeyQuery, useLazyGetBoxPreciseLocationQuery } from '../../../data/api';
+import { BoxItem, getErrorMessage, isErrorWithMessage, isFetchBaseQueryError, useGetBoxesQuery, useGetMeQuery, useLazyGetBoxAccessKeyQuery, useLazyGetBoxPreciseLocationQuery } from '../../../data/api';
 
 import '@ethersproject/shims';
 
@@ -17,8 +17,7 @@ import '@ethersproject/shims';
 
 import { LocationObject } from 'expo-location';
 import PagerView from 'react-native-pager-view';
-import { authenticate, connectDeviceById, disconnectDevice, getChallenge, keyBotCommand, manualMotorControl, subscribeToEvents } from '../../../ble/bleSlice';
-import { KeyBotCommand, ManualMotorControlCommand } from '../../../ble/bleSlice.contracts';
+import { authenticate, connectDeviceById, disconnectDevice, getChallenge, subscribeToEvents } from '../../../ble/bleSlice';
 import BLEDeviceList from '../../../components/BleDeviceList';
 import ScreenIndicators from '../../../components/ScreenIndicators';
 import { BoxPermissionLevel, BoxStatus } from '../../../constants/Auth';
@@ -192,7 +191,7 @@ export default function KeyBot() {
       } else {
         console.log("error", err);
         setError(JSON.stringify(err));
-        
+
       }
     }
 
@@ -403,7 +402,12 @@ export default function KeyBot() {
             </Button>
 
             <Button mode="contained" onPress={() => {
-            router.push("client/keybot/" + Boxes.items[pageIndex].macAddress + "/control");
+              router.push({
+                pathname: "client/keybot/" + Boxes.items[pageIndex].macAddress + "/control",
+                params: { boxId: Boxes.items[pageIndex].id }
+              }
+
+              );
             }} style={{ margin: 20 }}>
               control
             </Button>
