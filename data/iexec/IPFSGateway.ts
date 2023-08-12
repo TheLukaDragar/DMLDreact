@@ -182,11 +182,11 @@ export const IPFSGateways ={
 
 
 
-   return {
-      Name: "test",
-      Hash: "test",
-      
-   }
+  //  return {
+  //     Name: "test",
+  //     Hash: "test",
+
+  //  }
   
     const options = {
       method: 'POST',
