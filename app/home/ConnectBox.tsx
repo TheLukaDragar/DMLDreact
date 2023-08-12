@@ -5,7 +5,6 @@ import { Button, Snackbar, TextInput } from 'react-native-paper';
 import { Text, View } from '../../components/Themed';
 import { useAppDispatch, useAppSelector } from '../../data/hooks';
 
-import { ethers } from 'ethers';
 import React, { useEffect } from 'react';
 import { isErrorWithMessage, isFetchBaseQueryError, useConnectBoxMutation, useLazyGetAuthMsgQuery, useLoginWalletMutation } from '../../data/api';
 

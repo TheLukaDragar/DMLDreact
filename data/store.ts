@@ -46,7 +46,7 @@ const rootReducer = combineReducers({
     loading: loadingSlice.reducer,
     secure: secureReducer,
     ble: bleReducer,
-    api: persistReducer(apiPersistConfig, apiReducer),
+    api:apiReducer, //persistReducer(apiPersistConfig, apiReducer), not persisting api state
     blockchain: blockchainReducer,
 });
 

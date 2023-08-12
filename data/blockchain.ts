@@ -20,16 +20,45 @@ import {
 import Token from './iexec/token';
 
 
+//fix for expo
+export class CustomJsonRpcProvider extends ethers.providers.JsonRpcProvider {
+  async fetchFunc(path: string, json: string) {
+    try {
+      const response = await fetch(
+        this.connection.url,
+        {
+          method: 'POST',
+          body: json,
+          headers: {
+            ...this.connection.headers, //by default ethers sets host header and bellecour api rejects it
+            'Content-Type': 'application/json'
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Bad response from server');
+      }
+
+      return await response.json();
+    } catch (error) {
+      throw error;
+    }
+  }
+}
+
+
 
 const RPCUrl = Constants?.expoConfig?.extra?.RPCUrl;
 const reputationSCAddress = Constants?.expoConfig?.extra?.reputationSCAddress;
 const parcelNFTSCAddress = Constants?.expoConfig?.extra?.parcelNFTSCAddress;
 const DLMDApp = Constants?.expoConfig?.extra?.DLMDApp;
-const provider = new ethers.providers.JsonRpcProvider(RPCUrl);
+const provider = new CustomJsonRpcProvider(RPCUrl);
 //const smsURL = "https://sms.scone-prod.v8-bellecour.iex.ec";
 const smsURL = "https://sms.scone-debug.v8-bellecour.iex.ec";
 const marketplaceURL = "https://api.market.v8-bellecour.iex.ec";
 const result_storageURL = "https://result.v8-bellecour.iex.ec";
+const workerpoolApiUrl = "https://core-debug.v8-bellecour.iex.ec";
 const hub_addres = "0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f"
 const iExecDatasetRegistryAddres = "0x799DAa22654128d0C64d5b79eac9283008158730";
 const chainId = '134';
@@ -38,6 +67,7 @@ const iexecresultIPFSGateway = "https://ipfs-gateway.v8-bellecour.iex.ec";
 console.log(RPCUrl);
 console.log(reputationSCAddress);
 console.log(parcelNFTSCAddress);
+console.log(workerpoolApiUrl);
 
 // Setup provider and contract outside of the slice
 // const provider = new ethers.providers.JsonRpcProvider(RPCUrl);
@@ -455,7 +485,7 @@ export const uploadMetadataToIPFS = createAsyncThunk(
       } else {
         ipfsRes = await uploadToIPFS(encryptedData);
       }
-
+      console.log("ipfsRes: " + JSON.stringify(ipfsRes));
       // Return IPFS result along with other details
       return { ipfsRes, aesKey, checksum };
     } catch (error) {
@@ -463,6 +493,54 @@ export const uploadMetadataToIPFS = createAsyncThunk(
     }
   }
 );
+
+// export const uploadMetadataToIPFS = createAsyncThunk(
+//   'blockchain/uploadMetadataToIPFS',
+//   async (metadata: Metadata, thunkAPI): Promise<UploadMetadataToIPFSResponse> => {
+//     try {
+//       // Get the current state
+
+//       const isTestingEnv = metadata.testingEnv;
+
+//       //remve testing env from metadata
+//       delete metadata.testingEnv;
+
+
+
+
+
+//       // Generate AES key
+//       const aesKey = generateAes256Key();
+//       console.log("aesKey: " + aesKey);
+
+//       let ipfsRes;
+//       if (isTestingEnv) {
+//         const dataBuffer = Buffer.from(JSON.stringify(metadata));
+
+
+
+//         // Encrypt data
+//         const encryptedData = await encryptAes256Cbc(dataBuffer, aesKey);
+//         console.log("Encrypted Data: " + encryptedData.toString('base64'));
+
+//         const checksum = await sha256Sum(encryptedData);
+//         console.log("checksum: " + checksum);
+//         console.log("uploading to testing ipfs node");
+//         ipfsRes = await uploadToIPFSTesting(encryptedData);
+//       } else {
+//         const aesKey = generateAes256Key();
+//         ipfsRes = await uploadToIPFS(JSON.stringify(metadata), aesKey);
+//       }
+//       console.log("ipfsRes: " + JSON.stringify(ipfsRes));
+//       console.log("ipfsRes.Hash: " + ipfsRes.Hash);
+//       //console.log("checksum: " + checksum);
+//       // Return IPFS result along with other details
+//       return { ipfsRes, aesKey, checksum: ipfsRes.Checksum };
+//     } catch (error) {
+//       return handleError(error, thunkAPI);
+//     }
+//   }
+// );
 
 export const downloadMetadataFromIPFS = createAsyncThunk(
   'blockchain/downloadMetadataFromIPFS',
@@ -1023,7 +1101,7 @@ export const mintBox = createAsyncThunk(
       const contract = new ethers.Contract(parcelNFTSCAddress, parcelNFTSC_ABI, wallet);
       //mint(_reciever,_uuid,parcel_id,_dataset)
       //random address
-
+      console.log("wallet.address: " + wallet.address);
       console.log("calling mintParcel with args: " + mintBox.reciever_address + " " + mintBox.parcel_id + " " + mintBox.dataset);
       // console.log("reciever_address type: " + typeof mintParcel.reciever_address);
       // console.log("uuid type: " + typeof mintParcel.uuid);
@@ -1159,12 +1237,13 @@ export interface UpdateBox {
 
 }
 export interface UpdateBoxResponse {
-  tx_data: string
+  tx_data: string, txHash: string;
+
 }
 //user approves the other user to transfer the NFT to himself
 export const updateBox = createAsyncThunk(
   'blockchain/updateBox',
-  async (updateBox: UpdateBox, thunkAPI) => {
+  async (updateBox: UpdateBox, thunkAPI): Promise<UpdateBoxResponse> => {
     try {
       // Get the current state
       const state = thunkAPI.getState() as RootState;
@@ -1206,8 +1285,12 @@ export const updateBox = createAsyncThunk(
 
 
       console.log("txReceipt: " + JSON.stringify(txReceipt));
+      const tx_hash = txReceipt.transactionHash;
 
-      return { tx_data: JSON.stringify(txReceipt) } as UpdateBoxResponse;
+      return {
+        tx_data: JSON.stringify(txReceipt), txHash: tx_hash
+
+      } as UpdateBoxResponse;
 
     }
     catch (error) {
@@ -1217,6 +1300,89 @@ export const updateBox = createAsyncThunk(
   }
 );
 
+export interface Dataset {
+  dataset: string;
+  datasetprice: number;
+  volume: number;
+  tag: string;
+  apprestrict: string;
+  workerpoolrestrict: string;
+  requesterrestrict: string;
+  salt: string;
+  sign: string;
+  orderHash: string;
+  chainId: number;
+  publicationTimestamp: string;
+  signer: string;
+  status: string;
+  remaining: number;
+}
+
+
+export const getDatasetOrder = createAsyncThunk(
+  'blockchain/getDatasetOrder',
+  async (dataset_address: string, thunkAPI): Promise<Dataset> => {
+    try {
+      // Get the current state
+      const state = thunkAPI.getState() as RootState;
+
+      // Get the wallet from the state
+      const privateKey = state.blockchain.privateKey;
+
+      // Check if the wallet exists
+      if (!privateKey) {
+        throw new Error("Wallet not found");
+      }
+
+
+      const wallet = new ethers.Wallet(privateKey, provider);
+      const query = {
+        "chainId": chainId,
+        "app": DLMDApp,
+        "dataset": dataset_address,
+        "workerpool": "0xdb214a4A444D176e22030bE1Ed89dA1b029320f2", //debug workerpool
+        "requester": wallet.address,
+        "minTag": "0x0000000000000000000000000000000000000000000000000000000000000003",
+        "maxTag": "0x0000000000000000000000000000000000000000000000000000000000000003"
+      }
+
+      //fetch datasetOrder of dataset
+
+      const GETdatasetOrder = await fetch(marketplaceURL + '/datasetorders?' + objToQueryString(query), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!GETdatasetOrder.ok) {
+        console.log(GETdatasetOrder);
+        throw new Error("Error fetching datasetOrder");
+      }
+
+      let response = await GETdatasetOrder.json()
+      let orderData = response.orders[0];
+      let order = orderData && orderData.order;
+
+      if (!order) {
+        throw new Error("No datasetOrder found");
+      }
+
+      let dataset = {
+        ...orderData,
+        ...order
+      };
+
+      console.log("dataset: " + JSON.stringify(dataset));
+
+      return dataset as Dataset;
+
+    }
+    catch (error) {
+      return handleError(error, thunkAPI);
+    }
+  }
+);
 
 export const getBoxDatasets = createAsyncThunk(
   'blockchain/getBoxDatasets',
@@ -1293,11 +1459,16 @@ export const setReputation = createAsyncThunk(
 
       console.log("calling addScore with args: " + "user: " + user + " score: " + score);
 
-      const tx = await contract.addScore(user, score, { gasLimit: 1000000 });
+      //multiply score to get wei
+      const scoreBigNumber = ethers.BigNumber.from(score).mul(ethers.BigNumber.from('1000000000000000000'));
+
+
+      const tx = await contract.addScore(user, scoreBigNumber, { gasLimit: 1000000 });
 
       //wait for tx to be mined
       const txReceipt = await tx.wait(1);
       console.log("txReceipt: " + JSON.stringify(txReceipt));
+      return { txHash: txReceipt.transactionHash };
 
 
     }
@@ -1314,6 +1485,8 @@ export const getReputation = createAsyncThunk(
   'blockchain/getReputation',
   async (address: string, thunkAPI) => {
     try {
+
+      console.log("calling getReputation with args: " + "address: " + address);
       // Get the current state
       // Get the current state
       const state = thunkAPI.getState() as RootState;
@@ -1332,12 +1505,12 @@ export const getReputation = createAsyncThunk(
       const contract = new ethers.Contract(reputationSCAddress, reputationSC_ABI, wallet);
 
       const res = await contract.reputation(address);
-      const score = ethers.utils.formatUnits(res[0], 'wei'); // Converts a BigNumber to a decimal string.
+      const score = ethers.utils.formatUnits(res[0], 18);
       const cnt = ethers.utils.formatUnits(res[1], 'wei'); // Converts a BigNumber to a decimal string.
 
       console.log("score: " + score + " cnt: " + cnt);
 
-      return parseFloat(score)
+      return Math.round(parseFloat(score) * 100) / 100; // round the score to two decimal places
     }
     catch (error) {
       return handleError(error, thunkAPI);
@@ -1345,6 +1518,48 @@ export const getReputation = createAsyncThunk(
     }
   }
 );
+
+//GET balance
+export const getBalance = createAsyncThunk(
+  'blockchain/getBalance',
+  async (address: string, thunkAPI) => {
+    try {
+
+      console.log("calling getBalance with args: " + "address: " + address);
+      // Get the current state
+      // Get the current state
+      const state = thunkAPI.getState() as RootState;
+
+      // Get the wallet from the state
+      const privateKey = state.blockchain.privateKey;
+
+      // Check if the wallet exists
+      if (!privateKey) {
+        throw new Error("Wallet not found");
+      }
+
+      //call  addScore
+      const wallet = new ethers.Wallet(privateKey, provider);
+
+      const tokencontract = new ethers.Contract(hub_addres, TokenABI, wallet);
+
+      const res = await tokencontract.balanceOf(address);
+      const balance = ethers.utils.formatUnits(res, 'wei'); // Converts a BigNumber to a decimal string.
+
+      console.log("balance: " + balance);
+
+      return parseFloat(balance)
+    }
+    catch (error) {
+      return handleError(error, thunkAPI);
+
+    }
+  }
+);
+
+
+
+
 
 //getOwnerOfNft
 export const getOwnerOfNft = createAsyncThunk(
@@ -1373,6 +1588,57 @@ export const getOwnerOfNft = createAsyncThunk(
       console.log("owner: " + owner);
 
       return owner;
+
+    }
+    catch (error) {
+      return handleError(error, thunkAPI);
+    }
+  }
+);
+//getNftDetails
+export const getNftDetails = createAsyncThunk(
+  'blockchain/getNftDetails',
+  async (tokenId: string, thunkAPI): Promise<{ parcelId: string, sender: string, receiver: string }> => {
+    try {
+      // Get the current state
+      const state = thunkAPI.getState() as RootState;
+
+      // Get the wallet from the state
+      const privateKey = state.blockchain.privateKey;
+
+      // Check if the wallet exists
+      if (!privateKey) {
+        throw new Error("Wallet not found");
+      }
+
+      //call  addScore
+      const wallet = new ethers.Wallet(privateKey, provider);
+
+      const contract = new ethers.Contract(parcelNFTSCAddress, parcelNFTSC_ABI, wallet);
+
+      console.log("calling getNftDetails with args: " + "tokenId: " + tokenId);
+      const {
+        parcelId,
+        sender,
+        receiver
+      } = await contract.boxes(tokenId) as { parcelId: string, sender: string, receiver: string };
+
+
+
+
+      console.log("details: " + JSON.stringify({
+        parcelId,
+        sender,
+        receiver
+      }));
+
+
+
+      return {
+        parcelId,
+        sender,
+        receiver
+      };
 
     }
     catch (error) {
@@ -1701,11 +1967,38 @@ export const runApp = createAsyncThunk(
   }
 );
 
+export const TASK_STATUS_MAP = {
+  0: 'UNSET',
+  1: 'ACTIVE',
+  2: 'REVEALING',
+  3: 'COMPLETED',
+  4: 'FAILED',
+  timeout: 'TIMEOUT',
+};
+
+export type TaskData = {
+  taskId: string;
+  statusName: string;
+  taskTimedOut: boolean;
+  results: any; // replace 'any' with the actual type of your result
+  replicateStatus: {
+    status: string;
+    date: Date;
+
+  }[]
+};
+
+
+// export const getTaskDataOffChain = createAsyncThunk(
+//   'blockchain/getTaskDataOffChain',
+
+
+
 
 //thunk for checking progress of tasks
 export const monitorTaskProgress = createAsyncThunk(
   'blockchain/monitorTaskProgress',
-  async ({ tasks }: { tasks: string[] }, thunkAPI) => {
+  async ({ tasks }: { tasks: string[] }, thunkAPI): Promise<{ tasksCompleted: number, tasksFailed: number, tasksTimeout: number, tasksData: TaskData[] }> => {
     try {
 
       // Get the current state
@@ -1719,14 +2012,7 @@ export const monitorTaskProgress = createAsyncThunk(
         throw new Error("Wallet not found");
       }
 
-      const TASK_STATUS_MAP = {
-        0: 'UNSET',
-        1: 'ACTIVE',
-        2: 'REVEALING',
-        3: 'COMPLETED',
-        4: 'FAILED',
-        timeout: 'TIMEOUT',
-      };
+
 
       const decodeTaskResult = (results: any) => {
         try {
@@ -1750,6 +2036,7 @@ export const monitorTaskProgress = createAsyncThunk(
 
       const tasksProgress = await Promise.all(tasks.map(async (task) => {
         const taskData = await iexecContract.viewTask(task);
+        console.log("taskData: " + JSON.stringify(taskData));
 
         const now = Math.floor(Date.now() / 1000);
         const consensusTimeout = parseInt(taskData.finalDeadline, 10);
@@ -1757,21 +2044,47 @@ export const monitorTaskProgress = createAsyncThunk(
         const decodedResult = decodeTaskResult(taskData.results);
 
 
+        //get offchain data from api 
+        const GETtask = await fetch(workerpoolApiUrl + '/tasks/' + task, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+        let replicateStatus;
+        if (!GETtask.ok) {
+          console.log(GETtask);
+
+        } else {
+
+
+
+          let taskDataOffChain = await GETtask.json()
+
+          console.log("taskDataOffChain: " + JSON.stringify(taskDataOffChain));
+          if (taskDataOffChain.replicates && taskDataOffChain.replicates.length > 0) {
+            replicateStatus = taskDataOffChain.replicates[0].statusUpdateList
+          }
+          console.log("replicateStatus: " + JSON.stringify(replicateStatus));
+        }
+
+
         return {
-          taskid: task,
+          taskId: task,
           //data:JSON.stringify(taskData),
           statusName:
             taskData.status < 3 && taskTimedOut ? TASK_STATUS_MAP.timeout
               : TASK_STATUS_MAP[taskData.status as keyof typeof TASK_STATUS_MAP],
           taskTimedOut,
           results: decodedResult,
+          replicateStatus: replicateStatus ? replicateStatus : [{ status: "INITIALIZING", date: new Date().toISOString() }]
         };
 
       }));
 
 
-      const tasksCompleted = tasksProgress.filter((task) => task.statusName === 'COMPLETED');
-      const tasksFailed = tasksProgress.filter((task) => task.statusName === 'FAILED');
+      const tasksCompleted = tasksProgress.filter((task) => task.statusName === 'COMPLETED' && task.replicateStatus && task.replicateStatus[task.replicateStatus.length - 1].status === 'COMPLETED');
+      const tasksFailed = tasksProgress.filter((task) => task.statusName === 'FAILED' || task.replicateStatus && task.replicateStatus[task.replicateStatus.length - 1].status === 'ABORTED');
       const tasksTimeout = tasksProgress.filter((task) => task.statusName === 'TIMEOUT');
 
 
@@ -1987,7 +2300,8 @@ const blockchainSlice = createSlice({
   name: 'blockchain',
   initialState: {
     connected: false,
-    balance: null,
+    balance: null as number | null,
+    reputation: null as number | null,
     privateKey: null,
   },
   reducers: {
@@ -1998,9 +2312,28 @@ const blockchainSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // builder.addCase(getBalance.fulfilled, (state, action) => {
-    //     state.balance = action.payload;
-    // });
+    builder.addCase(getBalance.fulfilled, (state, action) => {
+      console.log("getBalance.fulfilled: " + action.payload);
+      state.balance = action.payload;
+    });
+    builder.addCase(getBalance.rejected, (state, action) => {
+      console.log("getBalance.rejected: " + action.payload);
+      state.balance = -1;
+    }
+    );
+    builder.addCase(getReputation.fulfilled, (state, action) => {
+      console.log("getReputation.fulfilled: " + action.payload);
+      state.reputation = action.payload;
+
+    }
+    );
+    builder.addCase(getReputation.rejected, (state, action) => {
+      console.log("getReputation.rejected: " + action.payload);
+      state.reputation = -1;
+    }
+    );
+
+
   },
 });
 

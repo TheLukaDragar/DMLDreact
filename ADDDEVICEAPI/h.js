@@ -108,21 +108,23 @@ async function loadWallet() {
 
 
         //call create box
-        // const url4 = "https://4gkntp89fl.execute-api.eu-central-1.amazonaws.com/development/box/create"
-        // newbox = {
-        //     "did":"KeyBot_000000000001",
-        //     "macAddress":"E8:6C:AB:36:64:D1",//"F9:E0:C3:CE:C3:14",
-        //     "key":keyhex}
+        const url4 = "https://4gkntp89fl.execute-api.eu-central-1.amazonaws.com/development/box/create"
+        newbox = {
+            "did":"BOX_000000000008",
+            "macAddress":"EF:26:EC:7A:11:C0",//"FF:FF:AB:36:64:D8",//"F9:E0:C3:CE:C3:14",
+            "key":keyhex,
+            "boxStatus":1,
+        }
 
-        // console.log('newbox', newbox);
+        console.log('newbox', newbox);
 
-        // const response4 = await fetch(url4, {
-        //     method: 'POST',
-        //     body: JSON.stringify(newbox),
-        //     headers: { 'Content-Type': 'application/json', 'Authorization': token }
-        // });
-        // const data4 = await response4.json();
-        // console.log('create box', data4);
+        const response4 = await fetch(url4, {
+            method: 'POST',
+            body: JSON.stringify(newbox),
+            headers: { 'Content-Type': 'application/json', 'Authorization': token }
+        });
+        const data4 = await response4.json();
+        console.log('create box', data4);
 
         boxId =1;
 

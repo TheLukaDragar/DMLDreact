@@ -1,14 +1,15 @@
 import { StyleSheet } from 'react-native';
 
+import '@ethersproject/shims';
+import { ethers } from 'ethers';
 import { useRouter } from 'expo-router';
+import React, { useEffect } from 'react';
 import { Button, Snackbar } from 'react-native-paper';
 import { Text, View } from '../../components/Themed';
-import { useAppDispatch, useAppSelector } from '../../data/hooks';
-
-import { ethers } from 'ethers';
-import React, { useEffect } from 'react';
+import { UserType2 } from '../../constants/Auth';
 import { isErrorWithMessage, isFetchBaseQueryError, useLazyGetAuthMsgQuery, useLoginWalletMutation } from '../../data/api';
-import { loadDemoClientWallet, loadDemoCourierWallet } from '../../data/secure';
+import { useAppDispatch, useAppSelector } from '../../data/hooks';
+import { loadDemoClientWallet, loadDemoCourierWallet, setUserType } from '../../data/secure';
 
 
 
@@ -43,26 +44,28 @@ export default function TabTwoScreen() {
   async function login() {
     try {
       const msg = await getMessageToSign().unwrap();
-  
+
       if (secure.is_wallet_setup === false) {
         throw new Error("wallet not setup");
       }
-  
+
       console.log(secure.keyChainData?.privateKey!, "private key");
       console.log(msg?.message!, "message");
       const signer = new ethers.Wallet(secure.keyChainData?.privateKey!);
       const signature = await signer.signMessage(msg?.message!);
 
       const recoveredAddress = ethers.utils.verifyMessage(msg?.message!, signature);
-  
+
       console.log(recoveredAddress === signer.address, "recovered address === wallet address");
-  
+
       const result = await Login({
         wallet: signer.address,
         signature: signature,
         timestamp: msg?.timestamp!,
       }).unwrap();
-  
+
+      await dispatch(setUserType(result.profile.userType as UserType2)).unwrap()
+
       console.log(result);
     } catch (err) {
       if (isFetchBaseQueryError(err)) {
@@ -82,24 +85,29 @@ export default function TabTwoScreen() {
 
       const secure_data = await dispatch(loadDemoClientWallet()).unwrap()
 
+
+
       const msg = await getMessageToSign().unwrap();
 
-  
+
       console.log(secure_data.keyChainData?.privateKey!, "private key");
       console.log(msg?.message!, "message");
       const signer = new ethers.Wallet(secure_data.keyChainData?.privateKey!);
       const signature = await signer.signMessage(msg?.message!);
 
       const recoveredAddress = ethers.utils.verifyMessage(msg?.message!, signature);
-  
+
       console.log(recoveredAddress === signer.address, "recovered address === wallet address");
-  
+
       const result = await Login({
         wallet: signer.address,
         signature: signature,
         timestamp: msg?.timestamp!,
       }).unwrap();
-  
+
+      await dispatch(setUserType(result.profile.userType as UserType2
+      )).unwrap()
+
       console.log(result);
     } catch (err) {
       if (isFetchBaseQueryError(err)) {
@@ -111,11 +119,12 @@ export default function TabTwoScreen() {
         setError(err.message);
       }
     }
-    
+
   }
 
   async function demo_courier_login() {
     try {
+
 
 
       const secure_data = await dispatch(loadDemoCourierWallet()).unwrap()
@@ -123,22 +132,25 @@ export default function TabTwoScreen() {
       //here we use the outut of the dispatch direclt because the secure state is updated asyncronously
 
       const msg = await getMessageToSign().unwrap();
-  
+
       console.log(secure_data.keyChainData?.privateKey!, "private key");
       console.log(msg?.message!, "message");
       const signer = new ethers.Wallet(secure_data.keyChainData?.privateKey!);
       const signature = await signer.signMessage(msg?.message!);
 
       const recoveredAddress = ethers.utils.verifyMessage(msg?.message!, signature);
-  
+
       console.log(recoveredAddress === signer.address, "recovered address === wallet address");
-  
+
       const result = await Login({
         wallet: signer.address,
         signature: signature,
         timestamp: msg?.timestamp!,
       }).unwrap();
-  
+
+      await dispatch(setUserType(result.profile.userType as UserType2
+      )).unwrap()
+
       console.log(result);
     } catch (err) {
       if (isFetchBaseQueryError(err)) {
@@ -150,7 +162,7 @@ export default function TabTwoScreen() {
         setError(err.message);
       }
     }
-    
+
   }
 
 
@@ -161,7 +173,7 @@ export default function TabTwoScreen() {
 
       <Text style={styles.title}>Welcome to DLMD</Text>
 
-      <Text>
+      {/* <Text>
         wallet:
         {secure.keyChainData.privateKey == null ? "null" : secure.keyChainData.privateKey}
 
@@ -171,7 +183,7 @@ export default function TabTwoScreen() {
         token:
         {secure.userData.token == null ? "null" : secure.userData.token}
 
-      </Text>
+      </Text> */}
 
 
 

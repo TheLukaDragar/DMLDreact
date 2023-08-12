@@ -1,6 +1,7 @@
 import { useRouter, useSegments } from "expo-router";
 import React from "react";
 import { useAppDispatch, useAppSelector } from '../data/hooks';
+import { UserType2 } from "../constants/Auth";
 const AuthContext = React.createContext(null);
 
 // This hook can be used to access the user info.
@@ -27,6 +28,7 @@ function useProtectedRoute(user) {
     //console.log("user", user);
 
     let is_user = user.userData.token !== null && user.userData.token !== '';
+    let user_type = user.userData.userType;
 
     //if user is not yet retrieved do nothing
     if (user.userData.token === '') {
@@ -49,7 +51,18 @@ function useProtectedRoute(user) {
       console.log("redirect to sign in");
     } else if (is_user && !inHome && !inModal) {
       // Redirect away from the sign-in page.
-      router.replace("/home");
+      //router.replace("/home");
+
+      console.log("user type", user_type);
+
+      //check user type
+      if (user_type === UserType2.RENTER) {
+        router.replace("client");
+      } else if (user_type === UserType2.PARCEL_DELIVERY) {
+        router.replace("courier");
+      }else if (user_type === null || isNaN(user_type)) {
+        router.replace("auth");
+      }
         console.log("redirect to home");
     }
   }, [user]); //segemnts

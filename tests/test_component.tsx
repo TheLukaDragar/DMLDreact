@@ -1,6 +1,7 @@
 
 
 import { useAppDispatch, useAppSelector } from '../data/hooks';
+import '@ethersproject/shims';
 
 import { ethers } from 'ethers';
 import React, { useEffect } from 'react';

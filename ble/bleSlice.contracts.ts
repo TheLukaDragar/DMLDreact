@@ -81,6 +81,7 @@ export interface IBLEDevice {
 }
 
 export const toBLEDeviceVM = (device: any) => {
+    console.log('toBLEDeviceVM',JSON.stringify(device));
     const result = {
         serviceUUIDs: device.serviceUUIDs,
         isConnectable: device.isConnectable,

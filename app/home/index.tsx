@@ -1,35 +1,31 @@
-import { StyleSheet, TextInput, KeyboardAvoidingView } from 'react-native';
+import { useEffect, useState } from 'react';
+import { StyleSheet } from 'react-native';
 import { Button, Snackbar } from 'react-native-paper';
-import EditScreenInfo from '../../components/EditScreenInfo';
 import { Text, View } from '../../components/Themed';
 import { RootTabScreenProps } from '../../types';
-import BluetoothScanner from '../../components/BluetoothScanner';
-import { useEffect, useState } from 'react';
 //import store from redux-toolkit store
-import { incrementCount, decrementCount } from '../../data/user-slice';
-import { setLoading } from '../../data/store';
 //import secureReducer, { getMnemonic , setMnemonic} from '../../data/secure';
-import { useAppDispatch, useAppSelector } from '../../data/hooks';
 import { ActivityIndicator, MD2Colors } from 'react-native-paper';
+import { useAppDispatch, useAppSelector } from '../../data/hooks';
 //bleslice
 //import {setLog, setPeriphiralID, setStatus } from '../../ble/bleSlice';
-import { Buffer } from 'buffer'
 //bleservice
 //import  { BLEServiceInstance } from '../../ble/BLEService';
-import {
-  connectDeviceById, manualMotorControl, scanBleDevices,
-  selectAdapterState,
-  selectConnectedDevice,
-  selectScannedDevices, stopDeviceScan, testbutton, keyBotCommand, disconnectDevice, getChallenge, authenticate,subscribeToEvents
-} from '../../ble/bleSlice';
-import { ManualMotorControlCommand, KeyBotCommand } from '../../ble/bleSlice.contracts';
-import { PreciseLocation, isErrorWithMessage, isFetchBaseQueryError, useLazyGetBoxAccessKeyQuery } from '../../data/api';
-import React from 'react';
 import * as Location from 'expo-location';
 import { LocationObject } from 'expo-location';
-import CryptoES from 'crypto-es';
-import { loadDemoClientWallet } from '../../data/secure';
-import { callDatasetContract, setPrivateKey } from '../../data/blockchain';
+import React from 'react';
+import {
+  authenticate,
+  connectDeviceById,
+  disconnectDevice, getChallenge,
+  keyBotCommand,
+  manualMotorControl,
+  subscribeToEvents
+} from '../../ble/bleSlice';
+import { KeyBotCommand, ManualMotorControlCommand } from '../../ble/bleSlice.contracts';
+import { PreciseLocation, isErrorWithMessage, isFetchBaseQueryError, useLazyGetBoxAccessKeyQuery } from '../../data/api';
+import { callDatasetContract } from '../../data/blockchain';
+import { getLocation } from '../../utils/getlocation';
 
 export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'>,) {
   const user = useAppSelector((state) => state.user);
@@ -41,8 +37,8 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
   const [calibMode, setCalibMode] = useState(false);
 
 
-  
-  const [getBoxAccessKey,{isLoading:isLoading,error:error}] = useLazyGetBoxAccessKeyQuery();
+
+  const [getBoxAccessKey, { isLoading: isLoading, error: error }] = useLazyGetBoxAccessKeyQuery();
 
 
 
@@ -55,7 +51,7 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
 
     //console.log(secure.userData);
 
-    
+
 
 
     console.log(secure);
@@ -65,11 +61,10 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         setError('Permission to access location was denied');
-       
+
         return;
       }
-
-      let location = await Location.getCurrentPositionAsync({});
+      let location = await getLocation();
       setLocation(location);
     })();
 
@@ -83,21 +78,21 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
 
 
   }, [])
-  
+
   async function test() {
-    
+
     const args = {
       name: "cv.pdf",
       multiaddr: "ipfs/QmUZxd6edNcwQEgjpvTNjmLDgzZxSjwDSMKwRrHEcKnUyM",
       checksum: '0x82fe3d68048079af009667e5800223f37d1d9adaf1402b2e5723c93ebcf3a749',
-      testingEnv:false
-  };
+      testingEnv: false
+    };
 
 
 
 
 
-    let result = await dispatch(callDatasetContract( args )).unwrap().then((result) => {
+    let result = await dispatch(callDatasetContract(args)).unwrap().then((result) => {
       console.log(result);
       return result;
     }).catch((error) => {
@@ -105,13 +100,13 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
       return error;
     });
   }
-  
+
   async function BleConnect() {
     try {
       // 1. Connect to device
       const connectResult = await dispatch(connectDeviceById({ id: "EF:26:EC:7A:11:C0" })).unwrap();
       console.log("connectResult", connectResult);
-  
+
       // 2. Get the challenge
       const challenge = await dispatch(getChallenge()).unwrap();
       console.log("challenge", challenge);
@@ -132,19 +127,19 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
 
       if (location?.coords.latitude == undefined || location?.coords.longitude == undefined || location?.coords.accuracy == undefined) {
         throw new Error("Location service is not enabled please enable it");
-        
+
       }
 
-      const preciseLocation : PreciseLocation = {
-        latitude : location?.coords.latitude!,
-        longitude : location?.coords.longitude!,
-        inaccuracy : location?.coords.accuracy!,
+      const preciseLocation: PreciseLocation = {
+        latitude: location?.coords.latitude!,
+        longitude: location?.coords.longitude!,
+        inaccuracy: location?.coords.accuracy!,
       }
       // 3. Get solution from api 
-      const response = await getBoxAccessKey({challenge:challenge,preciseLocation:preciseLocation,boxId:1}).unwrap();
-      
+      const response = await getBoxAccessKey({ challenge: challenge, preciseLocation: preciseLocation, boxId: 1 }).unwrap();
 
-      
+
+
       //   console.log("challenge: " + challenge);
       // //solve here 
       //   let key = "cQfTjWnZr4u7x!z%"
@@ -165,10 +160,10 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
       //   boxId:1,
       //   accessKey:solved_challenge
       // }
-      console.log("getBoxAccessKey",response.accessKey);
+      console.log("getBoxAccessKey", response.accessKey);
 
       // 4. Authenticate
-      const auth = await dispatch(authenticate({solved_challenge:response.accessKey})).unwrap();
+      const auth = await dispatch(authenticate({ solved_challenge: response.accessKey })).unwrap();
       console.log(auth);
 
       if (auth) {
@@ -179,11 +174,11 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
         const events = await dispatch(subscribeToEvents()).unwrap();
 
 
-      }else{
+      } else {
         console.log("not authenticated");
       }
 
-  
+
     } catch (err) {
       //diconect
       if (isFetchBaseQueryError(err)) {
@@ -199,8 +194,8 @@ export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'
         setError(JSON.stringify(err));
       }
     }
-  
-  
+
+
 
 
     // try {
